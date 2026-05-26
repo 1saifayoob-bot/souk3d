@@ -44,7 +44,7 @@ const CUSTOMERS_DATA = [
 
 const CUSTOM_ORDERS_DATA = [
   { id: 1, customerId: 4, customerName: "Sarah Jaber", heritage: "Syria", flag: "üá∫üá∏", arabicText: "ÿπÿßÿ¶ŸÑÿ© ÿ¨ÿßÿ®ÿ±", occasion: "Wedding", style: "Diwani", color: "Gold", deadline: "May 15", urgency: "urgent", stage: "mockup", messages: 4, snippet: "I need a custom wedding arch piece for my daughter..." },
-  { id: 2, customerId: 1, customerName: "Layla Hadi", heritage: "Syria", flag: "üá∫üá∏", arabicText: "Ÿπÿßÿ¶ŸÑÿ© ÿ≠ÿØÿßÿØ", occasion: "Graduation", style: "Modern", color: "White", deadline: "May 20", urgency: "soon", stage: "quote", messages: 2, snippet: "Congratulations plaque for my son graduating..." },
+  { id: 2, customerId: 1, customerName: "Layla Hadi", heritage: "Syria", flag: "üá∫üá∏", arabicText: "ÿ©ÿßÿ¶ŸÑÿ© ÿ≠ÿØÿßÿØ", occasion: "Graduation", style: "Modern", color: "White", deadline: "May 20", urgency: "soon", stage: "quote", messages: 2, snippet: "Congratulations plaque for my son graduating..." },
   { id: 3, customerId: 3, customerName: "Yara Mansour", heritage: "Palestine", flag: "üá¨üáß", arabicText: "ŸÖÿ®ÿ±ŸàŸÉ Ÿäÿß ÿØŸÉÿ™Ÿàÿ±", occasion: "Graduation", style: "Classic", color: "Gold", deadline: "Jun 1", urgency: "ok", stage: "new", messages: 1, snippet: "Doctor graduation gift for my husband..." },
   { id: 4, customerId: 7, customerName: "Nour Salem", heritage: "Palestine", flag: "üá∫üá∏", arabicText: "Ÿäÿß ÿµÿ®Ÿä Ÿäÿß ÿ≠ŸÑŸà", occasion: "Baby", style: "Diwani", color: "Blue", deadline: "Jun 15", urgency: "ok", stage: "approved", messages: 6, snippet: "New baby boy wall piece for nursery..." },
   { id: 5, customerId: 8, customerName: "Rana Haddad", heritage: "Syria", flag: "üá®üá¶", arabicText: "ÿπŸäÿØ ŸÖŸäŸÑÿßÿØ ÿ≥ÿπŸäÿØ", occasion: "Birthday", style: "Modern", color: "Mixed", deadline: "May 30", urgency: "ok", stage: "quote", messages: 3, snippet: "Birthday cake topper with arabic name..." },
@@ -255,59 +255,64 @@ function Sidebar({ page, setPage }) {
   );
 }
 
-// ‚îÄ‚îÄ‚îÄ DASHBOARD ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
-function Dashboard({ onNavigate }) {
+// ‚îÄ‚îÄ‚îÄ DASHBOARD ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚flex", alignItems: "center", gap: 14, padding: "10px 0", borderBottom: `0.5px solid ${COLORS.wheat}` }}>
+            <div style={{ fontSize: 12, fontFamily: FONTS.body, fontWeight: 600, color: COLORS.damascene, width: 60 }}>{o.orderNumber}</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 12, fontWeight: 500, color: COLORS.charcoal }}>{o.customer}</div>
+              <div style={{ fontSize: 10, color: COLORS.textMuted }}>{o.items[0].name}{o.items.length > 1 ? ` +${o.items.length - 1}` : ""}</div>
+            </div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.charcoal }}>${o.total.toFixed(2)}</div>
+            <Badge status={o.status} />
+          </div>
+        ))}
+      </SectionCard>
+    </div>
+  );
+}
+
+// ‚îÄ‚îÄ‚îÄ PRODUCTS PAGE ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+function ProductsPage() {
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [selected, setSelected] = useState(null);
+
+  const filtered = PRODUCTS_DATA.filter(p => {
+    const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase());
+    const matchStatus = statusFilter === "all" || p.status === statusFilter;
+    return matchSearch && matchStatus;
+  });
+
   return (
     <div style={{ animation: "fadeIn 0.3s ease" }}>
-      <div style={{ marginBottom: 24 }}>
-        <div style={{ fontFamily: FONTS.display, fontSize: 28, fontWeight: 600, color: COLORS.charcoal }}>Good morning, Nala ‚òÄÔ∏è</div>
-        <div style={{ fontFamily: FONTS.arabic, fontSize: 16, color: COLORS.saffron }}>ÿµÿ®ÿßÿ≠ ÿßŸÑÿÆŸäÿ± Ÿäÿß ŸÜÿßŸÑÿß</div>
-        <div style={{ fontSize: 13, color: COLORS.textMuted, fontFamily: FONTS.body, marginTop: 4 }}>Here's what's happening in your store today.</div>
-      </div>
-      <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
-        <StatCard label="TODAY'S REVENUE" value="$520" sub="‚Üë 18% vs yesterday" dark />
-        <StatCard label="ORDERS" value="8" sub="3 need attention" />
-        <StatCard label="AVG ORDER VALUE" value="$65" sub="‚Üë $4 this week" />
-        <StatCard label="NEW CUSTOMERS" value="3" sub="2 from Instagram" />
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 16, marginBottom: 16 }}>
-        <SectionCard>
-          <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body, marginBottom: 14 }}>Revenue ‚Äî Last 7 Days</div>
-          <ResponsiveContainer width="100%" height={180}>
-            <AreaChart data={REVENUE_DATA}>
-              <defs>
-                <linearGradient id="rev" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={COLORS.saffron} stopOpacity={0.3} />
-                  <stop offset="95%" stopColor={COLORS.saffron} stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <XAxis dataKey="day" tick={{ fontSize: 10, fontFamily: FONTS.body, fill: COLORS.textMuted }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10, fontFamily: FONTS.body, fill: COLORS.textMuted }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} />
-              <Tooltip formatter={v => [`$${v}`, "Revenue"]} contentStyle={{ fontFamily: FONTS.body, fontSize: 11, borderRadius: 8, border: `0.5px solid ${COLORS.wheat}` }} />
-              <Area type="monotone" dataKey="revenue" stroke={COLORS.saffron} strokeWidth={2} fill="url(#rev)" />
-            </AreaChart>
-          </ResponsiveContainer>
-        </SectionCard>
-        <SectionCard>
-          <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body, marginBottom: 14 }}>Top Sellers</div>
-          {PRODUCTS_DATA.slice(0, 4).map((p, i) => (
-            <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-              <div style={{ width: 24, height: 24, borderRadius: 6, background: COLORS.saffron + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: COLORS.saffron }}>{i + 1}</div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 12, fontWeight: 500, color: COLORS.charcoal, fontFamily: FONTS.body }}>{p.name}</div>
-                <div style={{ fontSize: 10, color: COLORS.textMuted }}>{p.orders} orders ¬∑ ${p.revenue.toFixed(0)}</div>
-              </div>
-            </div>
-          ))}
-        </SectionCard>
-      </div>
-      <SectionCard>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body }}>Recent Orders</div>
-          <GhostBtn onClick={() => onNavigate("orders")}>View All</GhostBtn>
+      <div style={{ position: "sticky", top: -24, zIndex: 10, background: COLORS.cream, margin: "-24px -32px 0", padding: "24px 32px 14px", borderBottom: `0.5px solid ${COLORS.wheat}`, boxShadow: "0 4px 12px rgba(0,0,0,0.04)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal, marginRight: "auto" }}>Products</div>
+          <PrimaryBtn>+ New Product</PrimaryBtn>
         </div>
-        {ORDERS_DATA.slice(0, 4).map(o => (
-          <div key={o.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "10px 0", borderBottom: `0.5px solid ${COLORS.wheat}` }}>
+        <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search products‚Ä¶" style={{ flex: 1, minWidth: 180, padding: "7px 12px", border: `0.5px solid ${COLORS.wheat}`, borderRadius: 8, fontSize: 12, fontFamily: FONTS.body, outline: "none" }} />
+          {["all", "active", "out_of_stock", "draft"].map(s => (
+            <FilterPill key={s} label={s === "all" ? "All" : s === "out_of_stock" ? "Out of Stock" : s.charAt(0).toUpperCase() + s.slice(1)} active={statusFilter === s} onClick={() => setStatusFilter(s)} />
+          ))}
+        </div>
+      </div>
+      <div style={{ height: 14 }} />
+      <SectionCard>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: FONTS.body }}>
+          <thead>
+            <tr style={{ borderBottom: `0.5px solid ${COLORS.wheat}` }}>
+              {["SKU", "Product", "Price", "Cost", "Stock", "Orders", "Status", ""].map(h => (
+                <th key={h} style={{ textAlign: "left", fontSize: 10, fontWeight: 600, color: COLORS.textMuted, letterSpacing: 0.5, padding: "0 8px 10px" }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map(p => (
+              <tr key={p.id} onClick={() => setSelected(p)} style={{ borderBottom: `0.5px solid ${COLORS.wheat}`, cursor: "pointer" }}>
+                <td style={{ padding: "12px 8px", fontSize: 11, color: COLORS.textMuted }}>{p.sku}</td>
+                <td style={{ padding: "12px 8px" }}>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: COLORS.charcoal }}>{p.name}</div>
+             flex", alignItems: "center", gap: 14, padding: "10px 0", borderBottom: `0.5px solid ${COLORS.wheat}` }}>
             <div style={{ fontSize: 12, fontFamily: FONTS.body, fontWeight: 600, color: COLORS.damascene, width: 60 }}>{o.orderNumber}</div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 12, fontWeight: 500, color: COLORS.charcoal }}>{o.customer}</div>
@@ -923,7 +928,7 @@ function AnalyticsPage() {
           <div style={{ display: "flex", gap: 4 }}>
             {["Today", "7d", "30d", "90d", "Year"].map(r => (
               <FilterPill key={r} label={r} active={range === r} onClick={() => setRange(r)} />
-             ))}
+            ))}
           </div>
         </div>
       </div>
@@ -938,9 +943,230 @@ function AnalyticsPage() {
           <div style={{ marginTop: 10, height: 50 }}>
             <ResponsiveContainer width="100%" height={50}>
               <AreaChart data={ANALYTICS_TREND}>
-                <defs><linearGradient id="spark" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={CM1=ILπÕÖôô…ΩπÙÅÕ—Ω¡=¡Öç•—‰ıÏ¿∏’Ùº¯ÒÕ—Ω¿ÅΩôôÕï–Ùà‰‘îàÅÕ—Ω¡Ω±Ω»ıÌ=1=ILπÕÖôô…ΩπÙÅÕ—Ω¡=¡Öç•—‰ıÏ¡Ùº¯Ω±•πïÖ……Öë•ïπ–¯ΩëïôÃ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒ…ïÑÅ—Â¡îÙâµΩπΩ—ΩπîàÅëÖ—Ö-ï‰Ùâ…ïŸïπ’îàÅÕ—…Ω≠îıÌ=1=ILπÕÖôô…Ωπ1•ù°—ÙÅÕ—…Ω≠ï]•ë—†ıÏƒ∏’ÙÅô•±∞Ùâ’…∞†çÕ¡Ö…¨§àÅëΩ–ıÌôÖ±ÕïÙÄº¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩ…ïÖ°Ö…–¯(ÄÄÄÄÄÄÄÄÄÄÄÄΩIïÕ¡ΩπÕ•ŸïΩπ—Ö•πï»¯(ÄÄÄÄÄÄÄÄÄÄΩë•ÿ¯(ÄÄÄÄÄÄÄÄΩë•ÿ¯(ÄÄÄÄÄÄÄÄÒM—Ö—Ö…êÅ±Öâï∞Ùâ=IILàÅŸÖ±’îÙà‡ƒàÅÕ’àÙãäDÄƒ»ÅŸÃÅ¡…ïÿÅ¡ï…•ΩêàÄº¯(ÄÄÄÄÄÄÄÄÒM—Ö—Ö…êÅ±Öâï∞ÙâYÅ=IHÅY1UàÅŸÖ±’îÙàê‘‘∏‡¿àÅÕ’àÙãäDÄê–∏»¿Å—°•ÃÅ¡ï…•ΩêàÄº¯(ÄÄÄÄÄÄÄÄÒM—Ö—Ö…êÅ±Öâï∞Ùâ9\ÅUMQ=5ILàÅŸÖ±’îÙà»–àÅÕ’àÙãäDÄÿÅŸÃÅ¡…ïÿÅ¡ï…•ΩêàÄº¯(ÄÄÄÄÄÄΩë•ÿ¯((ÄÄÄÄÄÅÏº®ÅIïŸïπ’îÅQ…ïπêÄ®ΩÙ(ÄÄÄÄÄÄÒMïç—•ΩπÖ…êÅÕ—Â±îıÌÏÅµÖ…ù•π	Ω——Ω¥ËÄƒÿÅıÙ¯(ÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅôΩπ—M•ÈîËÄƒÃ∞ÅôΩπ—]ï•ù°–ËÄÿ¿¿∞ÅçΩ±Ω»ËÅ=1=ILπç°Ö…çΩÖ∞∞ÅôΩπ—Öµ•±‰ËÅ=9QLπâΩë‰∞ÅµÖ…ù•π	Ω——Ω¥ËÄƒ–ÅıÙ˘IïŸïπ’îÅQ…ïπêΩë•ÿ¯(ÄÄÄÄÄÄÄÄÒIïÕ¡ΩπÕ•ŸïΩπ—Ö•πï»Å›•ë—†Ùàƒ¿¿îàÅ°ï•ù°–ıÏ»¿¡Ù¯(ÄÄÄÄÄÄÄÄÄÄÒ…ïÖ°Ö…–ÅëÖ—ÑıÌ91eQ%M}QI9Ù¯(ÄÄÄÄÄÄÄÄÄÄÄÄÒëïôÃ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒ±•πïÖ……Öë•ïπ–Å•êÙâ…ïŸ…ÖêàÅ‡ƒÙà¿àÅ‰ƒÙà¿àÅ‡»Ùà¿àÅ‰»Ùàƒà¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒÕ—Ω¿ÅΩôôÕï–Ùà‘îàÅÕ—Ω¡Ω±Ω»ıÌ=1=ILπÕÖôô…ΩπÙÅÕ—Ω¡=¡Öç•—‰ıÏ¿∏Ã’Ùº¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒÕ—Ω¿ÅΩôôÕï–Ùà‰‘îàÅÕ—Ω¡Ω±Ω»ıÌ=1=ILπÕÖôô…ΩπÙÅÕ—Ω¡=¡Öç•—‰ıÏ¡Ùº¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩ±•πïÖ……Öë•ïπ–¯(ÄÄÄÄÄÄÄÄÄÄÄÄΩëïôÃ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÒa·•ÃÅëÖ—Ö-ï‰ÙâëÖ—îàÅ—•ç¨ıÌÏÅôΩπ—M•ÈîËÄƒ¿∞ÅôΩπ—Öµ•±‰ËÅ=9QLπâΩë‰∞Åô•±∞ËÅ=1=ILπ—ï·—5’—ïêÅıÙÅÖ·•Õ1•πîıÌôÖ±ÕïÙÅ—•ç≠1•πîıÌôÖ±ÕïÙÄº¯(ÄÄÄÄÄÄÄÄÄÄÄÄÒe·•ÃÅ—•ç¨ıÌÏÅôΩπ—M•ÈîËÄƒ¿∞ÅôΩπ—Öµ•±‰ËÅ=9QLπâΩë‰∞Åô•±∞ËÅ=1=ILπ—ï·—5’—ïêÅıÙÅÖ·•Õ1•πîıÌôÖ±ÕïÙÅ—•ç≠1•πîıÌôÖ±ÕïÙÅ—•ç≠Ω…µÖ——ï»ıÌÿÄÙ¯ÅÄêëÌŸıÅÙÄº¯(ÄÄÄÄÄÄÄÄÄÄÄÄÒQΩΩ±—•¿ÅôΩ…µÖ——ï»ıÌÿÄÙ¯ÅmÄêëÌŸıÄ∞ÄâIïŸïπ’îâuÙÅçΩπ—ïπ—M—Â±îıÌÏÅôΩπ—Öµ•±‰ËÅ=9QLπâΩë‰∞ÅôΩπ—M•ÈîËÄƒƒ∞ÅâΩ…ëï…IÖë•’ÃËÄ‡∞ÅâΩ…ëï»ËÅÄ¿∏’¡‡ÅÕΩ±•êÄëÌ=1=ILπ›°ïÖ—ıÄÅıÙÄº¯(ÄÄÄÄÄÄÄÄÄÄÄÄÒ…ïÑÅ—Â¡îÙâµΩπΩ—ΩπîàÅëÖ—Ö-ï‰Ùâ…ïŸïπ’îàÅÕ—…Ω≠îıÌ=1=ILπÕÖôô…ΩπÙÅÕ—…Ω≠ï]•ë—†ıÏ»∏’ÙÅô•±∞Ùâ’…∞†ç…ïŸ…Öê§àÄº¯(ÄÄÄÄÄÄÄÄÄÄΩ…ïÖ°Ö…–¯(ÄÄÄÄÄÄÄÄΩIïÕ¡ΩπÕ•ŸïΩπ—Ö•πï»¯(ÄÄÄÄÄÄΩMïç—•ΩπÖ…ê¯((ÄÄÄÄÄÅÏº®ÄÃµçΩ±’µ∏Å…Ω‹Ä®ΩÙ(ÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅë•Õ¡±Ö‰ËÄâù…•êà∞Åù…•ëQïµ¡±Ö—ïΩ±’µπÃËÄà≈ô»Ä≈ô»Ä≈ô»à∞ÅùÖ¿ËÄƒ–∞ÅµÖ…ù•π	Ω——Ω¥ËÄƒÿÅıÙ¯(ÄÄÄÄÄÄÄÅÏº®Å!ï…•—ÖùîÅëΩπ’–Ä®ΩÙ(ÄÄÄÄÄÄÄÄÒMïç—•ΩπÖ…êÅÕ—Â±îıÌÏÅµÖ…ù•π	Ω——Ω¥ËÄ¿ÅıÙ¯(ÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅôΩπ—M•ÈîËÄƒ»∞ÅôΩπ—]ï•ù°–ËÄÿ¿¿∞ÅçΩ±Ω»ËÅ=1=ILπç°Ö…çΩÖ∞∞ÅôΩπ—Öµ•±‰ËÅ=9QLπâΩë‰∞ÅµÖ…ù•π	Ω——Ω¥ËÄƒ»ÅıÙ˘MÖ±ïÃÅâ‰Å!ï…•—ÖùîΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄÒIïÕ¡ΩπÕ•ŸïΩπ—Ö•πï»Å›•ë—†Ùàƒ¿¿îàÅ°ï•ù°–ıÏƒ–¡Ù¯(ÄÄÄÄÄÄÄÄÄÄÄÄÒA•ï°Ö…–¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒA•îÅëÖ—ÑıÌ!I%Q}QÙÅç‡Ùà‘¿îàÅç‰Ùà‘¿îàÅ•ππï…IÖë•’ÃıÏ–¡ÙÅΩ’—ï…IÖë•’ÃıÏÿ¡ÙÅëÖ—Ö-ï‰ÙâŸÖ±’îà¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÌ!I%Q}QπµÖ¿†°ïπ—…‰∞Å§§ÄÙ¯ÄÒï±∞Å≠ï‰ıÌ•ÙÅô•±∞ıÌïπ—…‰πçΩ±Ω…ÙÄº¯•Ù(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩA•î¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒQΩΩ±—•¿ÅôΩ…µÖ——ï»ıÏ°ÿ∞Å∏§ÄÙ¯ÅmÄëÌŸÙïÄ∞ÅπuÙÅçΩπ—ïπ—M—Â±îıÌÏÅôΩπ—Öµ•±‰ËÅ=9QLπâΩë‰∞ÅôΩπ—M•ÈîËÄƒƒ∞ÅâΩ…ëï…IÖë•’ÃËÄ‡ÅıÙÄº¯(ÄÄÄÄÄÄÄÄÄÄÄÄΩA•ï°Ö…–¯(ÄÄÄÄÄÄÄÄÄÄΩIïÕ¡ΩπÕ•ŸïΩπ—Ö•πï»¯(ÄÄÄÄÄÄÄÄÄÅÌ!I%Q}QπµÖ¿°†ÄÙ¯Ä†(ÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅ≠ï‰ıÌ†ππÖµïÙÅÕ—Â±îıÌÏÅë•Õ¡±Ö‰ËÄâô±ï‡à∞Å©’Õ—•ôÂΩπ—ïπ–ËÄâÕ¡Öçîµâï—›ïï∏à∞ÅôΩπ—M•ÈîËÄƒƒ∞ÅôΩπ—Öµ•±‰ËÅ=9QLπâΩë‰∞ÅµÖ…ù•πQΩ¿ËÄ–ÅıÙ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒÕ¡Ö∏ÅÕ—Â±îıÌÏÅë•Õ¡±Ö‰ËÄâô±ï‡à∞ÅÖ±•ùπ%—ïµÃËÄâçïπ—ï»à∞ÅùÖ¿ËÄÿÅıÙ¯ÒÕ¡Ö∏ÅÕ—Â±îıÌÏÅ›•ë—†ËÄ‡∞Å°ï•ù°–ËÄ‡∞ÅâΩ…ëï…IÖë•’ÃËÄà‘¿îà∞ÅâÖç≠ù…Ω’πêËÅ†πçΩ±Ω»∞Åë•Õ¡±Ö‰ËÄâ•π±•πîµâ±Ωç¨àÅıÙº˘Ì†ππÖµïÙΩÕ¡Ö∏¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒÕ¡Ö∏ÅÕ—Â±îıÌÏÅôΩπ—]ï•ù°–ËÄÿ¿¿∞ÅçΩ±Ω»ËÅ=1=ILπç°Ö…çΩÖ∞ÅıÙ˘Ì†πŸÖ±’ïÙîΩÕ¡Ö∏¯(ÄÄÄÄÄÄÄÄÄÄÄÄΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄ§•Ù(ÄÄÄÄÄÄÄÄΩMïç—•ΩπÖ…ê¯((ÄÄÄÄÄÄÄÅÏº®ÅQΩ¿ÅçΩ’π—…•ïÃÄ®ΩÙ(ÄÄÄÄÄÄÄÄÒMïç—•ΩπÖ…êÅÕ—Â±îıÌÏÅµÖ…ù•π	Ω——Ω¥ËÄ¿ÅıÙ¯(ÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅôΩπ—M•ÈîËÄƒ»∞ÅôΩπ—]ï•ù°–ËÄÿ¿¿∞ÅçΩ±Ω»ËÅ=1=ILπç°Ö…çΩÖ∞∞ÅôΩπ—Öµ•±‰ËÅ=9QLπâΩë‰∞ÅµÖ…ù•π	Ω——Ω¥ËÄƒ»ÅıÙ˘QΩ¿ÅΩ’π—…•ïÃΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÅÌ=U9QIe}QπµÖ¿°åÄÙ¯Ä†(ÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅ≠ï‰ıÌåπçΩ’π—…ÂÙÅÕ—Â±îıÌÏÅµÖ…ù•π	Ω——Ω¥ËÄƒ¿ÅıÙ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅë•Õ¡±Ö‰ËÄâô±ï‡à∞Å©’Õ—•ôÂΩπ—ïπ–ËÄâÕ¡Öçîµâï—›ïï∏à∞ÅôΩπ—M•ÈîËÄƒƒ∞ÅôΩπ—Öµ•±‰ËÅ=9QLπâΩë‰∞ÅµÖ…ù•π	Ω——Ω¥ËÄÃÅıÙ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒÕ¡Ö∏˘ÌåπçΩ’π—…ÂÙΩÕ¡Ö∏¯ÒÕ¡Ö∏ÅÕ—Â±îıÌÏÅôΩπ—]ï•ù°–ËÄÿ¿¿∞ÅçΩ±Ω»ËÅ=1=ILπç°Ö…çΩÖ∞ÅıÙ˘ÌåπΩ…ëï…ÕÙÅΩ…ëï…ÃΩÕ¡Ö∏¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅ°ï•ù°–ËÄ–∞ÅâÖç≠ù…Ω’πêËÅ=1=ILπç…ïÖ¥»∞ÅâΩ…ëï…IÖë•’ÃËÄ–ÅıÙ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅ°ï•ù°–ËÄ–∞Å›•ë—†ËÅÄëÌåπ¡ç—ÙïÄ∞ÅâÖç≠ù…Ω’πêËÅ=1=ILπÕÖôô…Ω∏∞ÅâΩ…ëï…IÖë•’ÃËÄ–ÅıÙÄº¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄÄÄΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄ§•Ù(ÄÄÄÄÄÄÄÄΩMïç—•ΩπÖ…ê¯((ÄÄÄÄÄÄÄÅÏº®ÅQ…Öôô•åÅÕΩ’…çïÃÄ®ΩÙ(ÄÄÄÄÄÄÄÄÒMïç—•ΩπÖ…êÅÕ—Â±îıÌÏÅµÖ…ù•π	Ω——Ω¥ËÄ¿ÅıÙ¯(ÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅôΩπ—M•ÈîËÄƒ»∞ÅôΩπ—]ï•ù°–ËÄÿ¿¿∞ÅçΩ±Ω»ËÅ=1=ILπç°Ö…çΩÖ∞∞ÅôΩπ—Öµ•±‰ËÅ=9QLπâΩë‰∞ÅµÖ…ù•π	Ω——Ω¥ËÄƒ»ÅıÙ˘Q…Öôô•åÅMΩ’…çïÃΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÅÌQI%}QπµÖ¿°–ÄÙ¯Ä†(ÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅ≠ï‰ıÌ–πÕΩ’…çïÙÅÕ—Â±îıÌÏÅë•Õ¡±Ö‰ËÄâô±ï‡à∞Å©’Õ—•ôÂΩπ—ïπ–ËÄâÕ¡Öçîµâï—›ïï∏à∞ÅÖ±•ùπ%—ïµÃËÄâçïπ—ï»à∞Å¡Öëë•πúËÄàŸ¡‡Ä¿à∞ÅâΩ…ëï…	Ω——Ω¥ËÅÄ¿∏’¡‡ÅÕΩ±•êÄëÌ=1=ILπ›°ïÖ—ıÄ∞ÅôΩπ—M•ÈîËÄƒƒ∞ÅôΩπ—Öµ•±‰ËÅ=9QLπâΩë‰ÅıÙ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒÕ¡Ö∏˘Ì–πÕΩ’…çïÙΩÕ¡Ö∏¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅ—ï·—±•ù∏ËÄâ…•ù°–àÅıÙ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅôΩπ—]ï•ù°–ËÄÿ¿¿∞ÅçΩ±Ω»ËÅ=1=ILπç°Ö…çΩÖ∞ÅıÙ˘Ì–πŸ•Õ•—Ãπ—Ω1ΩçÖ±ïM—…•πú†•ÙΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅôΩπ—M•ÈîËÄ‰∞ÅçΩ±Ω»ËÅ=1=ILπ—ï·—5’—ïêÅıÙ˘Ì–π¡ç—ÙîΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄÄÄΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄ§•Ù(ÄÄÄÄÄÄÄÄΩMïç—•ΩπÖ…ê¯(ÄÄÄÄÄÄΩë•ÿ¯((ÄÄÄÄÄÅÏº®Å	ïÕ–ÅÕï±±ï…ÃÄ¨ÅMµÖ…–ÅÖ±ï…—ÃÄ®ΩÙ(ÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅë•Õ¡±Ö‰ËÄâù…•êà∞Åù…•ëQïµ¡±Ö—ïΩ±’µπÃËÄà≈ô»Ä≈ô»à∞ÅùÖ¿ËÄƒ–ÅıÙ¯(ÄÄÄÄÄÄÄÄÒMïç—•ΩπÖ…êÅÕ—Â±îıÌÏÅµÖ…ù•π	Ω——Ω¥ËÄ¿ÅıÙ¯(ÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅôΩπ—M•ÈîËÄƒ»∞ÅôΩπ—]ï•ù°–ËÄÿ¿¿∞ÅçΩ±Ω»ËÅ=1=ILπç°Ö…çΩÖ∞∞ÅôΩπ—Öµ•±‰ËÅ=9QLπâΩë‰∞ÅµÖ…ù•π	Ω——Ω¥ËÄƒ»ÅıÙ˘	ïÕ–ÅMï±±ï…ÃΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÅÌAI=UQM}QπµÖ¿†°¿∞Å§§ÄÙ¯Ä†(ÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅ≠ï‰ıÌ¿π•ëÙÅÕ—Â±îıÌÏÅë•Õ¡±Ö‰ËÄâô±ï‡à∞ÅÖ±•ùπ%—ïµÃËÄâçïπ—ï»à∞ÅùÖ¿ËÄƒ¿∞Å¡Öëë•πúËÄà·¡‡Ä¿à∞ÅâΩ…ëï…	Ω——Ω¥ËÅÄ¿∏’¡‡ÅÕΩ±•êÄëÌ=1=ILπ›°ïÖ—ıÄÅıÙ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅ›•ë—†ËÄ»»∞Å°ï•ù°–ËÄ»»∞ÅâΩ…ëï…IÖë•’ÃËÄÿ∞ÅâÖç≠ù…Ω’πêËÅ=1=ILπÕÖôô…Ω∏Ä¨Äà»»à∞Åë•Õ¡±Ö‰ËÄâô±ï‡à∞ÅÖ±•ùπ%—ïµÃËÄâçïπ—ï»à∞Å©’Õ—•ôÂΩπ—ïπ–ËÄâçïπ—ï»à∞ÅôΩπ—M•ÈîËÄƒ¿∞ÅôΩπ—]ï•ù°–ËÄ‹¿¿∞ÅçΩ±Ω»ËÅ=1=ILπÕÖôô…Ω∏ÅıÙ˘Ì§Ä¨Ä≈ÙΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅô±ï‡ËÄƒÅıÙ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅôΩπ—M•ÈîËÄƒ»∞ÅôΩπ—]ï•ù°–ËÄ‘¿¿∞ÅçΩ±Ω»ËÅ=1=ILπç°Ö…çΩÖ∞∞ÅôΩπ—Öµ•±‰ËÅ=9QLπâΩë‰ÅıÙ˘Ì¿ππÖµïÙΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅôΩπ—M•ÈîËÄƒ¿∞ÅçΩ±Ω»ËÅ=1=ILπ—ï·—5’—ïêÅıÙ˘Ì¿πΩ…ëï…ÕÙÅΩ…ëï…ÃΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅôΩπ—M•ÈîËÄƒÃ∞ÅôΩπ—]ï•ù°–ËÄ‹¿¿∞ÅçΩ±Ω»ËÅ=1=ILπç°Ö…çΩÖ∞ÅıÙ¯ëÌ¿π…ïŸïπ’îπ—Ω•·ïê†¿•ÙΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄÄÄΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄ§•Ù(ÄÄÄÄÄÄÄÄΩMïç—•ΩπÖ…ê¯(ÄÄÄÄÄÄÄÄÒMïç—•ΩπÖ…êÅÕ—Â±îıÌÏÅµÖ…ù•π	Ω——Ω¥ËÄ¿ÅıÙ¯(ÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅôΩπ—M•ÈîËÄƒ»∞ÅôΩπ—]ï•ù°–ËÄÿ¿¿∞ÅçΩ±Ω»ËÅ=1=ILπç°Ö…çΩÖ∞∞ÅôΩπ—Öµ•±‰ËÅ=9QLπâΩë‰∞ÅµÖ…ù•π	Ω——Ω¥ËÄƒ»ÅıÙ˘MµÖ…–Å±ï…—ÃΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÅÌl(ÄÄÄÄÄÄÄÄÄÄÄÅÏÅ—Â¡îËÄâ›Ö…∏à∞ÅµÕúËÄâ1ïâÖπïÕîÅïëÖ»ÅM—ÖπêÅ°ÖÃÅâïï∏ÅΩ’–ÅΩòÅÕ—Ωç¨ÅôΩ»Ä‹ÅëÖÂÃÉäPÅ…ïÕ—Ωç¨ÅÕΩΩ∏àÅÙ∞(ÄÄÄÄÄÄÄÄÄÄÄÅÏÅ—Â¡îËÄâùΩΩêà∞ÅµÕúËÄâIïŸïπ’îÅ’¿Ä»ÃîÅ—°•ÃÅ›ïï¨ÉäPÅÂΩ’»ÅâïÕ–Ä‹µëÖ‰ÅÕ—…ïÖ¨Å—°•ÃÅµΩπ—†ÑàÅÙ∞(ÄÄÄÄÄÄÄÄÄÄÄÅÏÅ—Â¡îËÄâ•πôºà∞ÅµÕúËÄà‘Åç’Õ—Ω¥ÅΩ…ëï»Å…ï≈’ïÕ—ÃÅ›Ö•—•πúÉäPÅΩ±ëïÕ–Å•ÃÄÃÅëÖÂÃÅΩ±êàÅÙ∞(ÄÄÄÄÄÄÄÄÄÄÄÅÏÅ—Â¡îËÄâ›Ö…∏à∞ÅµÕúËÄâ-’ô•åÅÖ±±•ù…Ö¡°‰Å…ÖµîÅ±Ω‹ÅÕ—Ωç¨Ä†‹Å’π•—Ã§ÉäPÅçΩπÕ•ëï»Å…ïÕ—Ωç≠•πúàÅÙ∞(ÄÄÄÄÄÄÄÄÄÅtπµÖ¿†°Ñ∞Å§§ÄÙ¯ÅÏ(ÄÄÄÄÄÄÄÄÄÄÄÅçΩπÕ–ÅåÄÙÅÑπ—Â¡îÄÙÙÙÄâ›Ö…∏àÄ¸Å=1=ILπ—ï……ÖçΩ——ÑÄËÅÑπ—Â¡îÄÙÙÙÄâùΩΩêàÄ¸Å=1=ILπΩ±•ŸîÄËÅ=1=ILπëÖµÖÕçïπîÏ(ÄÄÄÄÄÄÄÄÄÄÄÅ…ï—’…∏Ä†(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅ≠ï‰ıÌ•ÙÅÕ—Â±îıÌÏÅ¡Öëë•πúËÄàƒ¡¡‡Äƒ…¡‡à∞ÅâΩ…ëï…IÖë•’ÃËÄ‡∞ÅâÖç≠ù…Ω’πêËÅåÄ¨Äàƒ–à∞ÅâΩ…ëï…1ïô–ËÅÄÕ¡‡ÅÕΩ±•êÄëÌçıÄ∞ÅµÖ…ù•π	Ω——Ω¥ËÄ‡ÅıÙ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅôΩπ—M•ÈîËÄƒ»∞ÅçΩ±Ω»ËÅ=1=ILπç°Ö…çΩÖ∞∞ÅôΩπ—Öµ•±‰ËÅ=9QLπâΩë‰ÅıÙ˘ÌÑπµÕùÙΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄÄÄ§Ï(ÄÄÄÄÄÄÄÄÄÅÙ•Ù(ÄÄÄÄÄÄÄÄΩMïç—•ΩπÖ…ê¯(ÄÄÄÄÄÄΩë•ÿ¯(ÄÄÄÄΩë•ÿ¯(ÄÄ§Ï)Ù((ººÉäRäRäR Å%M=U9QLÅAÉäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäRäR )ô’πç—•Ω∏Å•ÕçΩ’π—ÕAÖùî†§ÅÏ(ÄÅçΩπÕ–Åm—Öà∞ÅÕï—QÖâtÄÙÅ’ÕïM—Ö—î†âçΩëïÃà§Ï(ÄÅçΩπÕ–ÅmÕ—Ö—’Õ•±—ï»∞ÅÕï—M—Ö—’Õ•±—ï…tÄÙÅ’ÕïM—Ö—î†âÖ±∞à§Ï(ÄÅçΩπÕ–ÅmÕ°Ω›…ïÖ—î∞ÅÕï—M°Ω›…ïÖ—ïtÄÙÅ’ÕïM—Ö—î°ôÖ±Õî§Ï(ÄÅçΩπÕ–ÅmÕ°Ω›Qïµ¡±Ö—ïÃ∞ÅÕï—M°Ω›Qïµ¡±Ö—ïÕtÄÙÅ’ÕïM—Ö—î°ôÖ±Õî§Ï(ÄÅçΩπÕ–Åmπï›Ωëî∞ÅÕï—9ï›ΩëïtÄÙÅ’ÕïM—Ö—î°ÏÅçΩëîËÄàà∞ÅπÖµîËÄàà∞Å—Â¡îËÄâ¡ï…çïπ–à∞ÅŸÖ±’îËÄàà∞Åµ•π=…ëï»ËÄàà∞Å±•µ•–ËÄààÅÙ§Ï((ÄÅçΩπÕ–Åô•±—ï…ïêÄÙÅ%M=U9QM}Qπô•±—ï»°êÄÙ¯ÅÕ—Ö—’Õ•±—ï»ÄÙÙÙÄâÖ±∞àÅÒÅêπÕ—Ö—’ÃÄÙÙÙÅÕ—Ö—’Õ•±—ï»§Ï(ÄÅçΩπÕ–Å—Ω—Ö±UÕïêÄÙÅ%M=U9QM}Qπ…ïë’çî†°Ã∞Åê§ÄÙ¯ÅÃÄ¨Åêπ’ÕÖùïΩ’π–∞Ä¿§Ï(ÄÅçΩπÕ–Å—Ω—Ö±IïŸïπ’îÄÙÅ%M=U9QM}Qπ…ïë’çî†°Ã∞Åê§ÄÙ¯ÅÃÄ¨Åêπ…ïŸïπ’î∞Ä¿§Ï(ÄÅçΩπÕ–Å—Ω¡ΩëîÄÙÅ%M=U9QM}Qπ…ïë’çî†°Ñ∞Åà§ÄÙ¯ÅÑπ…ïŸïπ’îÄ¯Åàπ…ïŸïπ’îÄ¸ÅÑÄËÅà§Ï((ÄÅçΩπÕ–ÅQ5A1QLÄÙÅl(ÄÄÄÅÏÅù…Ω’¿ËÄâ•ÖÕ¡Ω…ÑÅÖ±ïπëÖ»à∞Å•—ïµÃËÅmÏÅçΩëîËÄâI58»¿à∞Å±Öâï∞ËÄâIÖµÖëÖ∏Å-Ö…ïï¥Ä»¿îàÅÙ∞ÅÏÅçΩëîËÄâ%ƒ‘à∞Å±Öâï∞ËÄâ•êÅ5’âÖ…Ö¨Äƒ‘îàÅÙ∞ÅÏÅçΩëîËÄâ9-	‹–à∞Å±Öâï∞ËÄâ9Ö≠âÑÅÖ‰ÅMΩ±•ëÖ…•—‰àÅıtÅÙ∞(ÄÄÄÅÏÅù…Ω’¿ËÄâUπ•Ÿï…ÕÖ∞à∞Å•—ïµÃËÅmÏÅçΩëîËÄâ]1=5ƒ¿à∞Å±Öâï∞ËÄâ9ï‹Å’Õ—Ωµï»Äƒ¿îàÅÙ∞ÅÏÅçΩëîËÄâ]%9	,»¿à∞Å±Öâï∞ËÄâ]•∏µ	Öç¨Ä»¿îàÅÙ∞ÅÏÅçΩëîËÄâY%@»‘à∞Å±Öâï∞ËÄâY%@Å1ΩÂÖ±—‰Ä»‘îàÅıtÅÙ∞(ÄÄÄÅÏÅù…Ω’¿ËÄâMïÖÕΩπÖ∞à∞Å•—ïµÃËÅmÏÅçΩëîËÄâ]%9ƒ‘à∞Å±Öâï∞ËÄâ]ïëë•πúÅMïÖÕΩ∏Äƒ‘îàÅÙ∞ÅÏÅçΩëîËÄâIƒ¿à∞Å±Öâï∞ËÄâ…Öë’Ö—•Ω∏Äƒ¿îàÅıtÅÙ∞(ÄÄÄÅÏÅù…Ω’¿ËÄâMÖ±ïÃà∞Å•—ïµÃËÅmÏÅçΩëîËÄâ	4Ã¿à∞Å±Öâï∞ËÄâ	±Öç¨Å…•ëÖ‰ÄÃ¿îàÅÙ∞ÅÏÅçΩëîËÄâ!=1%dƒ‘à∞Å±Öâï∞ËÄâ!Ω±•ëÖ‰Äƒ‘îàÅıtÅÙ∞(ÄÅtÏ((ÄÅ…ï—’…∏Ä†(ÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅÖπ•µÖ—•Ω∏ËÄâôÖëï%∏Ä¿∏ÕÃÅïÖÕîàÅıÙ¯(ÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅ¡ΩÕ•—•Ω∏ËÄâÕ—•ç≠‰à∞Å—Ω¿ËÄ¥»–∞ÅÈ%πëï‡ËÄƒ¿∞ÅâÖç≠ù…Ω’πêËÅ=1=ILπç…ïÖ¥∞ÅµÖ…ù•∏ËÄà¥»—¡‡Ä¥Ã…¡‡Ä¿à∞Å¡Öëë•πúËÄà»—¡‡ÄÃ…¡‡Äƒ—¡‡à∞ÅâΩ…ëï…	Ω——Ω¥ËÅÄ¿∏’¡‡ÅÕΩ±•êÄëÌ=1=ILπ›°ïÖ—ıÄ∞ÅâΩ·M°ÖëΩ‹ËÄà¿Ä—¡‡Äƒ…¡‡Å…ùâÑ†¿∞¿∞¿∞¿∏¿–§àÅıÙ¯(ÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅë•Õ¡±Ö‰ËÄâô±ï‡à∞ÅÖ±•ùπ%—ïµÃËÄâçïπ—ï»à∞ÅùÖ¿ËÄƒ¿∞ÅµÖ…ù•π	Ω——Ω¥ËÄƒ»ÅıÙ¯(ÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅôΩπ—Öµ•±‰ËÅ=9QLπë•Õ¡±Ö‰∞ÅôΩπ—M•ÈîËÄ»»∞ÅôΩπ—]ï•ù°–ËÄÿ¿¿∞ÅçΩ±Ω»ËÅ=1=ILπç°Ö…çΩÖ∞∞Åô±ï‡ËÄƒÅıÙ˘•ÕçΩ’π—ÃΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄÒ°ΩÕ—	—∏ÅΩπ±•ç¨ıÏ†§ÄÙ¯ÅÕï—M°Ω›Qïµ¡±Ö—ïÃ°—…’î•Ù˚¬~N,ÅQïµ¡±Ö—ïÃΩ°ΩÕ—	—∏¯(ÄÄÄÄÄÄÄÄÄÄÒA…•µÖ…Â	—∏ÅΩπ±•ç¨ıÏ†§ÄÙ¯ÅÕï—M°Ω›…ïÖ—î°—…’î•Ù¯¨Å…ïÖ—îÅΩëîΩA…•µÖ…Â	—∏¯(ÄÄÄÄÄÄÄÄΩë•ÿ¯(ÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅë•Õ¡±Ö‰ËÄâô±ï‡à∞ÅùÖ¿ËÄÿ∞Åô±ï·]…Ö¿ËÄâ›…Ö¿àÅıÙ¯(ÄÄÄÄÄÄÄÄÄÅÌmlâçΩëïÃà∞Äã¬~:|ÅA…ΩµºÅΩëïÃât∞ÅlâÕÖ±ïÃà∞Äã¬~RîÅ’—ºÅMÖ±ïÃât∞Ålââ’πë±ïÃà∞Äã¬~NòÅ	’πë±ïÃâutπµÖ¿†°mÿ∞Å±t§ÄÙ¯Ä†(ÄÄÄÄÄÄÄÄÄÄÄÄÒ•±—ï…A•±∞Å≠ï‰ıÌŸÙÅ±Öâï∞ıÌ±ÙÅÖç—•ŸîıÌ—ÖàÄÙÙÙÅŸÙÅΩπ±•ç¨ıÏ†§ÄÙ¯ÅÕï—QÖà°ÿ•ÙÄº¯(ÄÄÄÄÄÄÄÄÄÄ§•Ù(ÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅô±ï‡ËÄƒÅıÙÄº¯(ÄÄÄÄÄÄÄÄÄÅÌlâÖ±∞à∞ÄâÖç—•Ÿîà∞ÄâÕç°ïë’±ïêà∞Äâ¡Ö’Õïêà∞Äâï·¡•…ïêâtπµÖ¿°ÃÄÙ¯Ä†(ÄÄÄÄÄÄÄÄÄÄÄÄÒ•±—ï…A•±∞Å≠ï‰ıÌÕÙÅ±Öâï∞ıÌÃπç°Ö…–†¿§π—ΩU¡¡ï…ÖÕî†§Ä¨ÅÃπÕ±•çî†ƒ•ÙÅÖç—•ŸîıÌÕ—Ö—’Õ•±—ï»ÄÙÙÙÅÕÙÅΩπ±•ç¨ıÏ†§ÄÙ¯ÅÕï—M—Ö—’Õ•±—ï»°Ã•ÙÄº¯(ÄÄÄÄÄÄÄÄÄÄ§•Ù(ÄÄÄÄÄÄÄÄΩë•ÿ¯(ÄÄÄÄÄÄΩë•ÿ¯(ÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅ°ï•ù°–ËÄƒ–ÅıÙÄº¯((ÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅë•Õ¡±Ö‰ËÄâô±ï‡à∞ÅùÖ¿ËÄƒ»∞ÅµÖ…ù•π	Ω——Ω¥ËÄƒÿ∞Åô±ï·]…Ö¿ËÄâ›…Ö¿àÅıÙ¯(ÄÄÄÄÄÄÄÄÒM—Ö—Ö…êÅ±Öâï∞Ùâ=LÅUMàÅŸÖ±’îıÌ—Ω—Ö±UÕïëÙÅÕ’àÙâÖ±∞Å—•µîàÄº¯(ÄÄÄÄÄÄÄÄÒM—Ö—Ö…êÅ±Öâï∞ÙâQ=@Å=àÅŸÖ±’îıÌ—Ω¡ΩëîπçΩëïÙÅÕ’àıÌÄêëÌ—Ω¡Ωëîπ…ïŸïπ’îπ—Ω•·ïê†¿•ÙÅ…ïŸïπ’ïÅÙÅëÖ…¨Äº¯(ÄÄÄÄÄÄÄÄÒM—Ö—Ö…êÅ±Öâï∞Ùâ%M=U9QÅIY9UàÅŸÖ±’îıÌÄêëÌ—Ω—Ö±IïŸïπ’îπ—Ω1ΩçÖ±ïM—…•πú†•ıÅÙÄº¯(ÄÄÄÄÄÄÄÄÒM—Ö—Ö…êÅ±Öâï∞ÙâQ%YÅ5A%9LàÅŸÖ±’îıÌ%M=U9QM}Qπô•±—ï»°êÄÙ¯ÅêπÕ—Ö—’ÃÄÙÙÙÄâÖç—•Ÿîà§π±ïπù—°ÙÄº¯(ÄÄÄÄÄÄΩë•ÿ¯((ÄÄÄÄÄÅÏº®Å1•ŸîÅçÖµ¡Ö•ùπÃÅâÖππï»Ä®ΩÙ(ÄÄÄÄÄÅÌ%M=U9QM}Qπô•±—ï»°êÄÙ¯ÅêπÕ—Ö—’ÃÄÙÙÙÄâÖç—•Ÿîà§π±ïπù—†Ä¯Ä¿ÄòòÄ†(ÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅë•Õ¡±Ö‰ËÄâô±ï‡à∞ÅùÖ¿ËÄƒ»∞ÅµÖ…ù•π	Ω——Ω¥ËÄƒÿ∞Åô±ï·]…Ö¿ËÄâ›…Ö¿àÅıÙ¯(ÄÄÄÄÄÄÄÄÄÅÌ%M=U9QM}Qπô•±—ï»°êÄÙ¯ÅêπÕ—Ö—’ÃÄÙÙÙÄâÖç—•Ÿîà§πÕ±•çî†¿∞Ä»§πµÖ¿°êÄÙ¯Ä†(ÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅ≠ï‰ıÌêπ•ëÙÅÕ—Â±îıÌÏÅô±ï‡ËÄƒ∞ÅâÖç≠ù…Ω’πêËÅ=1=ILπç°Ö…çΩÖ∞∞ÅâΩ…ëï…IÖë•’ÃËÄƒ¿∞Å¡Öëë•πúËÄàƒ—¡‡Äƒ·¡‡à∞Åë•Õ¡±Ö‰ËÄâô±ï‡à∞Å©’Õ—•ôÂΩπ—ïπ–ËÄâÕ¡Öçîµâï—›ïï∏à∞ÅÖ±•ùπ%—ïµÃËÄâçïπ—ï»àÅıÙ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅôΩπ—M•ÈîËÄ‰∞ÅçΩ±Ω»ËÅ=1=ILπÕÖôô…Ωπ1•ù°–∞Å±ï——ï…M¡Öç•πúËÄƒ∞ÅµÖ…ù•π	Ω——Ω¥ËÄ–∞ÅôΩπ—Öµ•±‰ËÅ=9QLπâΩë‰ÅıÙ˘Q%YÅ5A%8Ωë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅôΩπ—M•ÈîËÄƒ‡∞ÅôΩπ—Öµ•±‰ËÄâµΩπΩÕ¡Öçîà∞ÅôΩπ—]ï•ù°–ËÄ‹¿¿∞ÅçΩ±Ω»ËÅ=1=ILπÕÖôô…Ω∏ÅıÙ˘ÌêπçΩëïÙΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅôΩπ—M•ÈîËÄƒƒ∞ÅçΩ±Ω»ËÅ=1=ILπ›°ïÖ–∞ÅµÖ…ù•πQΩ¿ËÄ»∞ÅôΩπ—Öµ•±‰ËÅ=9QLπâΩë‰ÅıÙ˘ÌêππÖµïÙΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅ—ï·—±•ù∏ËÄâ…•ù°–àÅıÙ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅôΩπ—M•ÈîËÄ»–∞ÅôΩπ—]ï•ù°–ËÄ‹¿¿∞ÅçΩ±Ω»ËÄàçà∞ÅôΩπ—Öµ•±‰ËÅ=9QLπâΩë‰ÅıÙ˘Ìêπ—Â¡îÄÙÙÙÄâ¡ï…çïπ–àÄ¸ÅÄëÌêπŸÖ±’ïÙïÄÄËÅêπ—Â¡îÄÙÙÙÄâô…ïï}Õ°•¡¡•πúàÄ¸Äâ…ïîÅM°•¿àÄËÅÄêëÌêπŸÖ±’ïıÅÙΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅôΩπ—M•ÈîËÄƒ¿∞ÅçΩ±Ω»ËÅ=1=ILπ—ï·—5’—ïê∞ÅôΩπ—Öµ•±‰ËÅ=9QLπâΩë‰ÅıÙ˘Ìêπ’ÕÖùïΩ’π—ÙÅ’ÕïÃÉ
-‹ÄëÌêπ…ïŸïπ’ïÙÅ…ïÿΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄÄÄΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄ§•Ù(ÄÄÄÄÄÄÄÄΩë•ÿ¯(ÄÄÄÄÄÄ•Ù((ÄÄÄÄÄÅÌ—ÖàÄÙÙÙÄâçΩëïÃàÄòòÄ†(ÄÄÄÄÄÄÄÄÒMïç—•ΩπÖ…ê¯(ÄÄÄÄÄÄÄÄÄÄÒ—Öâ±îÅÕ—Â±îıÌÏÅ›•ë—†ËÄàƒ¿¿îà∞ÅâΩ…ëï…Ω±±Ö¡ÕîËÄâçΩ±±Ö¡Õîà∞ÅôΩπ—Öµ•±‰ËÅ=9QLπâΩë‰ÅıÙ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÒ—°ïÖê¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒ—»ÅÕ—Â±îıÌÏÅâΩ…ëï…	Ω——Ω¥ËÅÄ¿∏’¡‡ÅÕΩ±•êÄëÌ=1=ILπ›°ïÖ—ıÄÅıÙ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÌlâΩëîà∞Äâ•ÕçΩ’π–à∞ÄâΩπë•—•ΩπÃà∞ÄâM—Ö—’Ãà∞ÄâUÕÖùîà∞ÄâIïŸïπ’îà∞ÄâAï…•Ωêà∞ÄàâtπµÖ¿°†ÄÙ¯Ä†(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒ—†Å≠ï‰ıÌ°ÙÅÕ—Â±îıÌÏÅ—ï·—±•ù∏ËÄâ±ïô–à∞ÅôΩπ—M•ÈîËÄƒ¿∞ÅôΩπ—]ï•ù°–ËÄÿ¿¿∞ÅçΩ±Ω»ËÅ=1=ILπ—ï·—5’—ïê∞Å±ï——ï…M¡Öç•πúËÄ¿∏‘∞Å¡Öëë•πúËÄà¿Ä·¡‡Äƒ¡¡‡àÅıÙ˘Ì°ÙΩ—†¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ§•Ù(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩ—»¯(ÄÄÄÄÄÄÄÄÄÄÄÄΩ—°ïÖê¯(ÄÄÄÄÄÄÄÄÄÄÄÄÒ—âΩë‰¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÅÌô•±—ï…ïêπµÖ¿°êÄÙ¯Ä†(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒ—»Å≠ï‰ıÌêπ•ëÙÅÕ—Â±îıÌÏÅâΩ…ëï…	Ω——Ω¥ËÅÄ¿∏’¡‡ÅÕΩ±•êÄëÌ=1=ILπ›°ïÖ—ıÄÅıÙ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒ—êÅÕ—Â±îıÌÏÅ¡Öëë•πúËÄàƒ…¡‡Ä·¡‡àÅıÙ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅôΩπ—Öµ•±‰ËÄâµΩπΩÕ¡Öçîà∞ÅôΩπ—M•ÈîËÄƒÃ∞ÅôΩπ—]ï•ù°–ËÄ‹¿¿∞ÅçΩ±Ω»ËÅ=1=ILπëÖµÖÕçïπî∞ÅâÖç≠ù…Ω’πêËÅ=1=ILπëÖµÖÕçïπîÄ¨Äàƒ–à∞Å¡Öëë•πúËÄàÕ¡‡Ä·¡‡à∞ÅâΩ…ëï…IÖë•’ÃËÄÿ∞Åë•Õ¡±Ö‰ËÄâ•π±•πîµâ±Ωç¨àÅıÙ˘ÌêπçΩëïÙΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅôΩπ—M•ÈîËÄƒ¿∞ÅçΩ±Ω»ËÅ=1=ILπ—ï·—5’—ïê∞ÅµÖ…ù•πQΩ¿ËÄ»ÅıÙ˘ÌêππÖµïÙΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩ—ê¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒ—êÅÕ—Â±îıÌÏÅ¡Öëë•πúËÄàƒ…¡‡Ä·¡‡à∞ÅôΩπ—M•ÈîËÄƒ–∞ÅôΩπ—]ï•ù°–ËÄ‹¿¿∞ÅçΩ±Ω»ËÅ=1=ILπç°Ö…çΩÖ∞ÅıÙ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÌêπ—Â¡îÄÙÙÙÄâ¡ï…çïπ–àÄ¸ÅÄëÌêπŸÖ±’ïÙïÄÄËÅêπ—Â¡îÄÙÙÙÄâô…ïï}Õ°•¡¡•πúàÄ¸Äâ…ïîÅM°•¡¡•πúàÄËÅÄêëÌêπŸÖ±’ïÙÅΩôôÅÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩ—ê¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒ—êÅÕ—Â±îıÌÏÅ¡Öëë•πúËÄàƒ…¡‡Ä·¡‡à∞ÅôΩπ—M•ÈîËÄƒƒ∞ÅçΩ±Ω»ËÅ=1=ILπ—ï·—5’—ïêÅıÙ˘ÌêπçΩπë•—•ΩπÕÙΩ—ê¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒ—êÅÕ—Â±îıÌÏÅ¡Öëë•πúËÄàƒ…¡‡Ä·¡‡àÅıÙ¯Ò	ÖëùîÅÕ—Ö—’ÃıÌêπÕ—Ö—’ÕÙÄº¯Ω—ê¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒ—êÅÕ—Â±îıÌÏÅ¡Öëë•πúËÄàƒ…¡‡Ä·¡‡à∞Åµ•π]•ë—†ËÄƒ¿¿ÅıÙ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅôΩπ—M•ÈîËÄƒƒ∞ÅçΩ±Ω»ËÅ=1=ILπç°Ö…çΩÖ∞∞ÅµÖ…ù•π	Ω——Ω¥ËÄ–ÅıÙ˘Ìêπ’ÕÖùïΩ’π—ıÌêπ’ÕÖùï1•µ•–Ä¸ÅÄºëÌêπ’ÕÖùï1•µ•—ıÄÄËÄàâÙΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÌêπ’ÕÖùï1•µ•–ÄòòÄ†(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅ°ï•ù°–ËÄ–∞ÅâÖç≠ù…Ω’πêËÅ=1=ILπç…ïÖ¥»∞ÅâΩ…ëï…IÖë•’ÃËÄ–ÅıÙ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅ°ï•ù°–ËÄ–∞Å›•ë—†ËÅÄëÌ5Ö—†πµ•∏†ƒ¿¿∞Åêπ’ÕÖùïΩ’π–ÄºÅêπ’ÕÖùï1•µ•–Ä®Äƒ¿¿•ÙïÄ∞ÅâÖç≠ù…Ω’πêËÅ=1=ILπÕÖôô…Ω∏∞ÅâΩ…ëï…IÖë•’ÃËÄ–ÅıÙÄº¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ•Ù(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩ—ê¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒ—êÅÕ—Â±îıÌÏÅ¡Öëë•πúËÄàƒ…¡‡Ä·¡‡à∞ÅôΩπ—M•ÈîËÄƒÃ∞ÅôΩπ—]ï•ù°–ËÄÿ¿¿∞ÅçΩ±Ω»ËÅ=1=ILπç°Ö…çΩÖ∞ÅıÙ¯ëÌêπ…ïŸïπ’îπ—Ω1ΩçÖ±ïM—…•πú†•ÙΩ—ê¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒ—êÅÕ—Â±îıÌÏÅ¡Öëë•πúËÄàƒ…¡‡Ä·¡‡à∞ÅôΩπ—M•ÈîËÄƒ¿∞ÅçΩ±Ω»ËÅ=1=ILπ—ï·—5’—ïêÅıÙ˘ÌêπÕ—Ö…—Õ—ıÌêπïπëÕ–Ä¸ÅÄÉäLÄëÌêπïπëÕ—ıÄÄËÄàÉ
-‹Å=πùΩ•πúâÙΩ—ê¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒ—êÅÕ—Â±îıÌÏÅ¡Öëë•πúËÄàƒ…¡‡Ä·¡‡àÅıÙ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅë•Õ¡±Ö‰ËÄâô±ï‡à∞ÅùÖ¿ËÄ–ÅıÙ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒ°ΩÕ—	—∏ÅÕ—Â±îıÌÏÅ¡Öëë•πúËÄà—¡‡Ä·¡‡à∞ÅôΩπ—M•ÈîËÄƒ¿ÅıÙ˘ë•–Ω°ΩÕ—	—∏¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒ°ΩÕ—	—∏ÅÕ—Â±îıÌÏÅ¡Öëë•πúËÄà—¡‡Ä·¡‡à∞ÅôΩπ—M•ÈîËÄƒ¿ÅıÙ˚ä.ºΩ°ΩÕ—	—∏¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩ—ê¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩ—»¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄ§•Ù(ÄÄÄÄÄÄÄÄÄÄÄÄÄ    </tbody>
+                <defs><linearGradient id="spark" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={COLORS.saffron} stopOpacity={0.5}/><stop offset="95%" stopColor={COLORS.saffron} stopOpacity={0}/></linearGradient></defs>
+                <Area type="monotone" dataKey="revenue" stroke={COLORS.saffronLight} strokeWidth={1.5} fill="url(#spark)" dot={false} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+        <StatCard label="ORDERS" value="81" sub="‚Üë 12 vs prev period" />
+        <StatCard label="AVG ORDER VALUE" value="$55.80" sub="‚Üë $4.20 this period" />
+        <StatCard label="NEW CUSTOMERS" value="24" sub="‚Üë 6 vs prev period" />
+      </div>
+
+      {/* Revenue Trend */}
+      <SectionCard style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body, marginBottom: 14 }}>Revenue Trend</div>
+        <ResponsiveContainer width="100%" height={200}>
+          <AreaChart data={ANALYTICS_TREND}>
+            <defs>
+              <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor={COLORS.saffron} stopOpacity={0.35}/>
+                <stop offset="95%" stopColor={COLORS.saffron} stopOpacity={0}/>
+              </linearGradient>
+            </defs>
+            <XAxis dataKey="date" tick={{ fontSize: 10, fontFamily: FONTS.body, fill: COLORS.textMuted }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 10, fontFamily: FONTS.body, fill: COLORS.textMuted }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} />
+            <Tooltip formatter={v => [`$${v}`, "Revenue"]} contentStyle={{ fontFamily: FONTS.body, fontSize: 11, borderRadius: 8, border: `0.5px solid ${COLORS.wheat}` }} />
+            <Area type="monotone" dataKey="revenue" stroke={COLORS.saffron} strokeWidth={2.5} fill="url(#revGrad)" />
+          </AreaChart>
+        </ResponsiveContainer>
+      </SectionCard>
+
+      {/* 3-column row */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 16 }}>
+        {/* Heritage donut */}
+        <SectionCard style={{ marginBottom: 0 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body, marginBottom: 12 }}>Sales by Heritage</div>
+          <ResponsiveContainer width="100%" height={140}>
+            <PieChart>
+              <Pie data={HERITAGE_DATA} cx="50%" cy="50%" innerRadius={40} outerRadius={60} dataKey="value">
+                {HERITAGE_DATA.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+              </Pie>
+              <Tooltip formatter={(v, n) => [`${v}%`, n]} contentStyle={{ fontFamily: FONTS.body, fontSize: 11, borderRadius: 8 }} />
+            </PieChart>
+          </ResponsiveContainer>
+          {HERITAGE_DATA.map(h => (
+            <div key={h.name} style={{ display: "flex", justifyContent: "space-between", fontSize: 11, fontFamily: FONTS.body, marginTop: 4 }}>
+              <span style={{ display: "flex", alignItems: "center", gap: 6 }}><span style={{ width: 8, height: 8, borderRadius: "50%", background: h.color, display: "inline-block" }}/>{h.name}</span>
+              <span style={{ fontWeight: 600, color: COLORS.charcoal }}>{h.value}%</span>
+            </div>
+          ))}
+        </SectionCard>
+
+        {/* Top countries */}
+        <SectionCard style={{ marginBottom: 0 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body, marginBottom: 12 }}>Top Countries</div>
+          {COUNTRY_DATA.map(c => (
+            <div key={c.country} style={{ marginBottom: 10 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, fontFamily: FONTS.body, marginBottom: 3 }}>
+                <span>{c.country}</span><span style={{ fontWeight: 600, color: COLORS.charcoal }}>{c.orders} orders</span>
+              </div>
+              <div style={{ height: 4, background: COLORS.cream2, borderRadius: 4 }}>
+                <div style={{ height: 4, width: `${c.pct}%`, background: COLORS.saffron, borderRadius: 4 }} />
+              </div>
+            </div>
+          ))}
+        </SectionCard>
+
+        {/* Traffic sources */}
+        <SectionCard style={{ marginBottom: 0 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body, marginBottom: 12 }}>Traffic Sources</div>
+          {TRAFFIC_DATA.map(t => (
+            <div key={t.source} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: `0.5px solid ${COLORS.wheat}`, fontSize: 11, fontFamily: FONTS.body }}>
+              <span>{t.source}</span>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontWeight: 600, color: COLORS.charcoal }}>{t.visits.toLocaleString()}</div>
+                <div style={{ fontSize: 9, color: COLORS.textMuted }}>{t.pct}%</div>
+              </div>
+            </div>
+          ))}
+        </SectionCard>
+      </div>
+
+      {/* Best sellers + Smart alerts */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+        <SectionCard style={{ marginBottom: 0 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body, marginBottom: 12 }}>Best Sellers</div>
+          {PRODUCTS_DATA.map((p, i) => (
+            <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: `0.5px solid ${COLORS.wheat}` }}>
+              <div style={{ width: 22, height: 22, borderRadius: 6, background: COLORS.saffron + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: COLORS.saffron }}>{i + 1}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 12, fontWeight: 500, color: COLORS.charcoal, fontFamily: FONTS.body }}>{p.name}</div>
+                <div style={{ fontSize: 10, color: COLORS.textMuted }}>{p.orders} orders</div>
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.charcoal }}>${p.revenue.toFixed(0)}</div>
+            </div>
+          ))}
+        </SectionCard>
+        <SectionCard style={{ marginBottom: 0 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body, marginBottom: 12 }}>Smart Alerts</div>
+          {[
+            { type: "warn", msg: "Lebanese Cedar Stand has been out of stock for 7 days ‚Äî restock soon" },
+            { type: "good", msg: "Revenue up 23% this week ‚Äî your best 7-day streak this month!" },
+            { type: "info", msg: "5 custom order requests waiting ‚Äî oldest is 3 days old" },
+            { type: "warn", msg: "Kufic Calligraphy Frame low stock (7 units) ‚Äî consider restocking" },
+          ].map((a, i) => {
+            const c = a.type === "warn" ? COLORS.terracotta : a.type === "good" ? COLORS.olive : COLORS.damascene;
+            return (
+              <div key={i} style={{ padding: "10px 12px", borderRadius: 8, background: c + "14", borderLeft: `3px solid ${c}`, marginBottom: 8 }}>
+                <div style={{ fontSize: 12, color: COLORS.charcoal, fontFamily: FONTS.body }}>{a.msg}</div>
+              </div>
+            );
+          })}
+        </SectionCard>
+      </div>
+    </div>
+  );
+}
+
+// ‚îÄ‚îÄ‚îÄ DISCOUNTS PAGE ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+function DiscountsPage() {
+  const [tab, setTab] = useState("codes");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [showCreate, setShowCreate] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [newCode, setNewCode] = useState({ code: "", name: "", type: "percent", value: "", minOrder: "", limit: "" });
+
+  const filtered = DISCOUNTS_DATA.filter(d => statusFilter === "all" || d.status === statusFilter);
+  const totalUsed = DISCOUNTS_DATA.reduce((s, d) => s + d.usageCount, 0);
+  const totalRevenue = DISCOUNTS_DATA.reduce((s, d) => s + d.revenue, 0);
+  const topCode = DISCOUNTS_DATA.reduce((a, b) => a.revenue > b.revenue ? a : b);
+
+  const TEMPLATES = [
+    { group: "Diaspora Calendar", items: [{ code: "RAMADAN20", label: "Ramadan Kareem 20%" }, { code: "EID15", label: "Eid Mubarak 15%" }, { code: "NAKBA74", label: "Nakba Day Solidarity" }] },
+    { group: "Universal", items: [{ code: "WELCOME10", label: "New Customer 10%" }, { code: "WINBACK20", label: "Win-Back 20%" }, { code: "VIP25", label: "VIP Loyalty 25%" }] },
+    { group: "Seasonal", items: [{ code: "WEDDING15", label: "Wedding Season 15%" }, { code: "GRAD10", label: "Graduation 10%" }] },
+    { group: "Sales", items: [{ code: "BFCM30", label: "Black Friday 30%" }, { code: "HOLIDAY15", label: "Holiday 15%" }] },
+  ];
+
+  return (
+    <div style={{ animation: "fadeIn 0.3s ease" }}>
+      <div style={{ position: "sticky", top: -24, zIndex: 10, background: COLORS.cream, margin: "-24px -32px 0", padding: "24px 32px 14px", borderBottom: `0.5px solid ${COLORS.wheat}`, boxShadow: "0 4px 12px rgba(0,0,0,0.04)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+          <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal, flex: 1 }}>Discounts</div>
+          <GhostBtn onClick={() => setShowTemplates(true)}>üìã Templates</GhostBtn>
+          <PrimaryBtn onClick={() => setShowCreate(true)}>+ Create Code</PrimaryBtn>
+        </div>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {[["codes", "üéü Promo Codes"], ["sales", "üî• Auto Sales"], ["bundles", "üì¶ Bundles"]].map(([v, l]) => (
+            <FilterPill key={v} label={l} active={tab === v} onClick={() => setTab(v)} />
+          ))}
+          <div style={{ flex: 1 }} />
+          {["all", "active", "scheduled", "paused", "expired"].map(s => (
+            <FilterPill key={s} label={s.charAt(0).toUpperCase() + s.slice(1)} active={statusFilter === s} onClick={() => setStatusFilter(s)} />
+          ))}
+        </div>
+      </div>
+      <div style={{ height: 14 }} />
+
+      <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
+        <StatCard label="CODES USED" value={totalUsed} sub="all time" />
+        <StatCard label="TOP CODE" value={topCode.code} sub={`$${topCode.revenue.toFixed(0)} revenue`} dark />
+        <StatCard label="DISCOUNTED REVENUE" value={`$${totalRevenue.toLocaleString()}`} />
+        <StatCard label="ACTIVE CAMPAIGNS" value={DISCOUNTS_DATA.filter(d => d.status === "active").length} />
+      </div>
+
+      {/* Live campaigns banner */}
+      {DISCOUNTS_DATA.filter(d => d.status === "active").length > 0 && (
+        <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
+          {DISCOUNTS_DATA.filter(d => d.status === "active").slice(0, 2).map(d => (
+            <div key={d.id} style={{ flex: 1, background: COLORS.charcoal, borderRadius: 10, padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div style={{ fontSize: 9, color: COLORS.saffronLight, letterSpacing: 1, marginBottom: 4, fontFamily: FONTS.body }}>ACTIVE CAMPAIGN</div>
+                <div style={{ fontSize: 18, fontFamily: "monospace", fontWeight: 700, color: COLORS.saffron }}>{d.code}</div>
+                <div style={{ fontSize: 11, color: COLORS.wheat, marginTop: 2, fontFamily: FONTS.body }}>{d.name}</div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: 24, fontWeight: 700, color: "#FFF", fontFamily: FONTS.body }}>{d.type === "percent" ? `${d.value}%` : d.type === "free_shipping" ? "Free Ship" : `$${d.value}`}</div>
+                <div style={{ fontSize: 10, color: COLORS.textMuted, fontFamily: FONTS.body }}>{d.usageCount} uses ¬∑ ${d.revenue} rev</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab === "codes" && (
+        <SectionCard>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: FONTS.body }}>
+            <thead>
+              <tr style={{ borderBottom: `0.5px solid ${COLORS.wheat}` }}>
+                {["Code", "Discount", "Conditions", "Status", "Usage", "Revenue", "Period", ""].map(h => (
+                  <th key={h} style={{ textAlign: "left", fontSize: 10, fontWeight: 600, color: COLORS.textMuted, letterSpacing: 0.5, padding: "0 8px 10px" }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(d => (
+                <tr key={d.id} style={{ borderBottom: `0.5px solid ${COLORS.wheat}` }}>
+                  <td style={{ padding: "12px 8px" }}>
+                    <div style={{ fontFamily: "monospace", fontSize: 13, fontWeight: 700, color: COLORS.damascene, background: COLORS.damascene + "14", padding: "3px 8px", borderRadius: 6, display: "inline-block" }}>{d.code}</div>
+                    <div style={{ fontSize: 10, color: COLORS.textMuted, marginTop: 2 }}>{d.name}</div>
+                  </td>
+                  <td style={{ padding: "12px 8px", fontSize: 14, fontWeight: 700, color: COLORS.charcoal }}>
+                    {d.type === "percent" ? `${d.value}%` : d.type === "free_shipping" ? "Free Shipping" : `$${d.value} off`}
+                  </td>
+                  <td style={{ padding: "12px 8px", fontSize: 11, color: COLORS.textMuted }}>{d.conditions}</td>
+                  <td style={{ padding: "12px 8px" }}><Badge status={d.status} /></td>
+                  <td style={{ padding: "12px 8px", minWidth: 100 }}>
+                    <div style={{ fontSize: 11, color: COLORS.charcoal, marginBottom: 4 }}>{d.usageCount}{d.usageLimit ? `/${d.usageLimit}` : ""}</div>
+                    {d.usageLimit && (
+                      <div style={{ height: 4, background: COLORS.cream2, borderRadius: 4 }}>
+                        <div style={{ height: 4, width: `${Math.min(100, d.usageCount / d.usageLimit * 100)}%`, background: COLORS.saffron, borderRadius: 4 }} />
+                      </div>
+                    )}
+                  </td>
+                  <td style={{ padding: "12px 8px", fontSize: 13, fontWeight: 600, color: COLORS.charcoal }}>${d.revenue.toLocaleString()}</td>
+                  <td style={{ padding: "12px 8px", fontSize: 10, color: COLORS.textMuted }}>{d.startsAt}{d.endsAt ? ` ‚Äì ${d.endsAt}` : " ¬∑ Ongoing"}</td>
+                  <td style={{ padding: "12px 8px" }}>
+                    <div style={{ display: "flex", gap: 4 }}>
+                      <GhostBtn style={{ padding: "4px 8px", fontSize: 10 }}>Edit</GhostBtn>
+                      <GhostBtn style={{ padding: "4px 8px", fontSize: 10 }}>‚ãØ</GhostBtn>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
           </table>
         </SectionCard>
       )}
@@ -1171,7 +1397,7 @@ function SettingsPage({ section: initSection, onNavigate }) {
   });
   const update = (k, v) => setSettings(s => ({ ...s, [k]: v }));
 
-  const SETTIGNS_NAV = [
+  const SETTINGS_NAV = [
     { group: "STORE", items: [{ id: "general", label: "General", icon: "üè™" }, { id: "payments", label: "Payments", icon: "üí≥" }, { id: "shipping", label: "Shipping", icon: "üì¶" }] },
     { group: "ACCOUNT", items: [{ id: "notifications", label: "Notifications", icon: "üîî" }, { id: "team", label: "Team", icon: "üë•" }] },
     { group: "LEGAL", items: [{ id: "policies", label: "Policies", icon: "üìã" }] },
