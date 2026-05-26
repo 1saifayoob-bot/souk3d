@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart, PieChart, Pie, Cell, BarChart, Bar } from "recharts";
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ BRAND CONSTANTS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// â”€â”€â”€ BRAND CONSTANTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const COLORS = {
   saffron: "#D4881F", saffronLight: "#E8B864", saffronDark: "#A86510",
   terracotta: "#B85C3C", damascene: "#1E5C8C", olive: "#5C6B3F",
@@ -14,40 +14,40 @@ const FONTS = {
   arabic: "'Amiri', serif",
 };
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ MOCK DATA Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// â”€â”€â”€ MOCK DATA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const PRODUCTS_DATA = [
-  { id: 1, sku: "S3D-001", name: "Damascus Name Plaque", name_ar: "Ã™â€Ã™Ë†Ã˜Â­Ã˜Â© Ã˜Â§Ã™â€Ã˜Â§Ã˜Â³Ã™â€¦ Ã˜Â§Ã™â€Ã˜Â¯Ã™â€¦Ã˜Â´Ã™â€šÃ™Å Ã˜Â©", category: "Home Decor", country: "Syria", price: 44.99, cost: 12, stock: 23, status: "active", featured: true, orders: 47, revenue: 2114.53 },
-  { id: 2, sku: "S3D-002", name: "Eid Mubarak Lantern", name_ar: "Ã™ÂÃ˜Â§Ã™â€ Ã™Ë†Ã˜Â³ Ã˜Â¹Ã™Å Ã˜Â¯ Ã™â€¦Ã˜Â¨Ã˜Â§Ã˜Â±Ã™Æ’", category: "Seasonal", country: "Pan-Arab", price: 34.99, cost: 9, stock: 41, status: "active", featured: true, orders: 38, revenue: 1329.62 },
-  { id: 3, sku: "S3D-003", name: "Palestinian Olive Tree", name_ar: "Ã˜Â´Ã˜Â¬Ã˜Â±Ã˜Â© Ã˜Â§Ã™â€Ã˜Â²Ã™Å Ã˜ÂªÃ™Ë†Ã™â€  Ã˜Â§Ã™â€Ã™ÂÃ™â€Ã˜Â³Ã˜Â·Ã™Å Ã™â€ Ã™Å Ã˜Â©", category: "Art", country: "Palestine", price: 54.99, cost: 15, stock: 12, status: "active", featured: false, orders: 29, revenue: 1594.71 },
-  { id: 4, sku: "S3D-004", name: "Lebanese Cedar Stand", name_ar: "Ã˜Â­Ã˜Â§Ã™â€¦Ã™â€ Ã˜Â§Ã™â€Ã˜Â£Ã˜Â±Ã˜Â² Ã˜Â§Ã™â€Ã™â€Ã˜Â¨Ã™â€ Ã˜Â§Ã™â€ Ã™Å ", category: "Home Decor", country: "Lebanon", price: 39.99, cost: 11, stock: 0, status: "out_of_stock", featured: false, orders: 22, revenue: 879.78 },
-  { id: 5, sku: "S3D-005", name: "Kufic Calligraphy Frame", name_ar: "Ã˜Â¥Ã˜Â·Ã˜Â§Ã˜Â± Ã˜Â§Ã™â€Ã˜Â®Ã˜Â· Ã˜Â§Ã™â€Ã™Æ’Ã™Ë†Ã™ÂÃ™Å ", category: "Art", country: "Pan-Arab", price: 64.99, cost: 18, stock: 7, status: "active", featured: true, orders: 18, revenue: 1169.82 },
+  { id: 1, sku: "S3D-001", name: "Damascus Name Plaque", name_ar: "Ù„ÙˆØ­Ø© Ø§Ù„Ø§Ø³Ù… Ø§Ù„Ø¯Ù…Ø´Ù‚ÙŠØ©", category: "Home Decor", country: "Syria", price: 44.99, cost: 12, stock: 23, status: "active", featured: true, orders: 47, revenue: 2114.53 },
+  { id: 2, sku: "S3D-002", name: "Eid Mubarak Lantern", name_ar: "ÙØ§Ù†ÙˆØ³ Ø¹ÙŠØ¯ Ù…Ø¨Ø§Ø±Ùƒ", category: "Seasonal", country: "Pan-Arab", price: 34.99, cost: 9, stock: 41, status: "active", featured: true, orders: 38, revenue: 1329.62 },
+  { id: 3, sku: "S3D-003", name: "Palestinian Olive Tree", name_ar: "Ø´Ø¬Ø±Ø© Ø§Ù„Ø²ÙŠØªÙˆÙ† Ø§Ù„ÙÙ„Ø³Ø·ÙŠÙ†ÙŠØ©", category: "Art", country: "Palestine", price: 54.99, cost: 15, stock: 12, status: "active", featured: false, orders: 29, revenue: 1594.71 },
+  { id: 4, sku: "S3D-004", name: "Lebanese Cedar Stand", name_ar: "Ø­Ø§Ù…Ù„ Ø§Ù„Ø£Ø±Ø² Ø§Ù„Ù„Ø¨Ù†Ø§Ù†ÙŠ", category: "Home Decor", country: "Lebanon", price: 39.99, cost: 11, stock: 0, status: "out_of_stock", featured: false, orders: 22, revenue: 879.78 },
+  { id: 5, sku: "S3D-005", name: "Kufic Calligraphy Frame", name_ar: "Ø¥Ø·Ø§Ø± Ø§Ù„Ø®Ø· Ø§Ù„ÙƒÙˆÙÙŠ", category: "Art", country: "Pan-Arab", price: 64.99, cost: 18, stock: 7, status: "active", featured: true, orders: 18, revenue: 1169.82 },
 ];
 
 const ORDERS_DATA = [
-  { id: 1, orderNumber: "#3041", customer: "Layla Hadi", email: "layla.h@example.com", location: "Detroit, MI Ã°Å¸â€¡ÂºÃ°Å¸â€¡Â¸", items: [{ name: "Damascus Name Plaque", qty: 1, price: 44.99 }], total: 52.98, status: "new", date: "5 min ago", customText: "Ã˜Â¹Ã˜Â§Ã˜Â¦Ã™â€Ã˜Â© Ã˜Â­Ã˜Â¯Ã˜Â§Ã˜Â¯", isCustom: false },
-  { id: 2, orderNumber: "#3040", customer: "Omar Khouri", email: "omar.k@example.com", location: "Toronto, ON Ã°Å¸â€¡Â¨Ã°Å¸â€¡Â¦", items: [{ name: "Eid Mubarak Lantern", qty: 2, price: 34.99 }], total: 77.97, status: "in_production", date: "1 hour ago", isCustom: false },
-  { id: 3, orderNumber: "#3039", customer: "Sarah Jaber", email: "sarah.j@example.com", location: "Dearborn, MI Ã°Å¸â€¡ÂºÃ°Å¸â€¡Â¸", items: [{ name: "Custom Wedding Arch", qty: 1, price: 120.00 }], total: 128.99, status: "awaiting_approval", date: "3 hours ago", isCustom: true },
-  { id: 4, orderNumber: "#3038", customer: "Yara Mansour", email: "yara.m@example.com", location: "London, UK Ã°Å¸â€¡Â¬Ã°Å¸â€¡Â§", items: [{ name: "Palestinian Olive Tree", qty: 1, price: 54.99 }], total: 67.98, status: "shipped", date: "Yesterday", trackingNumber: "1Z999AA1012345678", isCustom: false },
-  { id: 5, orderNumber: "#3037", customer: "Maya Saadeh", email: "maya.s@example.com", location: "Sydney, AU Ã°Å¸â€¡Â¦Ã°Å¸â€¡Âº", items: [{ name: "Kufic Calligraphy Frame", qty: 1, price: 64.99 }], total: 79.98, status: "delivered", date: "2 days ago", isCustom: false },
+  { id: 1, orderNumber: "#3041", customer: "Layla Hadi", email: "layla.h@example.com", location: "Detroit, MI ğŸ‡ºğŸ‡¸", items: [{ name: "Damascus Name Plaque", qty: 1, price: 44.99 }], total: 52.98, status: "new", date: "5 min ago", customText: "Ø¹Ø§Ø¦Ù„Ø© Ø­Ø¯Ø§Ø¯", isCustom: false },
+  { id: 2, orderNumber: "#3040", customer: "Omar Khouri", email: "omar.k@example.com", location: "Toronto, ON ğŸ‡¨ğŸ‡¦", items: [{ name: "Eid Mubarak Lantern", qty: 2, price: 34.99 }], total: 77.97, status: "in_production", date: "1 hour ago", isCustom: false },
+  { id: 3, orderNumber: "#3039", customer: "Sarah Jaber", email: "sarah.j@example.com", location: "Dearborn, MI ğŸ‡ºğŸ‡¸", items: [{ name: "Custom Wedding Arch", qty: 1, price: 120.00 }], total: 128.99, status: "awaiting_approval", date: "3 hours ago", isCustom: true },
+  { id: 4, orderNumber: "#3038", customer: "Yara Mansour", email: "yara.m@example.com", location: "London, UK ğŸ‡¬ğŸ‡§", items: [{ name: "Palestinian Olive Tree", qty: 1, price: 54.99 }], total: 67.98, status: "shipped", date: "Yesterday", trackingNumber: "1Z999AA1012345678", isCustom: false },
+  { id: 5, orderNumber: "#3037", customer: "Maya Saadeh", email: "maya.s@example.com", location: "Sydney, AU ğŸ‡¦ğŸ‡º", items: [{ name: "Kufic Calligraphy Frame", qty: 1, price: 64.99 }], total: 79.98, status: "delivered", date: "2 days ago", isCustom: false },
 ];
 
 const CUSTOMERS_DATA = [
-  { id: 1, name: "Layla Hadi", email: "layla.h@example.com", phone: "+1 313 555-0142", heritage: "Syria", location: { city: "Detroit", state: "MI", country: "USA", flag: "Ã°Å¸â€¡ÂºÃ°Å¸â€¡Â¸" }, orders: 5, customOrders: 3, ltv: 184.95, lastOrder: "5 min ago", tags: ["VIP", "Repeat buyer", "Custom orders"] },
-  { id: 2, name: "Omar Khouri", email: "omar.k@example.com", phone: "+1 416 555-0198", heritage: "Lebanon", location: { city: "Toronto", state: "ON", country: "Canada", flag: "Ã°Å¸â€¡Â¨Ã°Å¸â€¡Â¦" }, orders: 3, customOrders: 0, ltv: 94.94, lastOrder: "1 hour ago", tags: ["Repeat buyer"] },
-  { id: 3, name: "Yara Mansour", email: "yara.m@example.com", phone: "+44 20 7946 0958", heritage: "Palestine", location: { city: "London", state: "", country: "UK", flag: "Ã°Å¸â€¡Â¬Ã°Å¸â€¡Â§" }, orders: 2, customOrders: 0, ltv: 65.98, lastOrder: "3 hours ago", tags: ["Gift buyer"] },
-  { id: 4, name: "Sarah Jaber", email: "sarah.j@example.com", phone: "+1 313 555-0167", heritage: "Syria", location: { city: "Dearborn", state: "MI", country: "USA", flag: "Ã°Å¸â€¡ÂºÃ°Å¸â€¡Â¸" }, orders: 7, customOrders: 5, ltv: 312.50, lastOrder: "Yesterday", tags: ["VIP", "Custom orders"] },
-  { id: 5, name: "Maya Saadeh", email: "maya.s@example.com", phone: "+61 2 9999 0000", heritage: "Lebanon", location: { city: "Sydney", state: "NSW", country: "Australia", flag: "Ã°Å¸â€¡Â¦Ã°Å¸â€¡Âº" }, orders: 1, customOrders: 0, ltv: 44.97, lastOrder: "2 days ago", tags: [] },
-  { id: 6, name: "Karim Daher", email: "karim.d@example.com", phone: "+49 30 12345678", heritage: "Pan-Arab", location: { city: "Berlin", state: "", country: "Germany", flag: "Ã°Å¸â€¡Â©Ã°Å¸â€¡Âª" }, orders: 1, customOrders: 0, ltv: 59.96, lastOrder: "3 days ago", tags: [] },
-  { id: 7, name: "Nour Salem", email: "nour.s@example.com", phone: "+1 718 555-0123", heritage: "Palestine", location: { city: "Brooklyn", state: "NY", country: "USA", flag: "Ã°Å¸â€¡ÂºÃ°Å¸â€¡Â¸" }, orders: 2, customOrders: 0, ltv: 38.98, lastOrder: "4 days ago", tags: ["Repeat buyer"] },
-  { id: 8, name: "Rana Haddad", email: "rana.h@example.com", phone: "+1 514 555-0177", heritage: "Syria", location: { city: "Montreal", state: "QC", country: "Canada", flag: "Ã°Å¸â€¡Â¨Ã°Å¸â€¡Â¦" }, orders: 1, customOrders: 1, ltv: 39.99, lastOrder: "5 days ago", tags: ["Custom orders"] },
+  { id: 1, name: "Layla Hadi", email: "layla.h@example.com", phone: "+1 313 555-0142", heritage: "Syria", location: { city: "Detroit", state: "MI", country: "USA", flag: "ğŸ‡ºğŸ‡¸" }, orders: 5, customOrders: 3, ltv: 184.95, lastOrder: "5 min ago", tags: ["VIP", "Repeat buyer", "Custom orders"] },
+  { id: 2, name: "Omar Khouri", email: "omar.k@example.com", phone: "+1 416 555-0198", heritage: "Lebanon", location: { city: "Toronto", state: "ON", country: "Canada", flag: "ğŸ‡¨ğŸ‡¦" }, orders: 3, customOrders: 0, ltv: 94.94, lastOrder: "1 hour ago", tags: ["Repeat buyer"] },
+  { id: 3, name: "Yara Mansour", email: "yara.m@example.com", phone: "+44 20 7946 0958", heritage: "Palestine", location: { city: "London", state: "", country: "UK", flag: "ğŸ‡¬ğŸ‡§" }, orders: 2, customOrders: 0, ltv: 65.98, lastOrder: "3 hours ago", tags: ["Gift buyer"] },
+  { id: 4, name: "Sarah Jaber", email: "sarah.j@example.com", phone: "+1 313 555-0167", heritage: "Syria", location: { city: "Dearborn", state: "MI", country: "USA", flag: "ğŸ‡ºğŸ‡¸" }, orders: 7, customOrders: 5, ltv: 312.50, lastOrder: "Yesterday", tags: ["VIP", "Custom orders"] },
+  { id: 5, name: "Maya Saadeh", email: "maya.s@example.com", phone: "+61 2 9999 0000", heritage: "Lebanon", location: { city: "Sydney", state: "NSW", country: "Australia", flag: "ğŸ‡¦ğŸ‡º" }, orders: 1, customOrders: 0, ltv: 44.97, lastOrder: "2 days ago", tags: [] },
+  { id: 6, name: "Karim Daher", email: "karim.d@example.com", phone: "+49 30 12345678", heritage: "Pan-Arab", location: { city: "Berlin", state: "", country: "Germany", flag: "ğŸ‡©ğŸ‡ª" }, orders: 1, customOrders: 0, ltv: 59.96, lastOrder: "3 days ago", tags: [] },
+  { id: 7, name: "Nour Salem", email: "nour.s@example.com", phone: "+1 718 555-0123", heritage: "Palestine", location: { city: "Brooklyn", state: "NY", country: "USA", flag: "ğŸ‡ºğŸ‡¸" }, orders: 2, customOrders: 0, ltv: 38.98, lastOrder: "4 days ago", tags: ["Repeat buyer"] },
+  { id: 8, name: "Rana Haddad", email: "rana.h@example.com", phone: "+1 514 555-0177", heritage: "Syria", location: { city: "Montreal", state: "QC", country: "Canada", flag: "ğŸ‡¨ğŸ‡¦" }, orders: 1, customOrders: 1, ltv: 39.99, lastOrder: "5 days ago", tags: ["Custom orders"] },
 ];
 
 const CUSTOM_ORDERS_DATA = [
-  { id: 1, customerId: 4, customerName: "Sarah Jaber", heritage: "Syria", flag: "Ã°Å¸â€¡ÂºÃ°Å¸â€¡Â¸", arabicText: "Ã˜Â¹Ã˜Â§Ã˜Â¦Ã™â€Ã˜Â© Ã˜Â¬Ã˜Â§Ã˜Â¨Ã˜Â±", occasion: "Wedding", style: "Diwani", color: "Gold", deadline: "May 15", urgency: "urgent", stage: "mockup", messages: 4, snippet: "I need a custom wedding arch piece for my daughter..." },
-  { id: 2, customerId: 1, customerName: "Layla Hadi", heritage: "Syria", flag: "Ã°Å¸â€¡ÂºÃ°Å¸â€¡Â¸", arabicText: "Ã˜Â©Ã˜Â§Ã˜Â¦Ã™â€Ã˜Â© Ã˜Â­Ã˜Â¯Ã˜Â§Ã˜Â¯", occasion: "Graduation", style: "Modern", color: "White", deadline: "May 20", urgency: "soon", stage: "quote", messages: 2, snippet: "Congratulations plaque for my son graduating..." },
-  { id: 3, customerId: 3, customerName: "Yara Mansour", heritage: "Palestine", flag: "Ã°Å¸â€¡Â¬Ã°Å¸â€¡Â§", arabicText: "Ã™â€¦Ã˜Â¨Ã˜Â±Ã™Ë†Ã™Æ’ Ã™Å Ã˜Â§ Ã˜Â¯Ã™Æ’Ã˜ÂªÃ™Ë†Ã˜Â±", occasion: "Graduation", style: "Classic", color: "Gold", deadline: "Jun 1", urgency: "ok", stage: "new", messages: 1, snippet: "Doctor graduation gift for my husband..." },
-  { id: 4, customerId: 7, customerName: "Nour Salem", heritage: "Palestine", flag: "Ã°Å¸â€¡ÂºÃ°Å¸â€¡Â¸", arabicText: "Ã™Å Ã˜Â§ Ã˜ÂµÃ˜Â¨Ã™Å  Ã™Å Ã˜Â§ Ã˜Â­Ã™â€Ã™Ë†", occasion: "Baby", style: "Diwani", color: "Blue", deadline: "Jun 15", urgency: "ok", stage: "approved", messages: 6, snippet: "New baby boy wall piece for nursery..." },
-  { id: 5, customerId: 8, customerName: "Rana Haddad", heritage: "Syria", flag: "Ã°Å¸â€¡Â¨Ã°Å¸â€¡Â¦", arabicText: "Ã˜Â¹Ã™Å Ã˜Â¯ Ã™â€¦Ã™Å Ã™â€Ã˜Â§Ã˜Â¯ Ã˜Â³Ã˜Â¹Ã™Å Ã˜Â¯", occasion: "Birthday", style: "Modern", color: "Mixed", deadline: "May 30", urgency: "ok", stage: "quote", messages: 3, snippet: "Birthday cake topper with arabic name..." },
+  { id: 1, customerId: 4, customerName: "Sarah Jaber", heritage: "Syria", flag: "ğŸ‡ºğŸ‡¸", arabicText: "Ø¹Ø§Ø¦Ù„Ø© Ø¬Ø§Ø¨Ø±", occasion: "Wedding", style: "Diwani", color: "Gold", deadline: "May 15", urgency: "urgent", stage: "mockup", messages: 4, snippet: "I need a custom wedding arch piece for my daughter..." },
+  { id: 2, customerId: 1, customerName: "Layla Hadi", heritage: "Syria", flag: "ğŸ‡ºğŸ‡¸", arabicText: "Ù¹Ø§Ø¦Ù„Ø© Ø­Ø¯Ø§Ø¯", occasion: "Graduation", style: "Modern", color: "White", deadline: "May 20", urgency: "soon", stage: "quote", messages: 2, snippet: "Congratulations plaque for my son graduating..." },
+  { id: 3, customerId: 3, customerName: "Yara Mansour", heritage: "Palestine", flag: "ğŸ‡¬ğŸ‡§", arabicText: "Ù…Ø¨Ø±ÙˆÙƒ ÙŠØ§ Ø¯ÙƒØªÙˆØ±", occasion: "Graduation", style: "Classic", color: "Gold", deadline: "Jun 1", urgency: "ok", stage: "new", messages: 1, snippet: "Doctor graduation gift for my husband..." },
+  { id: 4, customerId: 7, customerName: "Nour Salem", heritage: "Palestine", flag: "ğŸ‡ºğŸ‡¸", arabicText: "ÙŠØ§ ØµØ¨ÙŠ ÙŠØ§ Ø­Ù„Ùˆ", occasion: "Baby", style: "Diwani", color: "Blue", deadline: "Jun 15", urgency: "ok", stage: "approved", messages: 6, snippet: "New baby boy wall piece for nursery..." },
+  { id: 5, customerId: 8, customerName: "Rana Haddad", heritage: "Syria", flag: "ğŸ‡¨ğŸ‡¦", arabicText: "Ø¹ÙŠØ¯ Ù…ÙŠÙ„Ø§Ø¯ Ø³Ø¹ÙŠØ¯", occasion: "Birthday", style: "Modern", color: "Mixed", deadline: "May 30", urgency: "ok", stage: "quote", messages: 3, snippet: "Birthday cake topper with arabic name..." },
 ];
 
 const REVENUE_DATA = [
@@ -74,21 +74,21 @@ const DISCOUNTS_DATA = [
 
 const NAV_ITEMS = [
   { section: "SALES", items: [
-    { id: "dashboard", label: "Dashboard", icon: "Ã¢Â¬â€º" },
-    { id: "orders", label: "Orders", icon: "Ã°Å¸â€œÂ¦", badge: 3 },
-    { id: "products", label: "Products", icon: "Ã°Å¸ÂÂº" },
-    { id: "customers", label: "Customers", icon: "Ã°Å¸â€˜Â¥" },
-    { id: "custom-orders", label: "Custom Orders", icon: "Ã¢Å“Â¦", badge: 5 },
+    { id: "dashboard", label: "Dashboard", icon: "â¬›" },
+    { id: "orders", label: "Orders", icon: "ğŸ“¦", badge: 3 },
+    { id: "products", label: "Products", icon: "ğŸº" },
+    { id: "customers", label: "Customers", icon: "ğŸ‘¥" },
+    { id: "custom-orders", label: "Custom Orders", icon: "âœ¦", badge: 5 },
   ]},
   { section: "MARKETING", items: [
-    { id: "discounts", label: "Discounts", icon: "Ã°Å¸Å½Å¸" },
-    { id: "email", label: "Email & Marketing", icon: "Ã°Å¸â€œÂ§" },
+    { id: "discounts", label: "Discounts", icon: "ğŸŸ" },
+    { id: "email", label: "Email & Marketing", icon: "ğŸ“§" },
   ]},
   { section: "INSIGHTS", items: [
-    { id: "analytics", label: "Analytics", icon: "Ã°Å¸â€œÅ " },
+    { id: "analytics", label: "Analytics", icon: "ğŸ“Š" },
   ]},
   { section: "ACCOUNT", items: [
-    { id: "settings-general", label: "Settings", icon: "Ã¢Å¡â„¢Ã¯Â¸Â" },
+    { id: "settings-general", label: "Settings", icon: "âš™ï¸" },
   ]},
 ];
 
@@ -97,7 +97,7 @@ const HERITAGE_COLORS = {
   "Pan-Arab": "#5C6B3F", Egypt: "#E8B864",
 };
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ SHARED COMPONENTS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// â”€â”€â”€ SHARED COMPONENTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function FilterPill({ label, active, onClick }) {
   return (
     <div onClick={onClick} style={{
@@ -187,7 +187,7 @@ function HeritageAvatar({ name, heritage, size = 36 }) {
   );
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ LOGIN Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// â”€â”€â”€ LOGIN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function LoginPage({ onLogin }) {
   const [pw, setPw] = useState("");
   const [err, setErr] = useState("");
@@ -201,8 +201,8 @@ function LoginPage({ onLogin }) {
       <div style={{ width: 380, background: COLORS.cream, borderRadius: 16, padding: 40, boxShadow: "0 20px 60px rgba(0,0,0,0.4)" }}>
         <div style={{ textAlign: "center", marginBottom: 32 }}>
           <div style={{ fontFamily: FONTS.display, fontSize: 32, fontWeight: 600, color: COLORS.charcoal }}>Souk3D</div>
-          <div style={{ fontFamily: FONTS.arabic, fontSize: 18, color: COLORS.saffron, marginTop: 4 }}>Ã˜Â³Ã™Ë†Ã™â€š Ã˜Â«Ã˜Â±Ã™Å  Ã˜Â¯Ã™Å </div>
-          <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 8, fontFamily: FONTS.body }}>Admin Dashboard Ã‚Â· Nala's Studio</div>
+          <div style={{ fontFamily: FONTS.arabic, fontSize: 18, color: COLORS.saffron, marginTop: 4 }}>Ø³ÙˆÙ‚ Ø«Ø±ÙŠ Ø¯ÙŠ</div>
+          <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 8, fontFamily: FONTS.body }}>Admin Dashboard Â· Nala's Studio</div>
         </div>
         <form onSubmit={handle}>
           <input
@@ -213,20 +213,20 @@ function LoginPage({ onLogin }) {
           <PrimaryBtn style={{ width: "100%", padding: "13px 20px" }}>Sign In</PrimaryBtn>
         </form>
         <div style={{ textAlign: "center", marginTop: 16 }}>
-          <button onClick={onLogin} style={{ background: "none", border: "none", color: COLORS.textMuted, fontSize: 12, cursor: "pointer", fontFamily: FONTS.body }}>One-click demo access Ã¢â€ â€™</button>
+          <button onClick={onLogin} style={{ background: "none", border: "none", color: COLORS.textMuted, fontSize: 12, cursor: "pointer", fontFamily: FONTS.body }}>One-click demo access â†’</button>
         </div>
       </div>
     </div>
   );
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ SIDEBAR Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// â”€â”€â”€ SIDEBAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function Sidebar({ page, setPage }) {
   return (
     <div style={{ width: 220, background: COLORS.charcoal, minHeight: "100vh", display: "flex", flexDirection: "column", flexShrink: 0, position: "sticky", top: 0, height: "100vh", overflowY: "auto" }}>
       <div style={{ padding: "24px 20px 16px" }}>
         <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: "#FFF" }}>Souk3D</div>
-        <div style={{ fontFamily: FONTS.arabic, fontSize: 13, color: COLORS.saffron }}>Ã˜Â³Ã™Ë†Ã™â€š Ã˜Â«Ã˜Â±Ã™Å  Ã˜Â¯Ã™Å </div>
+        <div style={{ fontFamily: FONTS.arabic, fontSize: 13, color: COLORS.saffron }}>Ø³ÙˆÙ‚ Ø«Ø±ÙŠ Ø¯ÙŠ</div>
       </div>
       <div style={{ padding: "0 10px", flex: 1 }}>
         {NAV_ITEMS.map(({ section, items }) => (
@@ -255,64 +255,59 @@ function Sidebar({ page, setPage }) {
   );
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ DASHBOARD Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢flex", alignItems: "center", gap: 14, padding: "10px 0", borderBottom: `0.5px solid ${COLORS.wheat}` }}>
-            <div style={{ fontSize: 12, fontFamily: FONTS.body, fontWeight: 600, color: COLORS.damascene, width: 60 }}>{o.orderNumber}</div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 12, fontWeight: 500, color: COLORS.charcoal }}>{o.customer}</div>
-              <div style={{ fontSize: 10, color: COLORS.textMuted }}>{o.items[0].name}{o.items.length > 1 ? ` +${o.items.length - 1}` : ""}</div>
-            </div>
-            <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.charcoal }}>${o.total.toFixed(2)}</div>
-            <Badge status={o.status} />
-          </div>
-        ))}
-      </SectionCard>
-    </div>
-  );
-}
-
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ PRODUCTS PAGE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-function ProductsPage() {
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [selected, setSelected] = useState(null);
-
-  const filtered = PRODUCTS_DATA.filter(p => {
-    const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = statusFilter === "all" || p.status === statusFilter;
-    return matchSearch && matchStatus;
-  });
-
+// â”€â”€â”€ DASHBOARD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function Dashboard({ onNavigate }) {
   return (
     <div style={{ animation: "fadeIn 0.3s ease" }}>
-      <div style={{ position: "sticky", top: -24, zIndex: 10, background: COLORS.cream, margin: "-24px -32px 0", padding: "24px 32px 14px", borderBottom: `0.5px solid ${COLORS.wheat}`, boxShadow: "0 4px 12px rgba(0,0,0,0.04)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal, marginRight: "auto" }}>Products</div>
-          <PrimaryBtn>+ New Product</PrimaryBtn>
-        </div>
-        <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search productsÃ¢â‚¬Â¦" style={{ flex: 1, minWidth: 180, padding: "7px 12px", border: `0.5px solid ${COLORS.wheat}`, borderRadius: 8, fontSize: 12, fontFamily: FONTS.body, outline: "none" }} />
-          {["all", "active", "out_of_stock", "draft"].map(s => (
-            <FilterPill key={s} label={s === "all" ? "All" : s === "out_of_stock" ? "Out of Stock" : s.charAt(0).toUpperCase() + s.slice(1)} active={statusFilter === s} onClick={() => setStatusFilter(s)} />
-          ))}
-        </div>
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ fontFamily: FONTS.display, fontSize: 28, fontWeight: 600, color: COLORS.charcoal }}>Good morning, Nala â˜€ï¸</div>
+        <div style={{ fontFamily: FONTS.arabic, fontSize: 16, color: COLORS.saffron }}>ØµØ¨Ø§Ø­ Ø§Ù„Ø®ÙŠØ± ÙŠØ§ Ù†Ø§Ù„Ø§</div>
+        <div style={{ fontSize: 13, color: COLORS.textMuted, fontFamily: FONTS.body, marginTop: 4 }}>Here's what's happening in your store today.</div>
       </div>
-      <div style={{ height: 14 }} />
+      <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
+        <StatCard label="TODAY'S REVENUE" value="$520" sub="â†‘ 18% vs yesterday" dark />
+        <StatCard label="ORDERS" value="8" sub="3 need attention" />
+        <StatCard label="AVG ORDER VALUE" value="$65" sub="â†‘ $4 this week" />
+        <StatCard label="NEW CUSTOMERS" value="3" sub="2 from Instagram" />
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 16, marginBottom: 16 }}>
+        <SectionCard>
+          <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body, marginBottom: 14 }}>Revenue â€” Last 7 Days</div>
+          <ResponsiveContainer width="100%" height={180}>
+            <AreaChart data={REVENUE_DATA}>
+              <defs>
+                <linearGradient id="rev" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={COLORS.saffron} stopOpacity={0.3} />
+                  <stop offset="95%" stopColor={COLORS.saffron} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <XAxis dataKey="day" tick={{ fontSize: 10, fontFamily: FONTS.body, fill: COLORS.textMuted }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 10, fontFamily: FONTS.body, fill: COLORS.textMuted }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} />
+              <Tooltip formatter={v => [`$${v}`, "Revenue"]} contentStyle={{ fontFamily: FONTS.body, fontSize: 11, borderRadius: 8, border: `0.5px solid ${COLORS.wheat}` }} />
+              <Area type="monotone" dataKey="revenue" stroke={COLORS.saffron} strokeWidth={2} fill="url(#rev)" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </SectionCard>
+        <SectionCard>
+          <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body, marginBottom: 14 }}>Top Sellers</div>
+          {PRODUCTS_DATA.slice(0, 4).map((p, i) => (
+            <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+              <div style={{ width: 24, height: 24, borderRadius: 6, background: COLORS.saffron + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: COLORS.saffron }}>{i + 1}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 12, fontWeight: 500, color: COLORS.charcoal, fontFamily: FONTS.body }}>{p.name}</div>
+                <div style={{ fontSize: 10, color: COLORS.textMuted }}>{p.orders} orders Â· ${p.revenue.toFixed(0)}</div>
+              </div>
+            </div>
+          ))}
+        </SectionCard>
+      </div>
       <SectionCard>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: FONTS.body }}>
-          <thead>
-            <tr style={{ borderBottom: `0.5px solid ${COLORS.wheat}` }}>
-              {["SKU", "Product", "Price", "Cost", "Stock", "Orders", "Status", ""].map(h => (
-                <th key={h} style={{ textAlign: "left", fontSize: 10, fontWeight: 600, color: COLORS.textMuted, letterSpacing: 0.5, padding: "0 8px 10px" }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map(p => (
-              <tr key={p.id} onClick={() => setSelected(p)} style={{ borderBottom: `0.5px solid ${COLORS.wheat}`, cursor: "pointer" }}>
-                <td style={{ padding: "12px 8px", fontSize: 11, color: COLORS.textMuted }}>{p.sku}</td>
-                <td style={{ padding: "12px 8px" }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: COLORS.charcoal }}>{p.name}</div>
-             flex", alignItems: "center", gap: 14, padding: "10px 0", borderBottom: `0.5px solid ${COLORS.wheat}` }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body }}>Recent Orders</div>
+          <GhostBtn onClick={() => onNavigate("orders")}>View All</GhostBtn>
+        </div>
+        {ORDERS_DATA.slice(0, 4).map(o => (
+          <div key={o.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "10px 0", borderBottom: `0.5px solid ${COLORS.wheat}` }}>
             <div style={{ fontSize: 12, fontFamily: FONTS.body, fontWeight: 600, color: COLORS.damascene, width: 60 }}>{o.orderNumber}</div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 12, fontWeight: 500, color: COLORS.charcoal }}>{o.customer}</div>
@@ -327,7 +322,7 @@ function ProductsPage() {
   );
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ PRODUCTS PAGE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// â”€â”€â”€ PRODUCTS PAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function ProductsPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -347,7 +342,7 @@ function ProductsPage() {
           <PrimaryBtn>+ New Product</PrimaryBtn>
         </div>
         <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search productsÃ¢â‚¬Â¦" style={{ flex: 1, minWidth: 180, padding: "7px 12px", border: `0.5px solid ${COLORS.wheat}`, borderRadius: 8, fontSize: 12, fontFamily: FONTS.body, outline: "none" }} />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search productsâ€¦" style={{ flex: 1, minWidth: 180, padding: "7px 12px", border: `0.5px solid ${COLORS.wheat}`, borderRadius: 8, fontSize: 12, fontFamily: FONTS.body, outline: "none" }} />
           {["all", "active", "out_of_stock", "draft"].map(s => (
             <FilterPill key={s} label={s === "all" ? "All" : s === "out_of_stock" ? "Out of Stock" : s.charAt(0).toUpperCase() + s.slice(1)} active={statusFilter === s} onClick={() => setStatusFilter(s)} />
           ))}
@@ -391,7 +386,7 @@ function ProductsPage() {
                 <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal }}>{selected.name}</div>
                 <div style={{ fontFamily: FONTS.arabic, fontSize: 16, color: COLORS.saffron }}>{selected.name_ar}</div>
               </div>
-              <button onClick={() => setSelected(null)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: COLORS.textMuted }}>Ã¢Å“â€¢</button>
+              <button onClick={() => setSelected(null)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: COLORS.textMuted }}>âœ•</button>
             </div>
             <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
               <StatCard label="PRICE" value={`$${selected.price}`} />
@@ -419,7 +414,7 @@ function ProductsPage() {
   );
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ ORDERS PAGE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// â”€â”€â”€ ORDERS PAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const ORDER_STAGES = [
   { id: "new", label: "New", color: "#3B5BB5" },
   { id: "awaiting_approval", label: "Awaiting Approval", color: COLORS.terracotta },
@@ -518,9 +513,9 @@ function OrdersPage() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <div>
                 <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal }}>{selectedOrder.orderNumber}</div>
-                <div style={{ fontSize: 12, color: COLORS.textMuted, fontFamily: FONTS.body }}>{selectedOrder.customer} Ã‚Â· {selectedOrder.date}</div>
+                <div style={{ fontSize: 12, color: COLORS.textMuted, fontFamily: FONTS.body }}>{selectedOrder.customer} Â· {selectedOrder.date}</div>
               </div>
-              <button onClick={() => setSelectedOrder(null)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: COLORS.textMuted }}>Ã¢Å“â€¢</button>
+              <button onClick={() => setSelectedOrder(null)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: COLORS.textMuted }}>âœ•</button>
             </div>
             <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
               {ORDER_STAGES.filter(s => !(!selectedOrder.isCustom && s.id === "awaiting_approval")).map(stage => (
@@ -531,7 +526,7 @@ function OrdersPage() {
               <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.textMuted, letterSpacing: 0.5, marginBottom: 10 }}>ORDER ITEMS</div>
               {selectedOrder.items.map((item, i) => (
                 <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: `0.5px solid ${COLORS.wheat}`, fontSize: 13, fontFamily: FONTS.body }}>
-                  <span>{item.name} Ãƒâ€” {item.qty}</span>
+                  <span>{item.name} Ã— {item.qty}</span>
                   <span style={{ fontWeight: 600 }}>${(item.price * item.qty).toFixed(2)}</span>
                 </div>
               ))}
@@ -571,7 +566,7 @@ function OrdersPage() {
   );
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ CUSTOMERS PAGE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// â”€â”€â”€ CUSTOMERS PAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function CustomersPage() {
   const [search, setSearch] = useState("");
   const [heritageFilter, setHeritageFilter] = useState("all");
@@ -603,7 +598,7 @@ function CustomersPage() {
           <PrimaryBtn>Export CSV</PrimaryBtn>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search customersÃ¢â‚¬Â¦" style={{ flex: 1, minWidth: 180, padding: "7px 12px", border: `0.5px solid ${COLORS.wheat}`, borderRadius: 8, fontSize: 12, fontFamily: FONTS.body, outline: "none" }} />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search customersâ€¦" style={{ flex: 1, minWidth: 180, padding: "7px 12px", border: `0.5px solid ${COLORS.wheat}`, borderRadius: 8, fontSize: 12, fontFamily: FONTS.body, outline: "none" }} />
           {["all", "Syria", "Lebanon", "Palestine", "Pan-Arab", "Egypt"].map(h => (
             <FilterPill key={h} label={h === "all" ? "All Heritage" : h} active={heritageFilter === h} onClick={() => setHeritageFilter(h)} />
           ))}
@@ -676,10 +671,10 @@ function CustomersPage() {
                     <div style={{ fontFamily: FONTS.display, fontSize: 24, fontWeight: 600, color: COLORS.charcoal }}>{selected.name}</div>
                     {selected.tags.includes("VIP") && <span style={{ fontSize: 9, background: COLORS.saffron, color: "#FFF", padding: "2px 8px", borderRadius: 6, fontWeight: 700 }}>VIP</span>}
                   </div>
-                  <div style={{ fontSize: 12, color: COLORS.textMuted, fontFamily: FONTS.body }}>{selected.location.flag} {selected.location.city}, {selected.location.country} Ã‚Â· {selected.heritage}</div>
+                  <div style={{ fontSize: 12, color: COLORS.textMuted, fontFamily: FONTS.body }}>{selected.location.flag} {selected.location.city}, {selected.location.country} Â· {selected.heritage}</div>
                 </div>
               </div>
-              <button onClick={() => setSelected(null)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: COLORS.textMuted }}>Ã¢Å“â€¢</button>
+              <button onClick={() => setSelected(null)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: COLORS.textMuted }}>âœ•</button>
             </div>
             <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
               <StatCard label="ORDERS" value={selected.orders} />
@@ -688,7 +683,7 @@ function CustomersPage() {
               <StatCard label="LAST ORDER" value={selected.lastOrder} />
             </div>
             <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
-              {[["Ã¢Å“â€° Email", COLORS.damascene], ["Ã°Å¸â€™Â¬ WhatsApp", COLORS.olive], ["Ã°Å¸Å½Å¸ Discount", COLORS.saffron]].map(([label, color]) => (
+              {[["âœ‰ Email", COLORS.damascene], ["ğŸ’¬ WhatsApp", COLORS.olive], ["ğŸŸ Discount", COLORS.saffron]].map(([label, color]) => (
                 <button key={label} style={{ flex: 1, padding: "9px 12px", background: color + "18", border: `0.5px solid ${color}44`, borderRadius: 8, fontSize: 11, fontWeight: 600, color, cursor: "pointer", fontFamily: FONTS.body }}>{label}</button>
               ))}
             </div>
@@ -704,7 +699,7 @@ function CustomersPage() {
               <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.textMuted, letterSpacing: 0.5, marginBottom: 10 }}>TAGS</div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {selected.tags.map(t => (
-                  <span key={t} style={{ fontSize: 10, background: (TAG_COLORS[t] || "#888") + "22", color: TAG_COLORS[t] || "#888", padding: "4px 10px", borderRadius: 10, fontWeight: 600, fontFamily: FONTS.body }}>{t} Ãƒâ€”</span>
+                  <span key={t} style={{ fontSize: 10, background: (TAG_COLORS[t] || "#888") + "22", color: TAG_COLORS[t] || "#888", padding: "4px 10px", borderRadius: 10, fontWeight: 600, fontFamily: FONTS.body }}>{t} Ã—</span>
                 ))}
               </div>
             </SectionCard>
@@ -714,7 +709,7 @@ function CustomersPage() {
                 <div key={o.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: `0.5px solid ${COLORS.wheat}` }}>
                   <div>
                     <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.damascene, fontFamily: FONTS.body }}>{o.orderNumber}</div>
-                    <div style={{ fontSize: 10, color: COLORS.textMuted }}>{o.items[0].name} Ã‚Â· {o.date}</div>
+                    <div style={{ fontSize: 10, color: COLORS.textMuted }}>{o.items[0].name} Â· {o.date}</div>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <Badge status={o.status} />
@@ -726,7 +721,7 @@ function CustomersPage() {
             </SectionCard>
             <SectionCard>
               <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.textMuted, letterSpacing: 0.5, marginBottom: 10 }}>PRIVATE NOTE</div>
-              <textarea value={noteText} onChange={e => setNoteText(e.target.value)} placeholder="Add a private note about this customerÃ¢â‚¬Â¦" style={{ width: "100%", minHeight: 80, padding: "10px 12px", border: `0.5px solid ${COLORS.wheat}`, borderRadius: 8, fontSize: 12, fontFamily: FONTS.body, resize: "vertical", outline: "none", boxSizing: "border-box" }} />
+              <textarea value={noteText} onChange={e => setNoteText(e.target.value)} placeholder="Add a private note about this customerâ€¦" style={{ width: "100%", minHeight: 80, padding: "10px 12px", border: `0.5px solid ${COLORS.wheat}`, borderRadius: 8, fontSize: 12, fontFamily: FONTS.body, resize: "vertical", outline: "none", boxSizing: "border-box" }} />
               <PrimaryBtn style={{ marginTop: 8 }}>Save Note</PrimaryBtn>
             </SectionCard>
           </div>
@@ -736,7 +731,7 @@ function CustomersPage() {
   );
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ CUSTOM ORDERS PAGE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// â”€â”€â”€ CUSTOM ORDERS PAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const CUSTOM_STAGE_INFO = {
   new:      { label: "New",        color: "#3B5BB5", bg: "#EEF4FF" },
   quote:    { label: "Quote Sent", color: COLORS.saffron, bg: "#FFF7E6" },
@@ -745,19 +740,19 @@ const CUSTOM_STAGE_INFO = {
   production:{ label: "Production",color: COLORS.damascene, bg: "#E6F4FF" },
 };
 const URGENCY_INFO = {
-  urgent: { label: "Ã°Å¸â€Â´ Urgent", color: COLORS.terracotta },
-  soon:   { label: "Ã°Å¸Å¸Â¡ Soon",   color: COLORS.saffron },
-  ok:     { label: "Ã°Å¸Å¸Â¢ OK",     color: COLORS.olive },
+  urgent: { label: "ğŸ”´ Urgent", color: COLORS.terracotta },
+  soon:   { label: "ğŸŸ¡ Soon",   color: COLORS.saffron },
+  ok:     { label: "ğŸŸ¢ OK",     color: COLORS.olive },
 };
 const MOCK_MESSAGES = {
   1: [
-    { from: "customer", text: "Hi! I need a custom wedding arch piece for my daughter's wedding on May 15. Arabic name Ã˜Â¹Ã˜Â§Ã˜Â¦Ã™â€Ã˜Â© Ã˜Â¬Ã˜Â§Ã˜Â¨Ã˜Â± in Diwani calligraphy, gold color, about 12 inches wide.", time: "2 days ago" },
-    { from: "owner",    text: "What a beautiful occasion! I can definitely do that. Let me put together a quote for you. The Diwani style in gold will be stunning Ã°Å¸Å’Å¸", time: "2 days ago" },
+    { from: "customer", text: "Hi! I need a custom wedding arch piece for my daughter's wedding on May 15. Arabic name Ø¹Ø§Ø¦Ù„Ø© Ø¬Ø§Ø¨Ø± in Diwani calligraphy, gold color, about 12 inches wide.", time: "2 days ago" },
+    { from: "owner",    text: "What a beautiful occasion! I can definitely do that. Let me put together a quote for you. The Diwani style in gold will be stunning ğŸŒŸ", time: "2 days ago" },
     { from: "customer", text: "Thank you so much! Also wondering if you can add a small olive branch motif on the sides?", time: "1 day ago" },
-    { from: "owner",    text: "Absolutely Ã¢â‚¬â€ I've attached a mockup with the olive branches. Let me know what you think!", time: "5 hours ago" },
+    { from: "owner",    text: "Absolutely â€” I've attached a mockup with the olive branches. Let me know what you think!", time: "5 hours ago" },
   ],
   2: [
-    { from: "customer", text: "Congratulations plaque for my son graduating from U of M. Ã˜Â¹Ã˜Â§Ã˜Â¦Ã™â€Ã˜Â© Ã˜Â­Ã˜Â¯Ã˜Â§Ã˜Â¯ in modern style, white.", time: "3 days ago" },
+    { from: "customer", text: "Congratulations plaque for my son graduating from U of M. Ø¹Ø§Ø¦Ù„Ø© Ø­Ø¯Ø§Ø¯ in modern style, white.", time: "3 days ago" },
     { from: "owner",    text: "Mabrook to your son! Here's a quote: base plaque $45 + custom Arabic text $20 = $65. Rush fee waived since we have 10 days.", time: "2 days ago" },
   ],
 };
@@ -781,7 +776,7 @@ function CustomOrdersPage() {
       {/* Filter Rail */}
       <div style={{ width: 168, background: COLORS.cream2, borderRight: `0.5px solid ${COLORS.wheat}`, padding: "20px 12px", overflowY: "auto", flexShrink: 0 }}>
         <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.2, color: COLORS.textMuted, marginBottom: 10, fontFamily: FONTS.body }}>STATUS</div>
-        {[["all", "All Requests"], ["urgent", "Ã°Å¸â€Â´ Urgent"], ["soon", "Ã°Å¸Å¸Â¡ Needs Reply"]].map(([v, l]) => (
+        {[["all", "All Requests"], ["urgent", "ğŸ”´ Urgent"], ["soon", "ğŸŸ¡ Needs Reply"]].map(([v, l]) => (
           <div key={v} onClick={() => setStageFilter(v)} style={{ padding: "7px 10px", borderRadius: 8, fontSize: 12, fontFamily: FONTS.body, cursor: "pointer", marginBottom: 3, background: stageFilter === v ? COLORS.saffron + "22" : "transparent", color: stageFilter === v ? COLORS.saffron : COLORS.inkBrown, fontWeight: stageFilter === v ? 600 : 400 }}>{l}</div>
         ))}
         <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.2, color: COLORS.textMuted, margin: "16px 0 10px", fontFamily: FONTS.body }}>PIPELINE</div>
@@ -811,10 +806,10 @@ function CustomOrdersPage() {
                 <span style={{ fontSize: 10, color: urgency.color, fontFamily: FONTS.body }}>{urgency.label}</span>
               </div>
               <div style={{ fontFamily: FONTS.arabic, fontSize: 16, color: COLORS.saffron, direction: "rtl", textAlign: "right", marginBottom: 4 }}>{order.arabicText}</div>
-              <div style={{ fontSize: 11, color: COLORS.textMuted, fontFamily: FONTS.body, marginBottom: 6, lineHeight: 1.4 }}>{order.snippet?.slice(0, 60)}Ã¢â‚¬Â¦</div>
+              <div style={{ fontSize: 11, color: COLORS.textMuted, fontFamily: FONTS.body, marginBottom: 6, lineHeight: 1.4 }}>{order.snippet?.slice(0, 60)}â€¦</div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span style={{ fontSize: 9, background: stage.bg, color: stage.color, padding: "2px 7px", borderRadius: 8, fontWeight: 600 }}>{stage.label}</span>
-                <span style={{ fontSize: 10, color: COLORS.textMuted }}>Ã°Å¸â€œâ€¦ {order.deadline}</span>
+                <span style={{ fontSize: 10, color: COLORS.textMuted }}>ğŸ“… {order.deadline}</span>
               </div>
             </div>
           );
@@ -834,7 +829,7 @@ function CustomOrdersPage() {
                   <span style={{ fontSize: 9, background: COLORS.saffron, color: "#FFF", padding: "2px 7px", borderRadius: 5, fontWeight: 700 }}>VIP</span>
                 )}
               </div>
-              <div style={{ fontSize: 11, color: COLORS.textMuted, fontFamily: FONTS.body }}>{selectedOrder.flag} {selectedOrder.heritage} Ã‚Â· {CUSTOMERS_DATA.find(c => c.id === selectedOrder.customerId)?.email}</div>
+              <div style={{ fontSize: 11, color: COLORS.textMuted, fontFamily: FONTS.body }}>{selectedOrder.flag} {selectedOrder.heritage} Â· {CUSTOMERS_DATA.find(c => c.id === selectedOrder.customerId)?.email}</div>
             </div>
             {/* Pipeline progress */}
             <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
@@ -881,10 +876,10 @@ function CustomOrdersPage() {
 
           {/* Reply Box */}
           <div style={{ padding: "12px 20px", borderTop: `0.5px solid ${COLORS.wheat}`, background: "#FFF", flexShrink: 0 }}>
-            <textarea value={replyText} onChange={e => setReplyText(e.target.value)} placeholder="Write a replyÃ¢â‚¬Â¦" style={{ width: "100%", minHeight: 72, padding: "10px 12px", border: `0.5px solid ${COLORS.wheat}`, borderRadius: 8, fontSize: 13, fontFamily: FONTS.body, resize: "none", outline: "none", boxSizing: "border-box", marginBottom: 8 }} />
+            <textarea value={replyText} onChange={e => setReplyText(e.target.value)} placeholder="Write a replyâ€¦" style={{ width: "100%", minHeight: 72, padding: "10px 12px", border: `0.5px solid ${COLORS.wheat}`, borderRadius: 8, fontSize: 13, fontFamily: FONTS.body, resize: "none", outline: "none", boxSizing: "border-box", marginBottom: 8 }} />
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ display: "flex", gap: 6 }}>
-                {["Ã°Å¸â€œÅ½ Attach", "Ã°Å¸â€“Â¼ Mockup", "Ã°Å¸â€œâ€¹ Template", "Ã°Å¸Å’Â Translate"].map(t => (
+                {["ğŸ“ Attach", "ğŸ–¼ Mockup", "ğŸ“‹ Template", "ğŸŒ Translate"].map(t => (
                   <GhostBtn key={t} style={{ padding: "5px 10px", fontSize: 10 }}>{t}</GhostBtn>
                 ))}
               </div>
@@ -899,7 +894,7 @@ function CustomOrdersPage() {
   );
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ ANALYTICS PAGE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// â”€â”€â”€ ANALYTICS PAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const ANALYTICS_TREND = [
   { date: "May 1", revenue: 310, orders: 5 }, { date: "May 3", revenue: 480, orders: 8 },
   { date: "May 5", revenue: 390, orders: 6 }, { date: "May 7", revenue: 620, orders: 10 },
@@ -907,9 +902,9 @@ const ANALYTICS_TREND = [
   { date: "May 13", revenue: 920, orders: 15 },
 ];
 const COUNTRY_DATA = [
-  { country: "Ã°Å¸â€¡ÂºÃ°Å¸â€¡Â¸ USA", orders: 47, pct: 58 }, { country: "Ã°Å¸â€¡Â¨Ã°Å¸â€¡Â¦ Canada", orders: 18, pct: 22 },
-  { country: "Ã°Å¸â€¡Â¬Ã°Å¸â€¡Â§ UK", orders: 9, pct: 11 }, { country: "Ã°Å¸â€¡Â¦Ã°Å¸â€¡Âº Australia", orders: 4, pct: 5 },
-  { country: "Ã°Å¸â€¡Â©Ã°Å¸â€¡Âª Germany", orders: 3, pct: 4 },
+  { country: "ğŸ‡ºğŸ‡¸ USA", orders: 47, pct: 58 }, { country: "ğŸ‡¨ğŸ‡¦ Canada", orders: 18, pct: 22 },
+  { country: "ğŸ‡¬ğŸ‡§ UK", orders: 9, pct: 11 }, { country: "ğŸ‡¦ğŸ‡º Australia", orders: 4, pct: 5 },
+  { country: "ğŸ‡©ğŸ‡ª Germany", orders: 3, pct: 4 },
 ];
 const TRAFFIC_DATA = [
   { source: "Instagram", visits: 1240, pct: 44 }, { source: "Direct", visits: 680, pct: 24 },
@@ -928,7 +923,7 @@ function AnalyticsPage() {
           <div style={{ display: "flex", gap: 4 }}>
             {["Today", "7d", "30d", "90d", "Year"].map(r => (
               <FilterPill key={r} label={r} active={range === r} onClick={() => setRange(r)} />
-            ))}
+             ))}
           </div>
         </div>
       </div>
@@ -939,241 +934,20 @@ function AnalyticsPage() {
         <div style={{ flex: 2, minWidth: 200, background: COLORS.charcoal, borderRadius: 10, padding: "18px 20px" }}>
           <div style={{ fontSize: 10, color: COLORS.wheat, letterSpacing: 0.8, fontFamily: FONTS.body, marginBottom: 4 }}>TOTAL REVENUE</div>
           <div style={{ fontFamily: FONTS.display, fontSize: 36, fontWeight: 700, color: "#FFF" }}>$4,520</div>
-          <div style={{ fontSize: 11, color: COLORS.saffronLight }}>Ã¢â€ â€˜ 23% vs previous {range}</div>
+          <div style={{ fontSize: 11, color: COLORS.saffronLight }}>â†‘ 23% vs previous {range}</div>
           <div style={{ marginTop: 10, height: 50 }}>
             <ResponsiveContainer width="100%" height={50}>
               <AreaChart data={ANALYTICS_TREND}>
-                <defs><linearGradient id="spark" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={COLORS.saffron} stopOpacity={0.5}/><stop offset="95%" stopColor={COLORS.saffron} stopOpacity={0}/></linearGradient></defs>
-                <Area type="monotone" dataKey="revenue" stroke={COLORS.saffronLight} strokeWidth={1.5} fill="url(#spark)" dot={false} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-        <StatCard label="ORDERS" value="81" sub="Ã¢â€ â€˜ 12 vs prev period" />
-        <StatCard label="AVG ORDER VALUE" value="$55.80" sub="Ã¢â€ â€˜ $4.20 this period" />
-        <StatCard label="NEW CUSTOMERS" value="24" sub="Ã¢â€ â€˜ 6 vs prev period" />
-      </div>
-
-      {/* Revenue Trend */}
-      <SectionCard style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body, marginBottom: 14 }}>Revenue Trend</div>
-        <ResponsiveContainer width="100%" height={200}>
-          <AreaChart data={ANALYTICS_TREND}>
-            <defs>
-              <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={COLORS.saffron} stopOpacity={0.35}/>
-                <stop offset="95%" stopColor={COLORS.saffron} stopOpacity={0}/>
-              </linearGradient>
-            </defs>
-            <XAxis dataKey="date" tick={{ fontSize: 10, fontFamily: FONTS.body, fill: COLORS.textMuted }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 10, fontFamily: FONTS.body, fill: COLORS.textMuted }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} />
-            <Tooltip formatter={v => [`$${v}`, "Revenue"]} contentStyle={{ fontFamily: FONTS.body, fontSize: 11, borderRadius: 8, border: `0.5px solid ${COLORS.wheat}` }} />
-            <Area type="monotone" dataKey="revenue" stroke={COLORS.saffron} strokeWidth={2.5} fill="url(#revGrad)" />
-          </AreaChart>
-        </ResponsiveContainer>
-      </SectionCard>
-
-      {/* 3-column row */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 16 }}>
-        {/* Heritage donut */}
-        <SectionCard style={{ marginBottom: 0 }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body, marginBottom: 12 }}>Sales by Heritage</div>
-          <ResponsiveContainer width="100%" height={140}>
-            <PieChart>
-              <Pie data={HERITAGE_DATA} cx="50%" cy="50%" innerRadius={40} outerRadius={60} dataKey="value">
-                {HERITAGE_DATA.map((entry, i) => <Cell key={i} fill={entry.color} />)}
-              </Pie>
-              <Tooltip formatter={(v, n) => [`${v}%`, n]} contentStyle={{ fontFamily: FONTS.body, fontSize: 11, borderRadius: 8 }} />
-            </PieChart>
-          </ResponsiveContainer>
-          {HERITAGE_DATA.map(h => (
-            <div key={h.name} style={{ display: "flex", justifyContent: "space-between", fontSize: 11, fontFamily: FONTS.body, marginTop: 4 }}>
-              <span style={{ display: "flex", alignItems: "center", gap: 6 }}><span style={{ width: 8, height: 8, borderRadius: "50%", background: h.color, display: "inline-block" }}/>{h.name}</span>
-              <span style={{ fontWeight: 600, color: COLORS.charcoal }}>{h.value}%</span>
-            </div>
-          ))}
-        </SectionCard>
-
-        {/* Top countries */}
-        <SectionCard style={{ marginBottom: 0 }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body, marginBottom: 12 }}>Top Countries</div>
-          {COUNTRY_DATA.map(c => (
-            <div key={c.country} style={{ marginBottom: 10 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, fontFamily: FONTS.body, marginBottom: 3 }}>
-                <span>{c.country}</span><span style={{ fontWeight: 600, color: COLORS.charcoal }}>{c.orders} orders</span>
-              </div>
-              <div style={{ height: 4, background: COLORS.cream2, borderRadius: 4 }}>
-                <div style={{ height: 4, width: `${c.pct}%`, background: COLORS.saffron, borderRadius: 4 }} />
-              </div>
-            </div>
-          ))}
-        </SectionCard>
-
-        {/* Traffic sources */}
-        <SectionCard style={{ marginBottom: 0 }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body, marginBottom: 12 }}>Traffic Sources</div>
-          {TRAFFIC_DATA.map(t => (
-            <div key={t.source} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: `0.5px solid ${COLORS.wheat}`, fontSize: 11, fontFamily: FONTS.body }}>
-              <span>{t.source}</span>
-              <div style={{ textAlign: "right" }}>
-                <div style={{ fontWeight: 600, color: COLORS.charcoal }}>{t.visits.toLocaleString()}</div>
-                <div style={{ fontSize: 9, color: COLORS.textMuted }}>{t.pct}%</div>
-              </div>
-            </div>
-          ))}
-        </SectionCard>
-      </div>
-
-      {/* Best sellers + Smart alerts */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-        <SectionCard style={{ marginBottom: 0 }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body, marginBottom: 12 }}>Best Sellers</div>
-          {PRODUCTS_DATA.map((p, i) => (
-            <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: `0.5px solid ${COLORS.wheat}` }}>
-              <div style={{ width: 22, height: 22, borderRadius: 6, background: COLORS.saffron + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: COLORS.saffron }}>{i + 1}</div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 12, fontWeight: 500, color: COLORS.charcoal, fontFamily: FONTS.body }}>{p.name}</div>
-                <div style={{ fontSize: 10, color: COLORS.textMuted }}>{p.orders} orders</div>
-              </div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.charcoal }}>${p.revenue.toFixed(0)}</div>
-            </div>
-          ))}
-        </SectionCard>
-        <SectionCard style={{ marginBottom: 0 }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body, marginBottom: 12 }}>Smart Alerts</div>
-          {[
-            { type: "warn", msg: "Lebanese Cedar Stand has been out of stock for 7 days Ã¢â‚¬â€ restock soon" },
-            { type: "good", msg: "Revenue up 23% this week Ã¢â‚¬â€ your best 7-day streak this month!" },
-            { type: "info", msg: "5 custom order requests waiting Ã¢â‚¬â€ oldest is 3 days old" },
-            { type: "warn", msg: "Kufic Calligraphy Frame low stock (7 units) Ã¢â‚¬â€ consider restocking" },
-          ].map((a, i) => {
-            const c = a.type === "warn" ? COLORS.terracotta : a.type === "good" ? COLORS.olive : COLORS.damascene;
-            return (
-              <div key={i} style={{ padding: "10px 12px", borderRadius: 8, background: c + "14", borderLeft: `3px solid ${c}`, marginBottom: 8 }}>
-                <div style={{ fontSize: 12, color: COLORS.charcoal, fontFamily: FONTS.body }}>{a.msg}</div>
-              </div>
-            );
-          })}
-        </SectionCard>
-      </div>
-    </div>
-  );
-}
-
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ DISCOUNTS PAGE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-function DiscountsPage() {
-  const [tab, setTab] = useState("codes");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [showCreate, setShowCreate] = useState(false);
-  const [showTemplates, setShowTemplates] = useState(false);
-  const [newCode, setNewCode] = useState({ code: "", name: "", type: "percent", value: "", minOrder: "", limit: "" });
-
-  const filtered = DISCOUNTS_DATA.filter(d => statusFilter === "all" || d.status === statusFilter);
-  const totalUsed = DISCOUNTS_DATA.reduce((s, d) => s + d.usageCount, 0);
-  const totalRevenue = DISCOUNTS_DATA.reduce((s, d) => s + d.revenue, 0);
-  const topCode = DISCOUNTS_DATA.reduce((a, b) => a.revenue > b.revenue ? a : b);
-
-  const TEMPLATES = [
-    { group: "Diaspora Calendar", items: [{ code: "RAMADAN20", label: "Ramadan Kareem 20%" }, { code: "EID15", label: "Eid Mubarak 15%" }, { code: "NAKBA74", label: "Nakba Day Solidarity" }] },
-    { group: "Universal", items: [{ code: "WELCOME10", label: "New Customer 10%" }, { code: "WINBACK20", label: "Win-Back 20%" }, { code: "VIP25", label: "VIP Loyalty 25%" }] },
-    { group: "Seasonal", items: [{ code: "WEDDING15", label: "Wedding Season 15%" }, { code: "GRAD10", label: "Graduation 10%" }] },
-    { group: "Sales", items: [{ code: "BFCM30", label: "Black Friday 30%" }, { code: "HOLIDAY15", label: "Holiday 15%" }] },
-  ];
-
-  return (
-    <div style={{ animation: "fadeIn 0.3s ease" }}>
-      <div style={{ position: "sticky", top: -24, zIndex: 10, background: COLORS.cream, margin: "-24px -32px 0", padding: "24px 32px 14px", borderBottom: `0.5px solid ${COLORS.wheat}`, boxShadow: "0 4px 12px rgba(0,0,0,0.04)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-          <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal, flex: 1 }}>Discounts</div>
-          <GhostBtn onClick={() => setShowTemplates(true)}>Ã°Å¸â€œâ€¹ Templates</GhostBtn>
-          <PrimaryBtn onClick={() => setShowCreate(true)}>+ Create Code</PrimaryBtn>
-        </div>
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-          {[["codes", "Ã°Å¸Å½Å¸ Promo Codes"], ["sales", "Ã°Å¸â€Â¥ Auto Sales"], ["bundles", "Ã°Å¸â€œÂ¦ Bundles"]].map(([v, l]) => (
-            <FilterPill key={v} label={l} active={tab === v} onClick={() => setTab(v)} />
-          ))}
-          <div style={{ flex: 1 }} />
-          {["all", "active", "scheduled", "paused", "expired"].map(s => (
-            <FilterPill key={s} label={s.charAt(0).toUpperCase() + s.slice(1)} active={statusFilter === s} onClick={() => setStatusFilter(s)} />
-          ))}
-        </div>
-      </div>
-      <div style={{ height: 14 }} />
-
-      <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
-        <StatCard label="CODES USED" value={totalUsed} sub="all time" />
-        <StatCard label="TOP CODE" value={topCode.code} sub={`$${topCode.revenue.toFixed(0)} revenue`} dark />
-        <StatCard label="DISCOUNTED REVENUE" value={`$${totalRevenue.toLocaleString()}`} />
-        <StatCard label="ACTIVE CAMPAIGNS" value={DISCOUNTS_DATA.filter(d => d.status === "active").length} />
-      </div>
-
-      {/* Live campaigns banner */}
-      {DISCOUNTS_DATA.filter(d => d.status === "active").length > 0 && (
-        <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
-          {DISCOUNTS_DATA.filter(d => d.status === "active").slice(0, 2).map(d => (
-            <div key={d.id} style={{ flex: 1, background: COLORS.charcoal, borderRadius: 10, padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
-                <div style={{ fontSize: 9, color: COLORS.saffronLight, letterSpacing: 1, marginBottom: 4, fontFamily: FONTS.body }}>ACTIVE CAMPAIGN</div>
-                <div style={{ fontSize: 18, fontFamily: "monospace", fontWeight: 700, color: COLORS.saffron }}>{d.code}</div>
-                <div style={{ fontSize: 11, color: COLORS.wheat, marginTop: 2, fontFamily: FONTS.body }}>{d.name}</div>
-              </div>
-              <div style={{ textAlign: "right" }}>
-                <div style={{ fontSize: 24, fontWeight: 700, color: "#FFF", fontFamily: FONTS.body }}>{d.type === "percent" ? `${d.value}%` : d.type === "free_shipping" ? "Free Ship" : `$${d.value}`}</div>
-                <div style={{ fontSize: 10, color: COLORS.textMuted, fontFamily: FONTS.body }}>{d.usageCount} uses Ã‚Â· ${d.revenue} rev</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {tab === "codes" && (
-        <SectionCard>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: FONTS.body }}>
-            <thead>
-              <tr style={{ borderBottom: `0.5px solid ${COLORS.wheat}` }}>
-                {["Code", "Discount", "Conditions", "Status", "Usage", "Revenue", "Period", ""].map(h => (
-                  <th key={h} style={{ textAlign: "left", fontSize: 10, fontWeight: 600, color: COLORS.textMuted, letterSpacing: 0.5, padding: "0 8px 10px" }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(d => (
-                <tr key={d.id} style={{ borderBottom: `0.5px solid ${COLORS.wheat}` }}>
-                  <td style={{ padding: "12px 8px" }}>
-                    <div style={{ fontFamily: "monospace", fontSize: 13, fontWeight: 700, color: COLORS.damascene, background: COLORS.damascene + "14", padding: "3px 8px", borderRadius: 6, display: "inline-block" }}>{d.code}</div>
-                    <div style={{ fontSize: 10, color: COLORS.textMuted, marginTop: 2 }}>{d.name}</div>
-                  </td>
-                  <td style={{ padding: "12px 8px", fontSize: 14, fontWeight: 700, color: COLORS.charcoal }}>
-                    {d.type === "percent" ? `${d.value}%` : d.type === "free_shipping" ? "Free Shipping" : `$${d.value} off`}
-                  </td>
-                  <td style={{ padding: "12px 8px", fontSize: 11, color: COLORS.textMuted }}>{d.conditions}</td>
-                  <td style={{ padding: "12px 8px" }}><Badge status={d.status} /></td>
-                  <td style={{ padding: "12px 8px", minWidth: 100 }}>
-                    <div style={{ fontSize: 11, color: COLORS.charcoal, marginBottom: 4 }}>{d.usageCount}{d.usageLimit ? `/${d.usageLimit}` : ""}</div>
-                    {d.usageLimit && (
-                      <div style={{ height: 4, background: COLORS.cream2, borderRadius: 4 }}>
-                        <div style={{ height: 4, width: `${Math.min(100, d.usageCount / d.usageLimit * 100)}%`, background: COLORS.saffron, borderRadius: 4 }} />
-                      </div>
-                    )}
-                  </td>
-                  <td style={{ padding: "12px 8px", fontSize: 13, fontWeight: 600, color: COLORS.charcoal }}>${d.revenue.toLocaleString()}</td>
-                  <td style={{ padding: "12px 8px", fontSize: 10, color: COLORS.textMuted }}>{d.startsAt}{d.endsAt ? ` Ã¢â‚¬â€œ ${d.endsAt}` : " Ã‚Â· Ongoing"}</td>
-                  <td style={{ padding: "12px 8px" }}>
-                    <div style={{ display: "flex", gap: 4 }}>
-                      <GhostBtn style={{ padding: "4px 8px", fontSize: 10 }}>Edit</GhostBtn>
-                      <GhostBtn style={{ padding: "4px 8px", fontSize: 10 }}>Ã¢â€¹Â¯</GhostBtn>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
+                <defs><linearGradient id="spark" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={CM1=IL¹Í…™™É½¹ôÍÑ½Á=Á…¥ÑäõìÀ¸Õô¼øñÍÑ½À½™™Í•ĞôˆäÔ”ˆÍÑ½Á½±½Èõí=1=IL¹Í…™™É½¹ôÍÑ½Á=Á…¥ÑäõìÁô¼øğ½±¥¹•…ÉÉ…‘¥•¹Ğøğ½‘•™Ìø(€€€€€€€€€€€€€€€€ñÉ•„ÑåÁ”ô‰µ½¹½Ñ½¹”ˆ‘…Ñ…-•äô‰É•Ù•¹Õ”ˆÍÑÉ½­”õí=1=IL¹Í…™™É½¹1¥¡ÑôÍÑÉ½­•]¥‘Ñ õìÄ¸Õô™¥±°ô‰ÕÉ° ÍÁ…É¬¤ˆ‘½Ğõí™…±Í•ô€¼ø(€€€€€€€€€€€€€€ğ½É•…¡…ÉĞø(€€€€€€€€€€€€ğ½I•ÍÁ½¹Í¥Ù•½¹Ñ…¥¹•Èø(€€€€€€€€€€ğ½‘¥Øø(€€€€€€€€ğ½‘¥Øø(€€€€€€€€ñMÑ…Ñ…É±…‰•°ô‰=IILˆÙ…±Õ”ôˆàÄˆÍÕˆô‹ŠD€ÄÈÙÌÁÉ•ØÁ•É¥½ˆ€¼ø(€€€€€€€€ñMÑ…Ñ…É±…‰•°ô‰Y=IHY1UˆÙ…±Õ”ôˆÔÔ¸àÀˆÍÕˆô‹ŠD€Ğ¸ÈÀÑ¡¥ÌÁ•É¥½ˆ€¼ø(€€€€€€€€ñMÑ…Ñ…É±…‰•°ô‰9\UMQ=5ILˆÙ…±Õ”ôˆÈĞˆÍÕˆô‹ŠD€ØÙÌÁÉ•ØÁ•É¥½ˆ€¼ø(€€€€€€ğ½‘¥Øø((€€€€€ì¼¨I•Ù•¹Õ”QÉ•¹€¨½ô(€€€€€€ñM•Ñ¥½¹…ÉÍÑå±”õíìµ…É¥¹	½ÑÑ½´è€ÄØõôø(€€€€€€€€ñ‘¥ØÍÑå±”õíì™½¹ÑM¥é”è€ÄÌ°™½¹Ñ]•¥¡Ğè€ØÀÀ°½±½Èè=1=IL¹¡…É½…°°™½¹Ñ…µ¥±äè=9QL¹‰½‘ä°µ…É¥¹	½ÑÑ½´è€ÄĞõôùI•Ù•¹Õ”QÉ•¹ğ½‘¥Øø(€€€€€€€€ñI•ÍÁ½¹Í¥Ù•½¹Ñ…¥¹•Èİ¥‘Ñ ôˆÄÀÀ”ˆ¡•¥¡ĞõìÈÀÁôø(€€€€€€€€€€ñÉ•…¡…ÉĞ‘…Ñ„õí91eQ%M}QI9ôø(€€€€€€€€€€€€ñ‘•™Ìø(€€€€€€€€€€€€€€ñ±¥¹•…ÉÉ…‘¥•¹Ğ¥ô‰É•ÙÉ…ˆàÄôˆÀˆäÄôˆÀˆàÈôˆÀˆäÈôˆÄˆø(€€€€€€€€€€€€€€€€ñÍÑ½À½™™Í•ĞôˆÔ”ˆÍÑ½Á½±½Èõí=1=IL¹Í…™™É½¹ôÍÑ½Á=Á…¥ÑäõìÀ¸ÌÕô¼ø(€€€€€€€€€€€€€€€€ñÍÑ½À½™™Í•ĞôˆäÔ”ˆÍÑ½Á½±½Èõí=1=IL¹Í…™™É½¹ôÍÑ½Á=Á…¥ÑäõìÁô¼ø(€€€€€€€€€€€€€€ğ½±¥¹•…ÉÉ…‘¥•¹Ğø(€€€€€€€€€€€€ğ½‘•™Ìø(€€€€€€€€€€€€ñaá¥Ì‘…Ñ…-•äô‰‘…Ñ”ˆÑ¥¬õíì™½¹ÑM¥é”è€ÄÀ°™½¹Ñ…µ¥±äè=9QL¹‰½‘ä°™¥±°è=1=IL¹Ñ•áÑ5ÕÑ•õô…á¥Í1¥¹”õí™…±Í•ôÑ¥­1¥¹”õí™…±Í•ô€¼ø(€€€€€€€€€€€€ñeá¥ÌÑ¥¬õíì™½¹ÑM¥é”è€ÄÀ°™½¹Ñ…µ¥±äè=9QL¹‰½‘ä°™¥±°è=1=IL¹Ñ•áÑ5ÕÑ•õô…á¥Í1¥¹”õí™…±Í•ôÑ¥­1¥¹”õí™…±Í•ôÑ¥­½Éµ…ÑÑ•ÈõíØ€ôø€‘íÙõô€¼ø(€€€€€€€€€€€€ñQ½½±Ñ¥À™½Éµ…ÑÑ•ÈõíØ€ôøm€‘íÙõ€°€‰I•Ù•¹Õ”‰uô½¹Ñ•¹ÑMÑå±”õíì™½¹Ñ…µ¥±äè=9QL¹‰½‘ä°™½¹ÑM¥é”è€ÄÄ°‰½É‘•ÉI…‘¥ÕÌè€à°‰½É‘•Èè€À¸ÕÁàÍ½±¥€‘í=1=IL¹İ¡•…Ñõ€õô€¼ø(€€€€€€€€€€€€ñÉ•„ÑåÁ”ô‰µ½¹½Ñ½¹”ˆ‘…Ñ…-•äô‰É•Ù•¹Õ”ˆÍÑÉ½­”õí=1=IL¹Í…™™É½¹ôÍÑÉ½­•]¥‘Ñ õìÈ¸Õô™¥±°ô‰ÕÉ° É•ÙÉ…¤ˆ€¼ø(€€€€€€€€€€ğ½É•…¡…ÉĞø(€€€€€€€€ğ½I•ÍÁ½¹Í¥Ù•½¹Ñ…¥¹•Èø(€€€€€€ğ½M•Ñ¥½¹…Éø((€€€€€ì¼¨€Ìµ½±Õµ¸É½Ü€¨½ô(€€€€€€ñ‘¥ØÍÑå±”õíì‘¥ÍÁ±…äè€‰É¥ˆ°É¥‘Q•µÁ±…Ñ•½±Õµ¹Ìè€ˆÅ™È€Å™È€Å™Èˆ°…Àè€ÄĞ°µ…É¥¹	½ÑÑ½´è€ÄØõôø(€€€€€€€ì¼¨!•É¥Ñ…”‘½¹ÕĞ€¨½ô(€€€€€€€€ñM•Ñ¥½¹…ÉÍÑå±”õíìµ…É¥¹	½ÑÑ½´è€Àõôø(€€€€€€€€€€ñ‘¥ØÍÑå±”õíì™½¹ÑM¥é”è€ÄÈ°™½¹Ñ]•¥¡Ğè€ØÀÀ°½±½Èè=1=IL¹¡…É½…°°™½¹Ñ…µ¥±äè=9QL¹‰½‘ä°µ…É¥¹	½ÑÑ½´è€ÄÈõôùM…±•Ì‰ä!•É¥Ñ…”ğ½‘¥Øø(€€€€€€€€€€ñI•ÍÁ½¹Í¥Ù•½¹Ñ…¥¹•Èİ¥‘Ñ ôˆÄÀÀ”ˆ¡•¥¡ĞõìÄĞÁôø(€€€€€€€€€€€€ñA¥•¡…ÉĞø(€€€€€€€€€€€€€€ñA¥”‘…Ñ„õí!I%Q}QôàôˆÔÀ”ˆäôˆÔÀ”ˆ¥¹¹•ÉI…‘¥ÕÌõìĞÁô½ÕÑ•ÉI…‘¥ÕÌõìØÁô‘…Ñ…-•äô‰Ù…±Õ”ˆø(€€€€€€€€€€€€€€€í!I%Q}Q¹µ…À ¡•¹ÑÉä°¤¤€ôø€ñ•±°­•äõí¥ô™¥±°õí•¹ÑÉä¹½±½Éô€¼ø¥ô(€€€€€€€€€€€€€€ğ½A¥”ø(€€€€€€€€€€€€€€ñQ½½±Ñ¥À™½Éµ…ÑÑ•Èõì¡Ø°¸¤€ôøm€‘íÙô•€°¹uô½¹Ñ•¹ÑMÑå±”õíì™½¹Ñ…µ¥±äè=9QL¹‰½‘ä°™½¹ÑM¥é”è€ÄÄ°‰½É‘•ÉI…‘¥ÕÌè€àõô€¼ø(€€€€€€€€€€€€ğ½A¥•¡…ÉĞø(€€€€€€€€€€ğ½I•ÍÁ½¹Í¥Ù•½¹Ñ…¥¹•Èø(€€€€€€€€€í!I%Q}Q¹µ…À¡ €ôø€ (€€€€€€€€€€€€ñ‘¥Ø­•äõí ¹¹…µ•ôÍÑå±”õíì‘¥ÍÁ±…äè€‰™±•àˆ°©ÕÍÑ¥™å½¹Ñ•¹Ğè€‰ÍÁ…”µ‰•Ñİ••¸ˆ°™½¹ÑM¥é”è€ÄÄ°™½¹Ñ…µ¥±äè=9QL¹‰½‘ä°µ…É¥¹Q½Àè€Ğõôø(€€€€€€€€€€€€€€ñÍÁ…¸ÍÑå±”õíì‘¥ÍÁ±…äè€‰™±•àˆ°…±¥¹%Ñ•µÌè€‰•¹Ñ•Èˆ°…Àè€ØõôøñÍÁ…¸ÍÑå±”õíìİ¥‘Ñ è€à°¡•¥¡Ğè€à°‰½É‘•ÉI…‘¥ÕÌè€ˆÔÀ”ˆ°‰…­É½Õ¹è ¹½±½È°‘¥ÍÁ±…äè€‰¥¹±¥¹”µ‰±½¬ˆõô¼ùí ¹¹…µ•ôğ½ÍÁ…¸ø(€€€€€€€€€€€€€€ñÍÁ…¸ÍÑå±”õíì™½¹Ñ]•¥¡Ğè€ØÀÀ°½±½Èè=1=IL¹¡…É½…°õôùí ¹Ù…±Õ•ô”ğ½ÍÁ…¸ø(€€€€€€€€€€€€ğ½‘¥Øø(€€€€€€€€€€¤¥ô(€€€€€€€€ğ½M•Ñ¥½¹…Éø((€€€€€€€ì¼¨Q½À½Õ¹ÑÉ¥•Ì€¨½ô(€€€€€€€€ñM•Ñ¥½¹…ÉÍÑå±”õíìµ…É¥¹	½ÑÑ½´è€Àõôø(€€€€€€€€€€ñ‘¥ØÍÑå±”õíì™½¹ÑM¥é”è€ÄÈ°™½¹Ñ]•¥¡Ğè€ØÀÀ°½±½Èè=1=IL¹¡…É½…°°™½¹Ñ…µ¥±äè=9QL¹‰½‘ä°µ…É¥¹	½ÑÑ½´è€ÄÈõôùQ½À½Õ¹ÑÉ¥•Ìğ½‘¥Øø(€€€€€€€€€í=U9QIe}Q¹µ…À¡Œ€ôø€ (€€€€€€€€€€€€ñ‘¥Ø­•äõíŒ¹½Õ¹ÑÉåôÍÑå±”õíìµ…É¥¹	½ÑÑ½´è€ÄÀõôø(€€€€€€€€€€€€€€ñ‘¥ØÍÑå±”õíì‘¥ÍÁ±…äè€‰™±•àˆ°©ÕÍÑ¥™å½¹Ñ•¹Ğè€‰ÍÁ…”µ‰•Ñİ••¸ˆ°™½¹ÑM¥é”è€ÄÄ°™½¹Ñ…µ¥±äè=9QL¹‰½‘ä°µ…É¥¹	½ÑÑ½´è€Ìõôø(€€€€€€€€€€€€€€€€ñÍÁ…¸ùíŒ¹½Õ¹ÑÉåôğ½ÍÁ…¸øñÍÁ…¸ÍÑå±”õíì™½¹Ñ]•¥¡Ğè€ØÀÀ°½±½Èè=1=IL¹¡…É½…°õôùíŒ¹½É‘•ÉÍô½É‘•ÉÌğ½ÍÁ…¸ø(€€€€€€€€€€€€€€ğ½‘¥Øø(€€€€€€€€€€€€€€ñ‘¥ØÍÑå±”õíì¡•¥¡Ğè€Ğ°‰…­É½Õ¹è=1=IL¹É•…´È°‰½É‘•ÉI…‘¥ÕÌè€Ğõôø(€€€€€€€€€€€€€€€€ñ‘¥ØÍÑå±”õíì¡•¥¡Ğè€Ğ°İ¥‘Ñ è€‘íŒ¹ÁÑô•€°‰…­É½Õ¹è=1=IL¹Í…™™É½¸°‰½É‘•ÉI…‘¥ÕÌè€Ğõô€¼ø(€€€€€€€€€€€€€€ğ½‘¥Øø(€€€€€€€€€€€€ğ½‘¥Øø(€€€€€€€€€€¤¥ô(€€€€€€€€ğ½M•Ñ¥½¹…Éø((€€€€€€€ì¼¨QÉ…™™¥ŒÍ½ÕÉ•Ì€¨½ô(€€€€€€€€ñM•Ñ¥½¹…ÉÍÑå±”õíìµ…É¥¹	½ÑÑ½´è€Àõôø(€€€€€€€€€€ñ‘¥ØÍÑå±”õíì™½¹ÑM¥é”è€ÄÈ°™½¹Ñ]•¥¡Ğè€ØÀÀ°½±½Èè=1=IL¹¡…É½…°°™½¹Ñ…µ¥±äè=9QL¹‰½‘ä°µ…É¥¹	½ÑÑ½´è€ÄÈõôùQÉ…™™¥ŒM½ÕÉ•Ìğ½‘¥Øø(€€€€€€€€€íQI%}Q¹µ…À¡Ğ€ôø€ (€€€€€€€€€€€€ñ‘¥Ø­•äõíĞ¹Í½ÕÉ•ôÍÑå±”õíì‘¥ÍÁ±…äè€‰™±•àˆ°©ÕÍÑ¥™å½¹Ñ•¹Ğè€‰ÍÁ…”µ‰•Ñİ••¸ˆ°…±¥¹%Ñ•µÌè€‰•¹Ñ•Èˆ°Á…‘‘¥¹œè€ˆÙÁà€Àˆ°‰½É‘•É	½ÑÑ½´è€À¸ÕÁàÍ½±¥€‘í=1=IL¹İ¡•…Ñõ€°™½¹ÑM¥é”è€ÄÄ°™½¹Ñ…µ¥±äè=9QL¹‰½‘äõôø(€€€€€€€€€€€€€€ñÍÁ…¸ùíĞ¹Í½ÕÉ•ôğ½ÍÁ…¸ø(€€€€€€€€€€€€€€ñ‘¥ØÍÑå±”õíìÑ•áÑ±¥¸è€‰É¥¡Ğˆõôø(€€€€€€€€€€€€€€€€ñ‘¥ØÍÑå±”õíì™½¹Ñ]•¥¡Ğè€ØÀÀ°½±½Èè=1=IL¹¡…É½…°õôùíĞ¹Ù¥Í¥ÑÌ¹Ñ½1½…±•MÑÉ¥¹œ ¥ôğ½‘¥Øø(€€€€€€€€€€€€€€€€ñ‘¥ØÍÑå±”õíì™½¹ÑM¥é”è€ä°½±½Èè=1=IL¹Ñ•áÑ5ÕÑ•õôùíĞ¹ÁÑô”ğ½‘¥Øø(€€€€€€€€€€€€€€ğ½‘¥Øø(€€€€€€€€€€€€ğ½‘¥Øø(€€€€€€€€€€¤¥ô(€€€€€€€€ğ½M•Ñ¥½¹…Éø(€€€€€€ğ½‘¥Øø((€€€€€ì¼¨	•ÍĞÍ•±±•ÉÌ€¬Mµ…ÉĞ…±•ÉÑÌ€¨½ô(€€€€€€ñ‘¥ØÍÑå±”õíì‘¥ÍÁ±…äè€‰É¥ˆ°É¥‘Q•µÁ±…Ñ•½±Õµ¹Ìè€ˆÅ™È€Å™Èˆ°…Àè€ÄĞõôø(€€€€€€€€ñM•Ñ¥½¹…ÉÍÑå±”õíìµ…É¥¹	½ÑÑ½´è€Àõôø(€€€€€€€€€€ñ‘¥ØÍÑå±”õíì™½¹ÑM¥é”è€ÄÈ°™½¹Ñ]•¥¡Ğè€ØÀÀ°½±½Èè=1=IL¹¡…É½…°°™½¹Ñ…µ¥±äè=9QL¹‰½‘ä°µ…É¥¹	½ÑÑ½´è€ÄÈõôù	•ÍĞM•±±•ÉÌğ½‘¥Øø(€€€€€€€€€íAI=UQM}Q¹µ…À ¡À°¤¤€ôø€ (€€€€€€€€€€€€ñ‘¥Ø­•äõíÀ¹¥‘ôÍÑå±”õíì‘¥ÍÁ±…äè€‰™±•àˆ°…±¥¹%Ñ•µÌè€‰•¹Ñ•Èˆ°…Àè€ÄÀ°Á…‘‘¥¹œè€ˆáÁà€Àˆ°‰½É‘•É	½ÑÑ½´è€À¸ÕÁàÍ½±¥€‘í=1=IL¹İ¡•…Ñõ€õôø(€€€€€€€€€€€€€€ñ‘¥ØÍÑå±”õíìİ¥‘Ñ è€ÈÈ°¡•¥¡Ğè€ÈÈ°‰½É‘•ÉI…‘¥ÕÌè€Ø°‰…­É½Õ¹è=1=IL¹Í…™™É½¸€¬€ˆÈÈˆ°‘¥ÍÁ±…äè€‰™±•àˆ°…±¥¹%Ñ•µÌè€‰•¹Ñ•Èˆ°©ÕÍÑ¥™å½¹Ñ•¹Ğè€‰•¹Ñ•Èˆ°™½¹ÑM¥é”è€ÄÀ°™½¹Ñ]•¥¡Ğè€ÜÀÀ°½±½Èè=1=IL¹Í…™™É½¸õôùí¤€¬€Åôğ½‘¥Øø(€€€€€€€€€€€€€€ñ‘¥ØÍÑå±”õíì™±•àè€Äõôø(€€€€€€€€€€€€€€€€ñ‘¥ØÍÑå±”õíì™½¹ÑM¥é”è€ÄÈ°™½¹Ñ]•¥¡Ğè€ÔÀÀ°½±½Èè=1=IL¹¡…É½…°°™½¹Ñ…µ¥±äè=9QL¹‰½‘äõôùíÀ¹¹…µ•ôğ½‘¥Øø(€€€€€€€€€€€€€€€€ñ‘¥ØÍÑå±”õíì™½¹ÑM¥é”è€ÄÀ°½±½Èè=1=IL¹Ñ•áÑ5ÕÑ•õôùíÀ¹½É‘•ÉÍô½É‘•ÉÌğ½‘¥Øø(€€€€€€€€€€€€€€ğ½‘¥Øø(€€€€€€€€€€€€€€ñ‘¥ØÍÑå±”õíì™½¹ÑM¥é”è€ÄÌ°™½¹Ñ]•¥¡Ğè€ÜÀÀ°½±½Èè=1=IL¹¡…É½…°õôø‘íÀ¹É•Ù•¹Õ”¹Ñ½¥á• À¥ôğ½‘¥Øø(€€€€€€€€€€€€ğ½‘¥Øø(€€€€€€€€€€¤¥ô(€€€€€€€€ğ½M•Ñ¥½¹…Éø(€€€€€€€€ñM•Ñ¥½¹…ÉÍÑå±”õíìµ…É¥¹	½ÑÑ½´è€Àõôø(€€€€€€€€€€ñ‘¥ØÍÑå±”õíì™½¹ÑM¥é”è€ÄÈ°™½¹Ñ]•¥¡Ğè€ØÀÀ°½±½Èè=1=IL¹¡…É½…°°™½¹Ñ…µ¥±äè=9QL¹‰½‘ä°µ…É¥¹	½ÑÑ½´è€ÄÈõôùMµ…ÉĞ±•ÉÑÌğ½‘¥Øø(€€€€€€€€€íl(€€€€€€€€€€€ìÑåÁ”è€‰İ…É¸ˆ°µÍœè€‰1•‰…¹•Í”•‘…ÈMÑ…¹¡…Ì‰••¸½ÕĞ½˜ÍÑ½¬™½È€Ü‘…åÌƒŠPÉ•ÍÑ½¬Í½½¸ˆô°(€€€€€€€€€€€ìÑåÁ”è€‰½½ˆ°µÍœè€‰I•Ù•¹Õ”ÕÀ€ÈÌ”Ñ¡¥Ìİ••¬ƒŠPå½ÕÈ‰•ÍĞ€Üµ‘…äÍÑÉ•…¬Ñ¡¥Ìµ½¹Ñ „ˆô°(€€€€€€€€€€€ìÑåÁ”è€‰¥¹™¼ˆ°µÍœè€ˆÔÕÍÑ½´½É‘•ÈÉ•ÅÕ•ÍÑÌİ…¥Ñ¥¹œƒŠP½±‘•ÍĞ¥Ì€Ì‘…åÌ½±ˆô°(€€€€€€€€€€€ìÑåÁ”è€‰İ…É¸ˆ°µÍœè€‰-Õ™¥Œ…±±¥É…Á¡äÉ…µ”±½ÜÍÑ½¬€ ÜÕ¹¥ÑÌ¤ƒŠP½¹Í¥‘•ÈÉ•ÍÑ½­¥¹œˆô°(€€€€€€€€€t¹µ…À ¡„°¤¤€ôøì(€€€€€€€€€€€½¹ÍĞŒ€ô„¹ÑåÁ”€ôôô€‰İ…É¸ˆ€ü=1=IL¹Ñ•ÉÉ…½ÑÑ„€è„¹ÑåÁ”€ôôô€‰½½ˆ€ü=1=IL¹½±¥Ù”€è=1=IL¹‘…µ…Í•¹”ì(€€€€€€€€€€€É•ÑÕÉ¸€ (€€€€€€€€€€€€€€ñ‘¥Ø­•äõí¥ôÍÑå±”õíìÁ…‘‘¥¹œè€ˆÄÁÁà€ÄÉÁàˆ°‰½É‘•ÉI…‘¥ÕÌè€à°‰…­É½Õ¹èŒ€¬€ˆÄĞˆ°‰½É‘•É1•™Ğè€ÍÁàÍ½±¥€‘íõ€°µ…É¥¹	½ÑÑ½´è€àõôø(€€€€€€€€€€€€€€€€ñ‘¥ØÍÑå±”õíì™½¹ÑM¥é”è€ÄÈ°½±½Èè=1=IL¹¡…É½…°°™½¹Ñ…µ¥±äè=9QL¹‰½‘äõôùí„¹µÍôğ½‘¥Øø(€€€€€€€€€€€€€€ğ½‘¥Øø(€€€€€€€€€€€€¤ì(€€€€€€€€€ô¥ô(€€€€€€€€ğ½M•Ñ¥½¹…Éø(€€€€€€ğ½‘¥Øø(€€€€ğ½‘¥Øø(€€¤ì)ô((¼¼ƒŠRŠRŠR %M=U9QLAƒŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠR )™Õ¹Ñ¥½¸¥Í½Õ¹ÑÍA…” ¤ì(€½¹ÍĞmÑ…ˆ°Í•ÑQ…‰t€ôÕÍ•MÑ…Ñ” ‰½‘•Ìˆ¤ì(€½¹ÍĞmÍÑ…ÑÕÍ¥±Ñ•È°Í•ÑMÑ…ÑÕÍ¥±Ñ•Ét€ôÕÍ•MÑ…Ñ” ‰…±°ˆ¤ì(€½¹ÍĞmÍ¡½İÉ•…Ñ”°Í•ÑM¡½İÉ•…Ñ•t€ôÕÍ•MÑ…Ñ”¡™…±Í”¤ì(€½¹ÍĞmÍ¡½İQ•µÁ±…Ñ•Ì°Í•ÑM¡½İQ•µÁ±…Ñ•Ít€ôÕÍ•MÑ…Ñ”¡™…±Í”¤ì(€½¹ÍĞm¹•İ½‘”°Í•Ñ9•İ½‘•t€ôÕÍ•MÑ…Ñ”¡ì½‘”è€ˆˆ°¹…µ”è€ˆˆ°ÑåÁ”è€‰Á•É•¹Ğˆ°Ù…±Õ”è€ˆˆ°µ¥¹=É‘•Èè€ˆˆ°±¥µ¥Ğè€ˆˆô¤ì((€½¹ÍĞ™¥±Ñ•É•€ô%M=U9QM}Q¹™¥±Ñ•È¡€ôøÍÑ…ÑÕÍ¥±Ñ•È€ôôô€‰…±°ˆñğ¹ÍÑ…ÑÕÌ€ôôôÍÑ…ÑÕÍ¥±Ñ•È¤ì(€½¹ÍĞÑ½Ñ…±UÍ•€ô%M=U9QM}Q¹É•‘Õ” ¡Ì°¤€ôøÌ€¬¹ÕÍ…•½Õ¹Ğ°€À¤ì(€½¹ÍĞÑ½Ñ…±I•Ù•¹Õ”€ô%M=U9QM}Q¹É•‘Õ” ¡Ì°¤€ôøÌ€¬¹É•Ù•¹Õ”°€À¤ì(€½¹ÍĞÑ½Á½‘”€ô%M=U9QM}Q¹É•‘Õ” ¡„°ˆ¤€ôø„¹É•Ù•¹Õ”€øˆ¹É•Ù•¹Õ”€ü„€èˆ¤ì((€½¹ÍĞQ5A1QL€ôl(€€€ìÉ½ÕÀè€‰¥…ÍÁ½É„…±•¹‘…Èˆ°¥Ñ•µÌèmì½‘”è€‰I58ÈÀˆ°±…‰•°è€‰I…µ…‘…¸-…É••´€ÈÀ”ˆô°ì½‘”è€‰%ÄÔˆ°±…‰•°è€‰¥5Õ‰…É…¬€ÄÔ”ˆô°ì½‘”è€‰9-	ÜĞˆ°±…‰•°è€‰9…­‰„…äM½±¥‘…É¥Ñäˆõtô°(€€€ìÉ½ÕÀè€‰U¹¥Ù•ÉÍ…°ˆ°¥Ñ•µÌèmì½‘”è€‰]1=5ÄÀˆ°±…‰•°è€‰9•ÜÕÍÑ½µ•È€ÄÀ”ˆô°ì½‘”è€‰]%9	,ÈÀˆ°±…‰•°è€‰]¥¸µ	…¬€ÈÀ”ˆô°ì½‘”è€‰Y%@ÈÔˆ°±…‰•°è€‰Y%@1½å…±Ñä€ÈÔ”ˆõtô°(€€€ìÉ½ÕÀè€‰M•…Í½¹…°ˆ°¥Ñ•µÌèmì½‘”è€‰]%9ÄÔˆ°±…‰•°è€‰]•‘‘¥¹œM•…Í½¸€ÄÔ”ˆô°ì½‘”è€‰IÄÀˆ°±…‰•°è€‰É…‘Õ…Ñ¥½¸€ÄÀ”ˆõtô°(€€€ìÉ½ÕÀè€‰M…±•Ìˆ°¥Ñ•µÌèmì½‘”è€‰	4ÌÀˆ°±…‰•°è€‰	±…¬É¥‘…ä€ÌÀ”ˆô°ì½‘”è€‰!=1%dÄÔˆ°±…‰•°è€‰!½±¥‘…ä€ÄÔ”ˆõtô°(€tì((€É•ÑÕÉ¸€ (€€€€ñ‘¥ØÍÑå±”õíì…¹¥µ…Ñ¥½¸è€‰™…‘•%¸€À¸ÍÌ•…Í”ˆõôø(€€€€€€ñ‘¥ØÍÑå±”õíìÁ½Í¥Ñ¥½¸è€‰ÍÑ¥­äˆ°Ñ½Àè€´ÈĞ°é%¹‘•àè€ÄÀ°‰…­É½Õ¹è=1=IL¹É•…´°µ…É¥¸è€ˆ´ÈÑÁà€´ÌÉÁà€Àˆ°Á…‘‘¥¹œè€ˆÈÑÁà€ÌÉÁà€ÄÑÁàˆ°‰½É‘•É	½ÑÑ½´è€À¸ÕÁàÍ½±¥€‘í=1=IL¹İ¡•…Ñõ€°‰½áM¡…‘½Üè€ˆÀ€ÑÁà€ÄÉÁàÉ‰„ À°À°À°À¸ÀĞ¤ˆõôø(€€€€€€€€ñ‘¥ØÍÑå±”õíì‘¥ÍÁ±…äè€‰™±•àˆ°…±¥¹%Ñ•µÌè€‰•¹Ñ•Èˆ°…Àè€ÄÀ°µ…É¥¹	½ÑÑ½´è€ÄÈõôø(€€€€€€€€€€ñ‘¥ØÍÑå±”õíì™½¹Ñ…µ¥±äè=9QL¹‘¥ÍÁ±…ä°™½¹ÑM¥é”è€ÈÈ°™½¹Ñ]•¥¡Ğè€ØÀÀ°½±½Èè=1=IL¹¡…É½…°°™±•àè€Äõôù¥Í½Õ¹ÑÌğ½‘¥Øø(€€€€€€€€€€ñ¡½ÍÑ	Ñ¸½¹±¥¬õì ¤€ôøÍ•ÑM¡½İQ•µÁ±…Ñ•Ì¡ÑÉÕ”¥ôûÂ~N,Q•µÁ±…Ñ•Ìğ½¡½ÍÑ	Ñ¸ø(€€€€€€€€€€ñAÉ¥µ…Éå	Ñ¸½¹±¥¬õì ¤€ôøÍ•ÑM¡½İÉ•…Ñ”¡ÑÉÕ”¥ôø¬É•…Ñ”½‘”ğ½AÉ¥µ…Éå	Ñ¸ø(€€€€€€€€ğ½‘¥Øø(€€€€€€€€ñ‘¥ØÍÑå±”õíì‘¥ÍÁ±…äè€‰™±•àˆ°…Àè€Ø°™±•á]É…Àè€‰İÉ…Àˆõôø(€€€€€€€€€íml‰½‘•Ìˆ°€‹Â~:|AÉ½µ¼½‘•Ì‰t°l‰Í…±•Ìˆ°€‹Â~R”ÕÑ¼M…±•Ì‰t°l‰‰Õ¹‘±•Ìˆ°€‹Â~N˜	Õ¹‘±•Ì‰ut¹µ…À ¡mØ°±t¤€ôø€ (€€€€€€€€€€€€ñ¥±Ñ•ÉA¥±°­•äõíÙô±…‰•°õí±ô…Ñ¥Ù”õíÑ…ˆ€ôôôÙô½¹±¥¬õì ¤€ôøÍ•ÑQ…ˆ¡Ø¥ô€¼ø(€€€€€€€€€€¤¥ô(€€€€€€€€€€ñ‘¥ØÍÑå±”õíì™±•àè€Äõô€¼ø(€€€€€€€€€íl‰…±°ˆ°€‰…Ñ¥Ù”ˆ°€‰Í¡•‘Õ±•ˆ°€‰Á…ÕÍ•ˆ°€‰•áÁ¥É•‰t¹µ…À¡Ì€ôø€ (€€€€€€€€€€€€ñ¥±Ñ•ÉA¥±°­•äõíÍô±…‰•°õíÌ¹¡…ÉĞ À¤¹Ñ½UÁÁ•É…Í” ¤€¬Ì¹Í±¥” Ä¥ô…Ñ¥Ù”õíÍÑ…ÑÕÍ¥±Ñ•È€ôôôÍô½¹±¥¬õì ¤€ôøÍ•ÑMÑ…ÑÕÍ¥±Ñ•È¡Ì¥ô€¼ø(€€€€€€€€€€¤¥ô(€€€€€€€€ğ½‘¥Øø(€€€€€€ğ½‘¥Øø(€€€€€€ñ‘¥ØÍÑå±”õíì¡•¥¡Ğè€ÄĞõô€¼ø((€€€€€€ñ‘¥ØÍÑå±”õíì‘¥ÍÁ±…äè€‰™±•àˆ°…Àè€ÄÈ°µ…É¥¹	½ÑÑ½´è€ÄØ°™±•á]É…Àè€‰İÉ…Àˆõôø(€€€€€€€€ñMÑ…Ñ…É±…‰•°ô‰=LUMˆÙ…±Õ”õíÑ½Ñ…±UÍ•‘ôÍÕˆô‰…±°Ñ¥µ”ˆ€¼ø(€€€€€€€€ñMÑ…Ñ…É±…‰•°ô‰Q=@=ˆÙ…±Õ”õíÑ½Á½‘”¹½‘•ôÍÕˆõí€‘íÑ½Á½‘”¹É•Ù•¹Õ”¹Ñ½¥á• À¥ôÉ•Ù•¹Õ•ô‘…É¬€¼ø(€€€€€€€€ñMÑ…Ñ…É±…‰•°ô‰%M=U9QIY9UˆÙ…±Õ”õí€‘íÑ½Ñ…±I•Ù•¹Õ”¹Ñ½1½…±•MÑÉ¥¹œ ¥õô€¼ø(€€€€€€€€ñMÑ…Ñ…É±…‰•°ô‰Q%Y5A%9LˆÙ…±Õ”õí%M=U9QM}Q¹™¥±Ñ•È¡€ôø¹ÍÑ…ÑÕÌ€ôôô€‰…Ñ¥Ù”ˆ¤¹±•¹Ñ¡ô€¼ø(€€€€€€ğ½‘¥Øø((€€€€€ì¼¨1¥Ù”…µÁ…¥¹Ì‰…¹¹•È€¨½ô(€€€€€í%M=U9QM}Q¹™¥±Ñ•È¡€ôø¹ÍÑ…ÑÕÌ€ôôô€‰…Ñ¥Ù”ˆ¤¹±•¹Ñ €ø€À€˜˜€ (€€€€€€€€ñ‘¥ØÍÑå±”õíì‘¥ÍÁ±…äè€‰™±•àˆ°…Àè€ÄÈ°µ…É¥¹	½ÑÑ½´è€ÄØ°™±•á]É…Àè€‰İÉ…Àˆõôø(€€€€€€€€€í%M=U9QM}Q¹™¥±Ñ•È¡€ôø¹ÍÑ…ÑÕÌ€ôôô€‰…Ñ¥Ù”ˆ¤¹Í±¥” À°€È¤¹µ…À¡€ôø€ (€€€€€€€€€€€€ñ‘¥Ø­•äõí¹¥‘ôÍÑå±”õíì™±•àè€Ä°‰…­É½Õ¹è=1=IL¹¡…É½…°°‰½É‘•ÉI…‘¥ÕÌè€ÄÀ°Á…‘‘¥¹œè€ˆÄÑÁà€ÄáÁàˆ°‘¥ÍÁ±…äè€‰™±•àˆ°©ÕÍÑ¥™å½¹Ñ•¹Ğè€‰ÍÁ…”µ‰•Ñİ••¸ˆ°…±¥¹%Ñ•µÌè€‰•¹Ñ•Èˆõôø(€€€€€€€€€€€€€€ñ‘¥Øø(€€€€€€€€€€€€€€€€ñ‘¥ØÍÑå±”õíì™½¹ÑM¥é”è€ä°½±½Èè=1=IL¹Í…™™É½¹1¥¡Ğ°±•ÑÑ•ÉMÁ…¥¹œè€Ä°µ…É¥¹	½ÑÑ½´è€Ğ°™½¹Ñ…µ¥±äè=9QL¹‰½‘äõôùQ%Y5A%8ğ½‘¥Øø(€€€€€€€€€€€€€€€€ñ‘¥ØÍÑå±”õíì™½¹ÑM¥é”è€Äà°™½¹Ñ…µ¥±äè€‰µ½¹½ÍÁ…”ˆ°™½¹Ñ]•¥¡Ğè€ÜÀÀ°½±½Èè=1=IL¹Í…™™É½¸õôùí¹½‘•ôğ½‘¥Øø(€€€€€€€€€€€€€€€€ñ‘¥ØÍÑå±”õíì™½¹ÑM¥é”è€ÄÄ°½±½Èè=1=IL¹İ¡•…Ğ°µ…É¥¹Q½Àè€È°™½¹Ñ…µ¥±äè=9QL¹‰½‘äõôùí¹¹…µ•ôğ½‘¥Øø(€€€€€€€€€€€€€€ğ½‘¥Øø(€€€€€€€€€€€€€€ñ‘¥ØÍÑå±”õíìÑ•áÑ±¥¸è€‰É¥¡Ğˆõôø(€€€€€€€€€€€€€€€€ñ‘¥ØÍÑå±”õíì™½¹ÑM¥é”è€ÈĞ°™½¹Ñ]•¥¡Ğè€ÜÀÀ°½±½Èè€ˆˆ°™½¹Ñ…µ¥±äè=9QL¹‰½‘äõôùí¹ÑåÁ”€ôôô€‰Á•É•¹Ğˆ€ü€‘í¹Ù…±Õ•ô•€€è¹ÑåÁ”€ôôô€‰™É••}Í¡¥ÁÁ¥¹œˆ€ü€‰É•”M¡¥Àˆ€è€‘í¹Ù…±Õ•õôğ½‘¥Øø(€€€€€€€€€€€€€€€€ñ‘¥ØÍÑå±”õíì™½¹ÑM¥é”è€ÄÀ°½±½Èè=1=IL¹Ñ•áÑ5ÕÑ•°™½¹Ñ…µ¥±äè=9QL¹‰½‘äõôùí¹ÕÍ…•½Õ¹ÑôÕÍ•Ìƒ
+Ü€‘í¹É•Ù•¹Õ•ôÉ•Øğ½‘¥Øø(€€€€€€€€€€€€€€ğ½‘¥Øø(€€€€€€€€€€€€ğ½‘¥Øø(€€€€€€€€€€¤¥ô(€€€€€€€€ğ½‘¥Øø(€€€€€€¥ô((€€€€€íÑ…ˆ€ôôô€‰½‘•Ìˆ€˜˜€ (€€€€€€€€ñM•Ñ¥½¹…Éø(€€€€€€€€€€ñÑ…‰±”ÍÑå±”õíìİ¥‘Ñ è€ˆÄÀÀ”ˆ°‰½É‘•É½±±…ÁÍ”è€‰½±±…ÁÍ”ˆ°™½¹Ñ…µ¥±äè=9QL¹‰½‘äõôø(€€€€€€€€€€€€ñÑ¡•…ø(€€€€€€€€€€€€€€ñÑÈÍÑå±”õíì‰½É‘•É	½ÑÑ½´è€À¸ÕÁàÍ½±¥€‘í=1=IL¹İ¡•…Ñõ€õôø(€€€€€€€€€€€€€€€íl‰½‘”ˆ°€‰¥Í½Õ¹Ğˆ°€‰½¹‘¥Ñ¥½¹Ìˆ°€‰MÑ…ÑÕÌˆ°€‰UÍ…”ˆ°€‰I•Ù•¹Õ”ˆ°€‰A•É¥½ˆ°€ˆ‰t¹µ…À¡ €ôø€ (€€€€€€€€€€€€€€€€€€ñÑ ­•äõí¡ôÍÑå±”õíìÑ•áÑ±¥¸è€‰±•™Ğˆ°™½¹ÑM¥é”è€ÄÀ°™½¹Ñ]•¥¡Ğè€ØÀÀ°½±½Èè=1=IL¹Ñ•áÑ5ÕÑ•°±•ÑÑ•ÉMÁ…¥¹œè€À¸Ô°Á…‘‘¥¹œè€ˆÀ€áÁà€ÄÁÁàˆõôùí¡ôğ½Ñ ø(€€€€€€€€€€€€€€€€¤¥ô(€€€€€€€€€€€€€€ğ½ÑÈø(€€€€€€€€€€€€ğ½Ñ¡•…ø(€€€€€€€€€€€€ñÑ‰½‘äø(€€€€€€€€€€€€€í™¥±Ñ•É•¹µ…À¡€ôø€ (€€€€€€€€€€€€€€€€ñÑÈ­•äõí¹¥‘ôÍÑå±”õíì‰½É‘•É	½ÑÑ½´è€À¸ÕÁàÍ½±¥€‘í=1=IL¹İ¡•…Ñõ€õôø(€€€€€€€€€€€€€€€€€€ñÑÍÑå±”õíìÁ…‘‘¥¹œè€ˆÄÉÁà€áÁàˆõôø(€€€€€€€€€€€€€€€€€€€€ñ‘¥ØÍÑå±”õíì™½¹Ñ…µ¥±äè€‰µ½¹½ÍÁ…”ˆ°™½¹ÑM¥é”è€ÄÌ°™½¹Ñ]•¥¡Ğè€ÜÀÀ°½±½Èè=1=IL¹‘…µ…Í•¹”°‰…­É½Õ¹è=1=IL¹‘…µ…Í•¹”€¬€ˆÄĞˆ°Á…‘‘¥¹œè€ˆÍÁà€áÁàˆ°‰½É‘•ÉI…‘¥ÕÌè€Ø°‘¥ÍÁ±…äè€‰¥¹±¥¹”µ‰±½¬ˆõôùí¹½‘•ôğ½‘¥Øø(€€€€€€€€€€€€€€€€€€€€ñ‘¥ØÍÑå±”õíì™½¹ÑM¥é”è€ÄÀ°½±½Èè=1=IL¹Ñ•áÑ5ÕÑ•°µ…É¥¹Q½Àè€Èõôùí¹¹…µ•ôğ½‘¥Øø(€€€€€€€€€€€€€€€€€€ğ½Ñø(€€€€€€€€€€€€€€€€€€ñÑÍÑå±”õíìÁ…‘‘¥¹œè€ˆÄÉÁà€áÁàˆ°™½¹ÑM¥é”è€ÄĞ°™½¹Ñ]•¥¡Ğè€ÜÀÀ°½±½Èè=1=IL¹¡…É½…°õôø(€€€€€€€€€€€€€€€€€€€í¹ÑåÁ”€ôôô€‰Á•É•¹Ğˆ€ü€‘í¹Ù…±Õ•ô•€€è¹ÑåÁ”€ôôô€‰™É••}Í¡¥ÁÁ¥¹œˆ€ü€‰É•”M¡¥ÁÁ¥¹œˆ€è€‘í¹Ù…±Õ•ô½™™ô(€€€€€€€€€€€€€€€€€€ğ½Ñø(€€€€€€€€€€€€€€€€€€ñÑÍÑå±”õíìÁ…‘‘¥¹œè€ˆÄÉÁà€áÁàˆ°™½¹ÑM¥é”è€ÄÄ°½±½Èè=1=IL¹Ñ•áÑ5ÕÑ•õôùí¹½¹‘¥Ñ¥½¹Íôğ½Ñø(€€€€€€€€€€€€€€€€€€ñÑÍÑå±”õíìÁ…‘‘¥¹œè€ˆÄÉÁà€áÁàˆõôøñ	…‘”ÍÑ…ÑÕÌõí¹ÍÑ…ÑÕÍô€¼øğ½Ñø(€€€€€€€€€€€€€€€€€€ñÑÍÑå±”õíìÁ…‘‘¥¹œè€ˆÄÉÁà€áÁàˆ°µ¥¹]¥‘Ñ è€ÄÀÀõôø(€€€€€€€€€€€€€€€€€€€€ñ‘¥ØÍÑå±”õíì™½¹ÑM¥é”è€ÄÄ°½±½Èè=1=IL¹¡…É½…°°µ…É¥¹	½ÑÑ½´è€Ğõôùí¹ÕÍ…•½Õ¹Ñõí¹ÕÍ…•1¥µ¥Ğ€ü€¼‘í¹ÕÍ…•1¥µ¥Ñõ€€è€ˆ‰ôğ½‘¥Øø(€€€€€€€€€€€€€€€€€€€í¹ÕÍ…•1¥µ¥Ğ€˜˜€ (€€€€€€€€€€€€€€€€€€€€€€ñ‘¥ØÍÑå±”õíì¡•¥¡Ğè€Ğ°‰…­É½Õ¹è=1=IL¹É•…´È°‰½É‘•ÉI…‘¥ÕÌè€Ğõôø(€€€€€€€€€€€€€€€€€€€€€€€€ñ‘¥ØÍÑå±”õíì¡•¥¡Ğè€Ğ°İ¥‘Ñ è€‘í5…Ñ ¹µ¥¸ ÄÀÀ°¹ÕÍ…•½Õ¹Ğ€¼¹ÕÍ…•1¥µ¥Ğ€¨€ÄÀÀ¥ô•€°‰…­É½Õ¹è=1=IL¹Í…™™É½¸°‰½É‘•ÉI…‘¥ÕÌè€Ğõô€¼ø(€€€€€€€€€€€€€€€€€€€€€€ğ½‘¥Øø(€€€€€€€€€€€€€€€€€€€€¥ô(€€€€€€€€€€€€€€€€€€ğ½Ñø(€€€€€€€€€€€€€€€€€€ñÑÍÑå±”õíìÁ…‘‘¥¹œè€ˆÄÉÁà€áÁàˆ°™½¹ÑM¥é”è€ÄÌ°™½¹Ñ]•¥¡Ğè€ØÀÀ°½±½Èè=1=IL¹¡…É½…°õôø‘í¹É•Ù•¹Õ”¹Ñ½1½…±•MÑÉ¥¹œ ¥ôğ½Ñø(€€€€€€€€€€€€€€€€€€ñÑÍÑå±”õíìÁ…‘‘¥¹œè€ˆÄÉÁà€áÁàˆ°™½¹ÑM¥é”è€ÄÀ°½±½Èè=1=IL¹Ñ•áÑ5ÕÑ•õôùí¹ÍÑ…ÉÑÍÑõí¹•¹‘ÍĞ€ü€ƒŠL€‘í¹•¹‘ÍÑõ€€è€ˆƒ
+Ü=¹½¥¹œ‰ôğ½Ñø(€€€€€€€€€€€€€€€€€€ñÑÍÑå±”õíìÁ…‘‘¥¹œè€ˆÄÉÁà€áÁàˆõôø(€€€€€€€€€€€€€€€€€€€€ñ‘¥ØÍÑå±”õíì‘¥ÍÁ±…äè€‰™±•àˆ°…Àè€Ğõôø(€€€€€€€€€€€€€€€€€€€€€€ñ¡½ÍÑ	Ñ¸ÍÑå±”õíìÁ…‘‘¥¹œè€ˆÑÁà€áÁàˆ°™½¹ÑM¥é”è€ÄÀõôù‘¥Ğğ½¡½ÍÑ	Ñ¸ø(€€€€€€€€€€€€€€€€€€€€€€ñ¡½ÍÑ	Ñ¸ÍÑå±”õíìÁ…‘‘¥¹œè€ˆÑÁà€áÁàˆ°™½¹ÑM¥é”è€ÄÀõôûŠ.¼ğ½¡½ÍÑ	Ñ¸ø(€€€€€€€€€€€€€€€€€€€€ğ½‘¥Øø(€€€€€€€€€€€€€€€€€€ğ½Ñø(€€€€€€€€€€€€€€€€ğ½ÑÈø(€€€€€€€€€€€€€€¤¥ô(€€€€€€€€€€€€€    </tbody>
           </table>
         </SectionCard>
       )}
       {tab !== "codes" && (
         <SectionCard>
           <div style={{ textAlign: "center", padding: "40px 0", color: COLORS.textMuted, fontFamily: FONTS.body, fontSize: 13 }}>
-            {tab === "sales" ? "Ã°Å¸â€Â¥ Set up automatic sales Ã¢â‚¬â€ coming soon" : "Ã°Å¸â€œÂ¦ Bundle deals Ã¢â‚¬â€ coming soon"}
+            {tab === "sales" ? "ğŸ”¥ Set up automatic sales â€” coming soon" : "ğŸ“¦ Bundle deals â€” coming soon"}
           </div>
         </SectionCard>
       )}
@@ -1185,7 +959,7 @@ function DiscountsPage() {
           <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: "min(520px, 92vw)", background: COLORS.cream, zIndex: 101, boxShadow: "-20px 0 60px rgba(0,0,0,0.3)", animation: "slideIn 0.3s ease", overflowY: "auto", padding: 28 }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20 }}>
               <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal }}>Discount Templates</div>
-              <button onClick={() => setShowTemplates(false)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: COLORS.textMuted }}>Ã¢Å“â€¢</button>
+              <button onClick={() => setShowTemplates(false)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: COLORS.textMuted }}>âœ•</button>
             </div>
             {TEMPLATES.map(group => (
               <div key={group.group} style={{ marginBottom: 20 }}>
@@ -1211,7 +985,7 @@ function DiscountsPage() {
           <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: "min(520px, 92vw)", background: COLORS.cream, zIndex: 101, boxShadow: "-20px 0 60px rgba(0,0,0,0.3)", animation: "slideIn 0.3s ease", overflowY: "auto", padding: 28 }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 24 }}>
               <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal }}>Create Discount Code</div>
-              <button onClick={() => setShowCreate(false)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: COLORS.textMuted }}>Ã¢Å“â€¢</button>
+              <button onClick={() => setShowCreate(false)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: COLORS.textMuted }}>âœ•</button>
             </div>
             {[["Discount Code", "code", "WELCOME10"], ["Campaign Name", "name", "New Customer Welcome"]].map(([label, key, ph]) => (
               <div key={key} style={{ marginBottom: 14 }}>
@@ -1248,7 +1022,7 @@ function DiscountsPage() {
   );
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ EMAIL & MARKETING PAGE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// â”€â”€â”€ EMAIL & MARKETING PAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const CAMPAIGNS_DATA = [
   { id: 1, name: "Eid al-Adha Collection Drop", status: "sent", date: "Jun 5", opens: 68, clicks: 31, revenue: 840 },
   { id: 2, name: "New Customer Welcome Series", status: "active", date: "Ongoing", opens: 74, clicks: 42, revenue: 1240 },
@@ -1256,12 +1030,12 @@ const CAMPAIGNS_DATA = [
   { id: 4, name: "Wedding Season Lookbook", status: "draft", date: "Scheduled Jun 20", opens: 0, clicks: 0, revenue: 0 },
 ];
 const AUTOMATIONS = [
-  { icon: "Ã¢Å“â€¦", name: "Order Confirmation", trigger: "Immediately after purchase", active: true, sent: 81, openRate: 94 },
-  { icon: "Ã°Å¸Å¡Å¡", name: "Shipping Update", trigger: "When tracking added", active: true, sent: 67, openRate: 89 },
-  { icon: "Ã°Å¸â€˜â€¹", name: "Welcome Series", trigger: "On signup (3 emails, 7 days)", active: true, sent: 24, openRate: 71 },
-  { icon: "Ã°Å¸â€ºâ€™", name: "Abandoned Cart", trigger: "1 hour after cart abandoned", active: false, sent: 12, openRate: 38 },
-  { icon: "Ã¢Å“Â¦", name: "Custom Order Milestones", trigger: "Quote sent / Mockup ready / Approved", active: true, sent: 19, openRate: 86 },
-  { icon: "Ã°Å¸â€™Å’", name: "Win-Back", trigger: "90 days since last order", active: false, sent: 8, openRate: 29 },
+  { icon: "âœ…", name: "Order Confirmation", trigger: "Immediately after purchase", active: true, sent: 81, openRate: 94 },
+  { icon: "ğŸšš", name: "Shipping Update", trigger: "When tracking added", active: true, sent: 67, openRate: 89 },
+  { icon: "ğŸ‘‹", name: "Welcome Series", trigger: "On signup (3 emails, 7 days)", active: true, sent: 24, openRate: 71 },
+  { icon: "ğŸ›’", name: "Abandoned Cart", trigger: "1 hour after cart abandoned", active: false, sent: 12, openRate: 38 },
+  { icon: "âœ¦", name: "Custom Order Milestones", trigger: "Quote sent / Mockup ready / Approved", active: true, sent: 19, openRate: 86 },
+  { icon: "ğŸ’Œ", name: "Win-Back", trigger: "90 days since last order", active: false, sent: 8, openRate: 29 },
 ];
 
 function EmailMarketingPage() {
@@ -1278,7 +1052,7 @@ function EmailMarketingPage() {
           <PrimaryBtn>+ New Campaign</PrimaryBtn>
         </div>
         <div style={{ display: "flex", gap: 6 }}>
-          {[["campaigns", "Ã°Å¸â€œÂ§ Campaigns"], ["automations", "Ã¢Å¡Â¡ Automations"], ["subscribers", "Ã°Å¸â€˜Â¥ Subscribers"], ["templates", "Ã°Å¸â€œâ€¹ Templates"]].map(([v, l]) => (
+          {[["campaigns", "ğŸ“§ Campaigns"], ["automations", "âš¡ Automations"], ["subscribers", "ğŸ‘¥ Subscribers"], ["templates", "ğŸ“‹ Templates"]].map(([v, l]) => (
             <FilterPill key={v} label={l} active={tab === v} onClick={() => setTab(v)} />
           ))}
         </div>
@@ -1286,9 +1060,9 @@ function EmailMarketingPage() {
       <div style={{ height: 14 }} />
 
       <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
-        <StatCard label="SUBSCRIBERS" value="284" sub="Ã¢â€ â€˜ 12 this month" />
+        <StatCard label="SUBSCRIBERS" value="284" sub="â†‘ 12 this month" />
         <StatCard label="AVG OPEN RATE" value="68%" sub="Industry avg 38%" dark />
-        <StatCard label="AVG CLICK RATE" value="31%" sub="Ã¢â€ â€˜ 4% this month" />
+        <StatCard label="AVG CLICK RATE" value="31%" sub="â†‘ 4% this month" />
         <StatCard label="REVENUE FROM EMAIL" value="$2,470" sub="this month" />
       </div>
 
@@ -1296,7 +1070,7 @@ function EmailMarketingPage() {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 16 }}>
           <div>
             {CAMPAIGNS_DATA.map(c => {
-              const statusIcon = c.status === "sent" ? "Ã¢Å“â€œ" : c.status === "active" ? "Ã¢â€”Â" : "Ã¢â€”â€¹";
+              const statusIcon = c.status === "sent" ? "âœ“" : c.status === "active" ? "â—" : "â—‹";
               const statusColor = c.status === "sent" ? COLORS.olive : c.status === "active" ? COLORS.saffron : COLORS.textMuted;
               return (
                 <SectionCard key={c.id} style={{ marginBottom: 10, cursor: "pointer" }}>
@@ -1323,7 +1097,7 @@ function EmailMarketingPage() {
             <SectionCard style={{ marginBottom: 12 }}>
               <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body, marginBottom: 12 }}>Subscriber Health</div>
               <div style={{ fontFamily: FONTS.display, fontSize: 36, fontWeight: 700, color: COLORS.charcoal }}>284</div>
-              <div style={{ fontSize: 11, color: COLORS.olive, marginBottom: 12 }}>Ã¢â€ â€˜ 12 subscribers this month</div>
+              <div style={{ fontSize: 11, color: COLORS.olive, marginBottom: 12 }}>â†‘ 12 subscribers this month</div>
               {[["VIP", 18, COLORS.saffron], ["Repeat buyers", 42, COLORS.damascene], ["Newsletter only", 184, COLORS.olive], ["Inactive 90d", 40, COLORS.terracotta]].map(([seg, n, c]) => (
                 <div key={seg} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "5px 0", borderBottom: `0.5px solid ${COLORS.wheat}`, fontSize: 12, fontFamily: FONTS.body }}>
                   <span style={{ display: "flex", alignItems: "center", gap: 6 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: c, display: "inline-block" }}/>{seg}</span>
@@ -1332,8 +1106,8 @@ function EmailMarketingPage() {
               ))}
             </SectionCard>
             <div style={{ background: COLORS.saffron + "18", border: `0.5px solid ${COLORS.saffron}44`, borderRadius: 10, padding: "14px 16px" }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.saffron, letterSpacing: 0.8, marginBottom: 10, fontFamily: FONTS.body }}>Ã¢Å“Â¦ SMART SUGGESTIONS</div>
-              {["40 inactive subscribers Ã¢â‚¬â€ send a win-back?", "3 customers have birthdays this month", "Eid al-Adha in 3 weeks Ã¢â‚¬â€ start a campaign now", "5 new VIPs this month Ã¢â‚¬â€ send a thank you"].map((s, i) => (
+              <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.saffron, letterSpacing: 0.8, marginBottom: 10, fontFamily: FONTS.body }}>âœ¦ SMART SUGGESTIONS</div>
+              {["40 inactive subscribers â€” send a win-back?", "3 customers have birthdays this month", "Eid al-Adha in 3 weeks â€” start a campaign now", "5 new VIPs this month â€” send a thank you"].map((s, i) => (
                 <div key={i} style={{ fontSize: 12, color: COLORS.charcoal, fontFamily: FONTS.body, padding: "6px 0", borderBottom: i < 3 ? `0.5px solid ${COLORS.saffron}22` : "none" }}>{s}</div>
               ))}
             </div>
@@ -1369,20 +1143,20 @@ function EmailMarketingPage() {
 
       {tab === "subscribers" && (
         <SectionCard>
-          <div style={{ textAlign: "center", padding: "40px 0", color: COLORS.textMuted, fontFamily: FONTS.body, fontSize: 13 }}>Subscriber management Ã¢â‚¬â€ coming soon. Import/export CSV, segment builder, and more.</div>
+          <div style={{ textAlign: "center", padding: "40px 0", color: COLORS.textMuted, fontFamily: FONTS.body, fontSize: 13 }}>Subscriber management â€” coming soon. Import/export CSV, segment builder, and more.</div>
         </SectionCard>
       )}
 
       {tab === "templates" && (
         <SectionCard>
-          <div style={{ textAlign: "center", padding: "40px 0", color: COLORS.textMuted, fontFamily: FONTS.body, fontSize: 13 }}>Email template library Ã¢â‚¬â€ coming soon. Arabic-friendly layouts, seasonal designs, and brand assets.</div>
+          <div style={{ textAlign: "center", padding: "40px 0", color: COLORS.textMuted, fontFamily: FONTS.body, fontSize: 13 }}>Email template library â€” coming soon. Arabic-friendly layouts, seasonal designs, and brand assets.</div>
         </SectionCard>
       )}
     </div>
   );
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ SETTINGS PAGE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// â”€â”€â”€ SETTINGS PAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function SettingsPage({ section: initSection, onNavigate }) {
   const [section, setSection] = useState(initSection || "general");
   const [settings, setSettings] = useState({
@@ -1397,10 +1171,10 @@ function SettingsPage({ section: initSection, onNavigate }) {
   });
   const update = (k, v) => setSettings(s => ({ ...s, [k]: v }));
 
-  const SETTINGS_NAV = [
-    { group: "STORE", items: [{ id: "general", label: "General", icon: "Ã°Å¸ÂÂª" }, { id: "payments", label: "Payments", icon: "Ã°Å¸â€™Â³" }, { id: "shipping", label: "Shipping", icon: "Ã°Å¸â€œÂ¦" }] },
-    { group: "ACCOUNT", items: [{ id: "notifications", label: "Notifications", icon: "Ã°Å¸â€â€" }, { id: "team", label: "Team", icon: "Ã°Å¸â€˜Â¥" }] },
-    { group: "LEGAL", items: [{ id: "policies", label: "Policies", icon: "Ã°Å¸â€œâ€¹" }] },
+  const SETTIGNS_NAV = [
+    { group: "STORE", items: [{ id: "general", label: "General", icon: "ğŸª" }, { id: "payments", label: "Payments", icon: "ğŸ’³" }, { id: "shipping", label: "Shipping", icon: "ğŸ“¦" }] },
+    { group: "ACCOUNT", items: [{ id: "notifications", label: "Notifications", icon: "ğŸ””" }, { id: "team", label: "Team", icon: "ğŸ‘¥" }] },
+    { group: "LEGAL", items: [{ id: "policies", label: "Policies", icon: "ğŸ“‹" }] },
   ];
 
   const Toggle = ({ value, onChange }) => (
@@ -1421,11 +1195,11 @@ function SettingsPage({ section: initSection, onNavigate }) {
   );
 
   const SHIPPING_ZONES = [
-    { zone: "Ã°Å¸â€¡ÂºÃ°Å¸â€¡Â¸ USA", standard: "$5.99", express: "$12.99", processing: "3Ã¢â‚¬â€œ5 days" },
-    { zone: "Ã°Å¸â€¡Â¨Ã°Å¸â€¡Â¦ Canada", standard: "$9.99", express: "$18.99", processing: "5Ã¢â‚¬â€œ8 days" },
-    { zone: "Ã°Å¸â€¡ÂªÃ°Å¸â€¡Âº Europe", standard: "$14.99", express: "$24.99", processing: "7Ã¢â‚¬â€œ12 days" },
-    { zone: "Ã°Å¸â€¡Â¦Ã°Å¸â€¡Âº Australia", standard: "$16.99", express: "$29.99", processing: "10Ã¢â‚¬â€œ14 days" },
-    { zone: "Ã°Å¸Å’Â Worldwide", standard: "$19.99", express: "$34.99", processing: "14Ã¢â‚¬â€œ21 days" },
+    { zone: "ğŸ‡ºğŸ‡¸ USA", standard: "$5.99", express: "$12.99", processing: "3â€“5 days" },
+    { zone: "ğŸ‡¨ğŸ‡¦ Canada", standard: "$9.99", express: "$18.99", processing: "5â€“8 days" },
+    { zone: "ğŸ‡ªğŸ‡º Europe", standard: "$14.99", express: "$24.99", processing: "7â€“12 days" },
+    { zone: "ğŸ‡¦ğŸ‡º Australia", standard: "$16.99", express: "$29.99", processing: "10â€“14 days" },
+    { zone: "ğŸŒ Worldwide", standard: "$19.99", express: "$34.99", processing: "14â€“21 days" },
   ];
 
   return (
@@ -1452,7 +1226,7 @@ function SettingsPage({ section: initSection, onNavigate }) {
             <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal, marginBottom: 20 }}>General Settings</div>
             <SectionCard>
               <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.textMuted, letterSpacing: 0.8, marginBottom: 14, fontFamily: FONTS.body }}>STORE IDENTITY</div>
-              {[["Store Name", "storeName", "Souk3D"], ["Tagline", "tagline", "Handmade 3D giftsÃ¢â‚¬Â¦"], ["Email", "email", "nala@souk3d.com"], ["Phone", "phone", "+1 313Ã¢â‚¬Â¦"]].map(([label, key, ph]) => (
+              {[["Store Name", "storeName", "Souk3D"], ["Tagline", "tagline", "Handmade 3D giftsâ€¦"], ["Email", "email", "nala@souk3d.com"], ["Phone", "phone", "+1 313â€¦"]].map(([label, key, ph]) => (
                 <FieldRow key={key} label={label}><TextInput value={settings[key]} onChange={v => update(key, v)} placeholder={ph} /></FieldRow>
               ))}
             </SectionCard>
@@ -1483,7 +1257,7 @@ function SettingsPage({ section: initSection, onNavigate }) {
               <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.textMuted, letterSpacing: 0.8, marginBottom: 14, fontFamily: FONTS.body }}>STRIPE</div>
               <div style={{ background: settings.stripeConnected ? COLORS.olive + "14" : COLORS.terracotta + "14", border: `0.5px solid ${settings.stripeConnected ? COLORS.olive : COLORS.terracotta}44`, borderRadius: 10, padding: "16px 18px", marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body }}>{settings.stripeConnected ? "Ã¢Å“â€¦ Stripe Connected" : "Ã¢Å¡Â Ã¯Â¸Â Stripe Not Connected"}</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body }}>{settings.stripeConnected ? "âœ… Stripe Connected" : "âš ï¸ Stripe Not Connected"}</div>
                   <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 2, fontFamily: FONTS.body }}>{settings.stripeConnected ? "Payments are active" : "Connect Stripe to accept payments"}</div>
                 </div>
                 <PrimaryBtn onClick={() => update("stripeConnected", !settings.stripeConnected)}>{settings.stripeConnected ? "Disconnect" : "Connect Stripe"}</PrimaryBtn>
@@ -1550,7 +1324,7 @@ function SettingsPage({ section: initSection, onNavigate }) {
 
         {!["general", "payments", "shipping"].includes(section) && (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 300, color: COLORS.textMuted, fontFamily: FONTS.body, fontSize: 13 }}>
-            {section.charAt(0).toUpperCase() + section.slice(1)} settings Ã¢â‚¬â€ coming soon
+            {section.charAt(0).toUpperCase() + section.slice(1)} settings â€” coming soon
           </div>
         )}
       </div>
@@ -1558,7 +1332,7 @@ function SettingsPage({ section: initSection, onNavigate }) {
   );
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ ADMIN APP (ROOT) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// â”€â”€â”€ ADMIN APP (ROOT) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function AdminApp() {
   const [authed, setAuthed] = useState(false);
   const [page, setPage] = useState("dashboard");
