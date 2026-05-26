@@ -1060,7 +1060,7 @@ function AnalyticsPage() {
   );
 }
 
-// ─── DISCOUNTS PAGE ───────────────────────────────────────────────────────────
+// ─── DISCOUNTS PAGE ────────────────────────────────────────────────────────────
 function DiscountsPage() {
   const [tab, setTab] = useState("codes");
   const [statusFilter, setStatusFilter] = useState("all");
