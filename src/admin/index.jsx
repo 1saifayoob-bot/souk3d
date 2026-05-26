@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart, PieChart, Pie, Cell, BarChart, Bar } from "recharts";
 
-// ─── BRAND CONSTANTS ───────────────────────────────────────────────────────────
+// â”€â”€â”€ BRAND CONSTANTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const COLORS = {
   saffron: "#D4881F", saffronLight: "#E8B864", saffronDark: "#A86510",
   terracotta: "#B85C3C", damascene: "#1E5C8C", olive: "#5C6B3F",
@@ -14,40 +14,40 @@ const FONTS = {
   arabic: "'Amiri', serif",
 };
 
-// ─── MOCK DATA ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ MOCK DATA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const PRODUCTS_DATA = [
-  { id: 1, sku: "S3D-001", name: "Damascus Name Plaque", name_ar: "لوحة الاسم الدمشقية", category: "Home Decor", country: "Syria", price: 44.99, cost: 12, stock: 23, status: "active", featured: true, orders: 47, revenue: 2114.53 },
-  { id: 2, sku: "S3D-002", name: "Eid Mubarak Lantern", name_ar: "فانوس عيد مبارك", category: "Seasonal", country: "Pan-Arab", price: 34.99, cost: 9, stock: 41, status: "active", featured: true, orders: 38, revenue: 1329.62 },
-  { id: 3, sku: "S3D-003", name: "Palestinian Olive Tree", name_ar: "شجرة الزيتون الفلسطينية", category: "Art", country: "Palestine", price: 54.99, cost: 15, stock: 12, status: "active", featured: false, orders: 29, revenue: 1594.71 },
-  { id: 4, sku: "S3D-004", name: "Lebanese Cedar Stand", name_ar: "حامل الأرز اللبناني", category: "Home Decor", country: "Lebanon", price: 39.99, cost: 11, stock: 0, status: "out_of_stock", featured: false, orders: 22, revenue: 879.78 },
-  { id: 5, sku: "S3D-005", name: "Kufic Calligraphy Frame", name_ar: "إطار الخط الكوفي", category: "Art", country: "Pan-Arab", price: 64.99, cost: 18, stock: 7, status: "active", featured: true, orders: 18, revenue: 1169.82 },
+  { id: 1, sku: "S3D-001", name: "Damascus Name Plaque", name_ar: "Ù„ÙˆØ­Ø© Ø§Ù„Ø§Ø³Ù… Ø§Ù„Ø¯Ù…Ø´Ù‚ÙŠØ©", category: "Home Decor", country: "Syria", price: 44.99, cost: 12, stock: 23, status: "active", featured: true, orders: 47, revenue: 2114.53 },
+  { id: 2, sku: "S3D-002", name: "Eid Mubarak Lantern", name_ar: "ÙØ§Ù†ÙˆØ³ Ø¹ÙŠØ¯ Ù…Ø¨Ø§Ø±Ùƒ", category: "Seasonal", country: "Pan-Arab", price: 34.99, cost: 9, stock: 41, status: "active", featured: true, orders: 38, revenue: 1329.62 },
+  { id: 3, sku: "S3D-003", name: "Palestinian Olive Tree", name_ar: "Ø´Ø¬Ø±Ø© Ø§Ù„Ø²ÙŠØªÙˆÙ† Ø§Ù„ÙÙ„Ø³Ø·ÙŠÙ†ÙŠØ©", category: "Art", country: "Palestine", price: 54.99, cost: 15, stock: 12, status: "active", featured: false, orders: 29, revenue: 1594.71 },
+  { id: 4, sku: "S3D-004", name: "Lebanese Cedar Stand", name_ar: "Ø­Ø§Ù…Ù„ Ø§Ù„Ø£Ø±Ø² Ø§Ù„Ù„Ø¨Ù†Ø§Ù†ÙŠ", category: "Home Decor", country: "Lebanon", price: 39.99, cost: 11, stock: 0, status: "out_of_stock", featured: false, orders: 22, revenue: 879.78 },
+  { id: 5, sku: "S3D-005", name: "Kufic Calligraphy Frame", name_ar: "Ø¥Ø·Ø§Ø± Ø§Ù„Ø®Ø· Ø§Ù„ÙƒÙˆÙÙŠ", category: "Art", country: "Pan-Arab", price: 64.99, cost: 18, stock: 7, status: "active", featured: true, orders: 18, revenue: 1169.82 },
 ];
 
 const ORDERS_DATA = [
-  { id: 1, orderNumber: "#3041", customer: "Layla Hadi", email: "layla.h@example.com", location: "Detroit, MI 🇺🇸", items: [{ name: "Damascus Name Plaque", qty: 1, price: 44.99 }], total: 52.98, status: "new", date: "5 min ago", customText: "عائلة حداد", isCustom: false },
-  { id: 2, orderNumber: "#3040", customer: "Omar Khouri", email: "omar.k@example.com", location: "Toronto, ON 🇨🇦", items: [{ name: "Eid Mubarak Lantern", qty: 2, price: 34.99 }], total: 77.97, status: "in_production", date: "1 hour ago", isCustom: false },
-  { id: 3, orderNumber: "#3039", customer: "Sarah Jaber", email: "sarah.j@example.com", location: "Dearborn, MI 🇺🇸", items: [{ name: "Custom Wedding Arch", qty: 1, price: 120.00 }], total: 128.99, status: "awaiting_approval", date: "3 hours ago", isCustom: true },
-  { id: 4, orderNumber: "#3038", customer: "Yara Mansour", email: "yara.m@example.com", location: "London, UK 🇬🇧", items: [{ name: "Palestinian Olive Tree", qty: 1, price: 54.99 }], total: 67.98, status: "shipped", date: "Yesterday", trackingNumber: "1Z999AA1012345678", isCustom: false },
-  { id: 5, orderNumber: "#3037", customer: "Maya Saadeh", email: "maya.s@example.com", location: "Sydney, AU 🇦🇺", items: [{ name: "Kufic Calligraphy Frame", qty: 1, price: 64.99 }], total: 79.98, status: "delivered", date: "2 days ago", isCustom: false },
+  { id: 1, orderNumber: "#3041", customer: "Layla Hadi", email: "layla.h@example.com", location: "Detroit, MI ðŸ‡ºðŸ‡¸", items: [{ name: "Damascus Name Plaque", qty: 1, price: 44.99 }], total: 52.98, status: "new", date: "5 min ago", customText: "Ø¹Ø§Ø¦Ù„Ø© Ø­Ø¯Ø§Ø¯", isCustom: false },
+  { id: 2, orderNumber: "#3040", customer: "Omar Khouri", email: "omar.k@example.com", location: "Toronto, ON ðŸ‡¨ðŸ‡¦", items: [{ name: "Eid Mubarak Lantern", qty: 2, price: 34.99 }], total: 77.97, status: "in_production", date: "1 hour ago", isCustom: false },
+  { id: 3, orderNumber: "#3039", customer: "Sarah Jaber", email: "sarah.j@example.com", location: "Dearborn, MI ðŸ‡ºðŸ‡¸", items: [{ name: "Custom Wedding Arch", qty: 1, price: 120.00 }], total: 128.99, status: "awaiting_approval", date: "3 hours ago", isCustom: true },
+  { id: 4, orderNumber: "#3038", customer: "Yara Mansour", email: "yara.m@example.com", location: "London, UK ðŸ‡¬ðŸ‡§", items: [{ name: "Palestinian Olive Tree", qty: 1, price: 54.99 }], total: 67.98, status: "shipped", date: "Yesterday", trackingNumber: "1Z999AA1012345678", isCustom: false },
+  { id: 5, orderNumber: "#3037", customer: "Maya Saadeh", email: "maya.s@example.com", location: "Sydney, AU ðŸ‡¦ðŸ‡º", items: [{ name: "Kufic Calligraphy Frame", qty: 1, price: 64.99 }], total: 79.98, status: "delivered", date: "2 days ago", isCustom: false },
 ];
 
 const CUSTOMERS_DATA = [
-  { id: 1, name: "Layla Hadi", email: "layla.h@example.com", phone: "+1 313 555-0142", heritage: "Syria", location: { city: "Detroit", state: "MI", country: "USA", flag: "🇺🇸" }, orders: 5, customOrders: 3, ltv: 184.95, lastOrder: "5 min ago", tags: ["VIP", "Repeat buyer", "Custom orders"] },
-  { id: 2, name: "Omar Khouri", email: "omar.k@example.com", phone: "+1 416 555-0198", heritage: "Lebanon", location: { city: "Toronto", state: "ON", country: "Canada", flag: "🇨🇦" }, orders: 3, customOrders: 0, ltv: 94.94, lastOrder: "1 hour ago", tags: ["Repeat buyer"] },
-  { id: 3, name: "Yara Mansour", email: "yara.m@example.com", phone: "+44 20 7946 0958", heritage: "Palestine", location: { city: "London", state: "", country: "UK", flag: "🇬🇧" }, orders: 2, customOrders: 0, ltv: 65.98, lastOrder: "3 hours ago", tags: ["Gift buyer"] },
-  { id: 4, name: "Sarah Jaber", email: "sarah.j@example.com", phone: "+1 313 555-0167", heritage: "Syria", location: { city: "Dearborn", state: "MI", country: "USA", flag: "🇺🇸" }, orders: 7, customOrders: 5, ltv: 312.50, lastOrder: "Yesterday", tags: ["VIP", "Custom orders"] },
-  { id: 5, name: "Maya Saadeh", email: "maya.s@example.com", phone: "+61 2 9999 0000", heritage: "Lebanon", location: { city: "Sydney", state: "NSW", country: "Australia", flag: "🇦🇺" }, orders: 1, customOrders: 0, ltv: 44.97, lastOrder: "2 days ago", tags: [] },
-  { id: 6, name: "Karim Daher", email: "karim.d@example.com", phone: "+49 30 12345678", heritage: "Pan-Arab", location: { city: "Berlin", state: "", country: "Germany", flag: "🇩🇪" }, orders: 1, customOrders: 0, ltv: 59.96, lastOrder: "3 days ago", tags: [] },
-  { id: 7, name: "Nour Salem", email: "nour.s@example.com", phone: "+1 718 555-0123", heritage: "Palestine", location: { city: "Brooklyn", state: "NY", country: "USA", flag: "🇺🇸" }, orders: 2, customOrders: 0, ltv: 38.98, lastOrder: "4 days ago", tags: ["Repeat buyer"] },
-  { id: 8, name: "Rana Haddad", email: "rana.h@example.com", phone: "+1 514 555-0177", heritage: "Syria", location: { city: "Montreal", state: "QC", country: "Canada", flag: "🇨🇦" }, orders: 1, customOrders: 1, ltv: 39.99, lastOrder: "5 days ago", tags: ["Custom orders"] },
+  { id: 1, name: "Layla Hadi", email: "layla.h@example.com", phone: "+1 313 555-0142", heritage: "Syria", location: { city: "Detroit", state: "MI", country: "USA", flag: "ðŸ‡ºðŸ‡¸" }, orders: 5, customOrders: 3, ltv: 184.95, lastOrder: "5 min ago", tags: ["VIP", "Repeat buyer", "Custom orders"] },
+  { id: 2, name: "Omar Khouri", email: "omar.k@example.com", phone: "+1 416 555-0198", heritage: "Lebanon", location: { city: "Toronto", state: "ON", country: "Canada", flag: "ðŸ‡¨ðŸ‡¦" }, orders: 3, customOrders: 0, ltv: 94.94, lastOrder: "1 hour ago", tags: ["Repeat buyer"] },
+  { id: 3, name: "Yara Mansour", email: "yara.m@example.com", phone: "+44 20 7946 0958", heritage: "Palestine", location: { city: "London", state: "", country: "UK", flag: "ðŸ‡¬ðŸ‡§" }, orders: 2, customOrders: 0, ltv: 65.98, lastOrder: "3 hours ago", tags: ["Gift buyer"] },
+  { id: 4, name: "Sarah Jaber", email: "sarah.j@example.com", phone: "+1 313 555-0167", heritage: "Syria", location: { city: "Dearborn", state: "MI", country: "USA", flag: "ðŸ‡ºðŸ‡¸" }, orders: 7, customOrders: 5, ltv: 312.50, lastOrder: "Yesterday", tags: ["VIP", "Custom orders"] },
+  { id: 5, name: "Maya Saadeh", email: "maya.s@example.com", phone: "+61 2 9999 0000", heritage: "Lebanon", location: { city: "Sydney", state: "NSW", country: "Australia", flag: "ðŸ‡¦ðŸ‡º" }, orders: 1, customOrders: 0, ltv: 44.97, lastOrder: "2 days ago", tags: [] },
+  { id: 6, name: "Karim Daher", email: "karim.d@example.com", phone: "+49 30 12345678", heritage: "Pan-Arab", location: { city: "Berlin", state: "", country: "Germany", flag: "ðŸ‡©ðŸ‡ª" }, orders: 1, customOrders: 0, ltv: 59.96, lastOrder: "3 days ago", tags: [] },
+  { id: 7, name: "Nour Salem", email: "nour.s@example.com", phone: "+1 718 555-0123", heritage: "Palestine", location: { city: "Brooklyn", state: "NY", country: "USA", flag: "ðŸ‡ºðŸ‡¸" }, orders: 2, customOrders: 0, ltv: 38.98, lastOrder: "4 days ago", tags: ["Repeat buyer"] },
+  { id: 8, name: "Rana Haddad", email: "rana.h@example.com", phone: "+1 514 555-0177", heritage: "Syria", location: { city: "Montreal", state: "QC", country: "Canada", flag: "ðŸ‡¨ðŸ‡¦" }, orders: 1, customOrders: 1, ltv: 39.99, lastOrder: "5 days ago", tags: ["Custom orders"] },
 ];
 
 const CUSTOM_ORDERS_DATA = [
-  { id: 1, customerId: 4, customerName: "Sarah Jaber", heritage: "Syria", flag: "🇺🇸", arabicText: "عائلة جابر", occasion: "Wedding", style: "Diwani", color: "Gold", deadline: "May 15", urgency: "urgent", stage: "mockup", messages: 4, snippet: "I need a custom wedding arch piece for my daughter..." },
-  { id: 2, customerId: 1, customerName: "Layla Hadi", heritage: "Syria", flag: "🇺🇸", arabicText: "ةائلة حداد", occasion: "Graduation", style: "Modern", color: "White", deadline: "May 20", urgency: "soon", stage: "quote", messages: 2, snippet: "Congratulations plaque for my son graduating..." },
-  { id: 3, customerId: 3, customerName: "Yara Mansour", heritage: "Palestine", flag: "🇬🇧", arabicText: "مبروك يا دكتور", occasion: "Graduation", style: "Classic", color: "Gold", deadline: "Jun 1", urgency: "ok", stage: "new", messages: 1, snippet: "Doctor graduation gift for my husband..." },
-  { id: 4, customerId: 7, customerName: "Nour Salem", heritage: "Palestine", flag: "🇺🇸", arabicText: "يا صبي يا حلو", occasion: "Baby", style: "Diwani", color: "Blue", deadline: "Jun 15", urgency: "ok", stage: "approved", messages: 6, snippet: "New baby boy wall piece for nursery..." },
-  { id: 5, customerId: 8, customerName: "Rana Haddad", heritage: "Syria", flag: "🇨🇦", arabicText: "عيد ميلاد سعيد", occasion: "Birthday", style: "Modern", color: "Mixed", deadline: "May 30", urgency: "ok", stage: "quote", messages: 3, snippet: "Birthday cake topper with arabic name..." },
+  { id: 1, customerId: 4, customerName: "Sarah Jaber", heritage: "Syria", flag: "ðŸ‡ºðŸ‡¸", arabicText: "Ø¹Ø§Ø¦Ù„Ø© Ø¬Ø§Ø¨Ø±", occasion: "Wedding", style: "Diwani", color: "Gold", deadline: "May 15", urgency: "urgent", stage: "mockup", messages: 4, snippet: "I need a custom wedding arch piece for my daughter..." },
+  { id: 2, customerId: 1, customerName: "Layla Hadi", heritage: "Syria", flag: "ðŸ‡ºðŸ‡¸", arabicText: "Ø©Ø§Ø¦Ù„Ø© Ø­Ø¯Ø§Ø¯", occasion: "Graduation", style: "Modern", color: "White", deadline: "May 20", urgency: "soon", stage: "quote", messages: 2, snippet: "Congratulations plaque for my son graduating..." },
+  { id: 3, customerId: 3, customerName: "Yara Mansour", heritage: "Palestine", flag: "ðŸ‡¬ðŸ‡§", arabicText: "Ù…Ø¨Ø±ÙˆÙƒ ÙŠØ§ Ø¯ÙƒØªÙˆØ±", occasion: "Graduation", style: "Classic", color: "Gold", deadline: "Jun 1", urgency: "ok", stage: "new", messages: 1, snippet: "Doctor graduation gift for my husband..." },
+  { id: 4, customerId: 7, customerName: "Nour Salem", heritage: "Palestine", flag: "ðŸ‡ºðŸ‡¸", arabicText: "ÙŠØ§ ØµØ¨ÙŠ ÙŠØ§ Ø­Ù„Ùˆ", occasion: "Baby", style: "Diwani", color: "Blue", deadline: "Jun 15", urgency: "ok", stage: "approved", messages: 6, snippet: "New baby boy wall piece for nursery..." },
+  { id: 5, customerId: 8, customerName: "Rana Haddad", heritage: "Syria", flag: "ðŸ‡¨ðŸ‡¦", arabicText: "Ø¹ÙŠØ¯ Ù…ÙŠÙ„Ø§Ø¯ Ø³Ø¹ÙŠØ¯", occasion: "Birthday", style: "Modern", color: "Mixed", deadline: "May 30", urgency: "ok", stage: "quote", messages: 3, snippet: "Birthday cake topper with arabic name..." },
 ];
 
 const REVENUE_DATA = [
@@ -74,21 +74,21 @@ const DISCOUNTS_DATA = [
 
 const NAV_ITEMS = [
   { section: "SALES", items: [
-    { id: "dashboard", label: "Dashboard", icon: "⬛" },
-    { id: "orders", label: "Orders", icon: "📦", badge: 3 },
-    { id: "products", label: "Products", icon: "🏺" },
-    { id: "customers", label: "Customers", icon: "👥" },
-    { id: "custom-orders", label: "Custom Orders", icon: "✦", badge: 5 },
+    { id: "dashboard", label: "Dashboard", icon: "â¬›" },
+    { id: "orders", label: "Orders", icon: "ðŸ“¦", badge: 3 },
+    { id: "products", label: "Products", icon: "ðŸº" },
+    { id: "customers", label: "Customers", icon: "ðŸ‘¥" },
+    { id: "custom-orders", label: "Custom Orders", icon: "âœ¦", badge: 5 },
   ]},
   { section: "MARKETING", items: [
-    { id: "discounts", label: "Discounts", icon: "🎟" },
-    { id: "email", label: "Email & Marketing", icon: "📧" },
+    { id: "discounts", label: "Discounts", icon: "ðŸŽŸ" },
+    { id: "email", label: "Email & Marketing", icon: "ðŸ“§" },
   ]},
   { section: "INSIGHTS", items: [
-    { id: "analytics", label: "Analytics", icon: "📊" },
+    { id: "analytics", label: "Analytics", icon: "ðŸ“Š" },
   ]},
   { section: "ACCOUNT", items: [
-    { id: "settings-general", label: "Settings", icon: "⚙️" },
+    { id: "settings-general", label: "Settings", icon: "âš™ï¸" },
   ]},
 ];
 
@@ -97,7 +97,7 @@ const HERITAGE_COLORS = {
   "Pan-Arab": "#5C6B3F", Egypt: "#E8B864",
 };
 
-// ─── SHARED COMPONENTS ─────────────────────────────────────────────────────────
+// â”€â”€â”€ SHARED COMPONENTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function FilterPill({ label, active, onClick }) {
   return (
     <div onClick={onClick} style={{
@@ -187,7 +187,7 @@ function HeritageAvatar({ name, heritage, size = 36 }) {
   );
 }
 
-// ─── LOGIN ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ LOGIN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function LoginPage({ onLogin }) {
   const [pw, setPw] = useState("");
   const [err, setErr] = useState("");
@@ -201,8 +201,8 @@ function LoginPage({ onLogin }) {
       <div style={{ width: 380, background: COLORS.cream, borderRadius: 16, padding: 40, boxShadow: "0 20px 60px rgba(0,0,0,0.4)" }}>
         <div style={{ textAlign: "center", marginBottom: 32 }}>
           <div style={{ fontFamily: FONTS.display, fontSize: 32, fontWeight: 600, color: COLORS.charcoal }}>Souk3D</div>
-          <div style={{ fontFamily: FONTS.arabic, fontSize: 18, color: COLORS.saffron, marginTop: 4 }}>سوق ثري دي</div>
-          <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 8, fontFamily: FONTS.body }}>Admin Dashboard · Nala's Studio</div>
+          <div style={{ fontFamily: FONTS.arabic, fontSize: 18, color: COLORS.saffron, marginTop: 4 }}>Ø³ÙˆÙ‚ Ø«Ø±ÙŠ Ø¯ÙŠ</div>
+          <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 8, fontFamily: FONTS.body }}>Admin Dashboard Â· Nala's Studio</div>
         </div>
         <form onSubmit={handle}>
           <input
@@ -213,20 +213,20 @@ function LoginPage({ onLogin }) {
           <PrimaryBtn style={{ width: "100%", padding: "13px 20px" }}>Sign In</PrimaryBtn>
         </form>
         <div style={{ textAlign: "center", marginTop: 16 }}>
-          <button onClick={onLogin} style={{ background: "none", border: "none", color: COLORS.textMuted, fontSize: 12, cursor: "pointer", fontFamily: FONTS.body }}>One-click demo access →</button>
+          <button onClick={onLogin} style={{ background: "none", border: "none", color: COLORS.textMuted, fontSize: 12, cursor: "pointer", fontFamily: FONTS.body }}>One-click demo access â†’</button>
         </div>
       </div>
     </div>
   );
 }
 
-// ─── SIDEBAR ───────────────────────────────────────────────────────────────────
+// â”€â”€â”€ SIDEBAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function Sidebar({ page, setPage }) {
   return (
     <div style={{ width: 220, background: COLORS.charcoal, minHeight: "100vh", display: "flex", flexDirection: "column", flexShrink: 0, position: "sticky", top: 0, height: "100vh", overflowY: "auto" }}>
       <div style={{ padding: "24px 20px 16px" }}>
         <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: "#FFF" }}>Souk3D</div>
-        <div style={{ fontFamily: FONTS.arabic, fontSize: 13, color: COLORS.saffron }}>سوق ثري دي</div>
+        <div style={{ fontFamily: FONTS.arabic, fontSize: 13, color: COLORS.saffron }}>Ø³ÙˆÙ‚ Ø«Ø±ÙŠ Ø¯ÙŠ</div>
       </div>
       <div style={{ padding: "0 10px", flex: 1 }}>
         {NAV_ITEMS.map(({ section, items }) => (
@@ -255,7 +255,7 @@ function Sidebar({ page, setPage }) {
   );
 }
 
-// ─── DASHBOARD ──────────────────────────────────────────────────────────�flex", alignItems: "center", gap: 14, padding: "10px 0", borderBottom: `0.5px solid ${COLORS.wheat}` }}>
+// â”€â”€â”€ DASHBOARD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€âflex", alignItems: "center", gap: 14, padding: "10px 0", borderBottom: `0.5px solid ${COLORS.wheat}` }}>
             <div style={{ fontSize: 12, fontFamily: FONTS.body, fontWeight: 600, color: COLORS.damascene, width: 60 }}>{o.orderNumber}</div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 12, fontWeight: 500, color: COLORS.charcoal }}>{o.customer}</div>
@@ -270,7 +270,7 @@ function Sidebar({ page, setPage }) {
   );
 }
 
-// ─── PRODUCTS PAGE ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ PRODUCTS PAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function ProductsPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -290,7 +290,7 @@ function ProductsPage() {
           <PrimaryBtn>+ New Product</PrimaryBtn>
         </div>
         <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search products…" style={{ flex: 1, minWidth: 180, padding: "7px 12px", border: `0.5px solid ${COLORS.wheat}`, borderRadius: 8, fontSize: 12, fontFamily: FONTS.body, outline: "none" }} />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search productsâ€¦" style={{ flex: 1, minWidth: 180, padding: "7px 12px", border: `0.5px solid ${COLORS.wheat}`, borderRadius: 8, fontSize: 12, fontFamily: FONTS.body, outline: "none" }} />
           {["all", "active", "out_of_stock", "draft"].map(s => (
             <FilterPill key={s} label={s === "all" ? "All" : s === "out_of_stock" ? "Out of Stock" : s.charAt(0).toUpperCase() + s.slice(1)} active={statusFilter === s} onClick={() => setStatusFilter(s)} />
           ))}
@@ -327,7 +327,7 @@ function ProductsPage() {
   );
 }
 
-// ─── PRODUCTS PAGE ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ PRODUCTS PAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function ProductsPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -347,7 +347,7 @@ function ProductsPage() {
           <PrimaryBtn>+ New Product</PrimaryBtn>
         </div>
         <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search products…" style={{ flex: 1, minWidth: 180, padding: "7px 12px", border: `0.5px solid ${COLORS.wheat}`, borderRadius: 8, fontSize: 12, fontFamily: FONTS.body, outline: "none" }} />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search productsâ€¦" style={{ flex: 1, minWidth: 180, padding: "7px 12px", border: `0.5px solid ${COLORS.wheat}`, borderRadius: 8, fontSize: 12, fontFamily: FONTS.body, outline: "none" }} />
           {["all", "active", "out_of_stock", "draft"].map(s => (
             <FilterPill key={s} label={s === "all" ? "All" : s === "out_of_stock" ? "Out of Stock" : s.charAt(0).toUpperCase() + s.slice(1)} active={statusFilter === s} onClick={() => setStatusFilter(s)} />
           ))}
@@ -391,7 +391,7 @@ function ProductsPage() {
                 <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal }}>{selected.name}</div>
                 <div style={{ fontFamily: FONTS.arabic, fontSize: 16, color: COLORS.saffron }}>{selected.name_ar}</div>
               </div>
-              <button onClick={() => setSelected(null)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: COLORS.textMuted }}>✕</button>
+              <button onClick={() => setSelected(null)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: COLORS.textMuted }}>âœ•</button>
             </div>
             <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
               <StatCard label="PRICE" value={`$${selected.price}`} />
@@ -419,7 +419,7 @@ function ProductsPage() {
   );
 }
 
-// ─── ORDERS PAGE ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ ORDERS PAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const ORDER_STAGES = [
   { id: "new", label: "New", color: "#3B5BB5" },
   { id: "awaiting_approval", label: "Awaiting Approval", color: COLORS.terracotta },
@@ -518,9 +518,9 @@ function OrdersPage() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <div>
                 <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal }}>{selectedOrder.orderNumber}</div>
-                <div style={{ fontSize: 12, color: COLORS.textMuted, fontFamily: FONTS.body }}>{selectedOrder.customer} · {selectedOrder.date}</div>
+                <div style={{ fontSize: 12, color: COLORS.textMuted, fontFamily: FONTS.body }}>{selectedOrder.customer} Â· {selectedOrder.date}</div>
               </div>
-              <button onClick={() => setSelectedOrder(null)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: COLORS.textMuted }}>✕</button>
+              <button onClick={() => setSelectedOrder(null)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: COLORS.textMuted }}>âœ•</button>
             </div>
             <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
               {ORDER_STAGES.filter(s => !(!selectedOrder.isCustom && s.id === "awaiting_approval")).map(stage => (
@@ -531,7 +531,7 @@ function OrdersPage() {
               <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.textMuted, letterSpacing: 0.5, marginBottom: 10 }}>ORDER ITEMS</div>
               {selectedOrder.items.map((item, i) => (
                 <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: `0.5px solid ${COLORS.wheat}`, fontSize: 13, fontFamily: FONTS.body }}>
-                  <span>{item.name} × {item.qty}</span>
+                  <span>{item.name} Ã— {item.qty}</span>
                   <span style={{ fontWeight: 600 }}>${(item.price * item.qty).toFixed(2)}</span>
                 </div>
               ))}
@@ -571,7 +571,7 @@ function OrdersPage() {
   );
 }
 
-// ─── CUSTOMERS PAGE ────────────────────────────────────────────────────────────
+// â”€â”€â”€ CUSTOMERS PAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function CustomersPage() {
   const [search, setSearch] = useState("");
   const [heritageFilter, setHeritageFilter] = useState("all");
@@ -603,7 +603,7 @@ function CustomersPage() {
           <PrimaryBtn>Export CSV</PrimaryBtn>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search customers…" style={{ flex: 1, minWidth: 180, padding: "7px 12px", border: `0.5px solid ${COLORS.wheat}`, borderRadius: 8, fontSize: 12, fontFamily: FONTS.body, outline: "none" }} />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search customersâ€¦" style={{ flex: 1, minWidth: 180, padding: "7px 12px", border: `0.5px solid ${COLORS.wheat}`, borderRadius: 8, fontSize: 12, fontFamily: FONTS.body, outline: "none" }} />
           {["all", "Syria", "Lebanon", "Palestine", "Pan-Arab", "Egypt"].map(h => (
             <FilterPill key={h} label={h === "all" ? "All Heritage" : h} active={heritageFilter === h} onClick={() => setHeritageFilter(h)} />
           ))}
@@ -676,10 +676,10 @@ function CustomersPage() {
                     <div style={{ fontFamily: FONTS.display, fontSize: 24, fontWeight: 600, color: COLORS.charcoal }}>{selected.name}</div>
                     {selected.tags.includes("VIP") && <span style={{ fontSize: 9, background: COLORS.saffron, color: "#FFF", padding: "2px 8px", borderRadius: 6, fontWeight: 700 }}>VIP</span>}
                   </div>
-                  <div style={{ fontSize: 12, color: COLORS.textMuted, fontFamily: FONTS.body }}>{selected.location.flag} {selected.location.city}, {selected.location.country} · {selected.heritage}</div>
+                  <div style={{ fontSize: 12, color: COLORS.textMuted, fontFamily: FONTS.body }}>{selected.location.flag} {selected.location.city}, {selected.location.country} Â· {selected.heritage}</div>
                 </div>
               </div>
-              <button onClick={() => setSelected(null)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: COLORS.textMuted }}>✕</button>
+              <button onClick={() => setSelected(null)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: COLORS.textMuted }}>âœ•</button>
             </div>
             <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
               <StatCard label="ORDERS" value={selected.orders} />
@@ -688,7 +688,7 @@ function CustomersPage() {
               <StatCard label="LAST ORDER" value={selected.lastOrder} />
             </div>
             <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
-              {[["✉ Email", COLORS.damascene], ["💬 WhatsApp", COLORS.olive], ["🎟 Discount", COLORS.saffron]].map(([label, color]) => (
+              {[["âœ‰ Email", COLORS.damascene], ["ðŸ’¬ WhatsApp", COLORS.olive], ["ðŸŽŸ Discount", COLORS.saffron]].map(([label, color]) => (
                 <button key={label} style={{ flex: 1, padding: "9px 12px", background: color + "18", border: `0.5px solid ${color}44`, borderRadius: 8, fontSize: 11, fontWeight: 600, color, cursor: "pointer", fontFamily: FONTS.body }}>{label}</button>
               ))}
             </div>
@@ -704,7 +704,7 @@ function CustomersPage() {
               <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.textMuted, letterSpacing: 0.5, marginBottom: 10 }}>TAGS</div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {selected.tags.map(t => (
-                  <span key={t} style={{ fontSize: 10, background: (TAG_COLORS[t] || "#888") + "22", color: TAG_COLORS[t] || "#888", padding: "4px 10px", borderRadius: 10, fontWeight: 600, fontFamily: FONTS.body }}>{t} ×</span>
+                  <span key={t} style={{ fontSize: 10, background: (TAG_COLORS[t] || "#888") + "22", color: TAG_COLORS[t] || "#888", padding: "4px 10px", borderRadius: 10, fontWeight: 600, fontFamily: FONTS.body }}>{t} Ã—</span>
                 ))}
               </div>
             </SectionCard>
@@ -714,7 +714,7 @@ function CustomersPage() {
                 <div key={o.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: `0.5px solid ${COLORS.wheat}` }}>
                   <div>
                     <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.damascene, fontFamily: FONTS.body }}>{o.orderNumber}</div>
-                    <div style={{ fontSize: 10, color: COLORS.textMuted }}>{o.items[0].name} · {o.date}</div>
+                    <div style={{ fontSize: 10, color: COLORS.textMuted }}>{o.items[0].name} Â· {o.date}</div>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <Badge status={o.status} />
@@ -726,7 +726,7 @@ function CustomersPage() {
             </SectionCard>
             <SectionCard>
               <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.textMuted, letterSpacing: 0.5, marginBottom: 10 }}>PRIVATE NOTE</div>
-              <textarea value={noteText} onChange={e => setNoteText(e.target.value)} placeholder="Add a private note about this customer…" style={{ width: "100%", minHeight: 80, padding: "10px 12px", border: `0.5px solid ${COLORS.wheat}`, borderRadius: 8, fontSize: 12, fontFamily: FONTS.body, resize: "vertical", outline: "none", boxSizing: "border-box" }} />
+              <textarea value={noteText} onChange={e => setNoteText(e.target.value)} placeholder="Add a private note about this customerâ€¦" style={{ width: "100%", minHeight: 80, padding: "10px 12px", border: `0.5px solid ${COLORS.wheat}`, borderRadius: 8, fontSize: 12, fontFamily: FONTS.body, resize: "vertical", outline: "none", boxSizing: "border-box" }} />
               <PrimaryBtn style={{ marginTop: 8 }}>Save Note</PrimaryBtn>
             </SectionCard>
           </div>
@@ -736,7 +736,7 @@ function CustomersPage() {
   );
 }
 
-// ─── CUSTOM ORDERS PAGE ────────────────────────────────────────────────────────
+// â”€â”€â”€ CUSTOM ORDERS PAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const CUSTOM_STAGE_INFO = {
   new:      { label: "New",        color: "#3B5BB5", bg: "#EEF4FF" },
   quote:    { label: "Quote Sent", color: COLORS.saffron, bg: "#FFF7E6" },
@@ -745,19 +745,19 @@ const CUSTOM_STAGE_INFO = {
   production:{ label: "Production",color: COLORS.damascene, bg: "#E6F4FF" },
 };
 const URGENCY_INFO = {
-  urgent: { label: "🔴 Urgent", color: COLORS.terracotta },
-  soon:   { label: "🟡 Soon",   color: COLORS.saffron },
-  ok:     { label: "🟢 OK",     color: COLORS.olive },
+  urgent: { label: "ðŸ”´ Urgent", color: COLORS.terracotta },
+  soon:   { label: "ðŸŸ¡ Soon",   color: COLORS.saffron },
+  ok:     { label: "ðŸŸ¢ OK",     color: COLORS.olive },
 };
 const MOCK_MESSAGES = {
   1: [
-    { from: "customer", text: "Hi! I need a custom wedding arch piece for my daughter's wedding on May 15. Arabic name عائلة جابر in Diwani calligraphy, gold color, about 12 inches wide.", time: "2 days ago" },
-    { from: "owner",    text: "What a beautiful occasion! I can definitely do that. Let me put together a quote for you. The Diwani style in gold will be stunning 🌟", time: "2 days ago" },
+    { from: "customer", text: "Hi! I need a custom wedding arch piece for my daughter's wedding on May 15. Arabic name Ø¹Ø§Ø¦Ù„Ø© Ø¬Ø§Ø¨Ø± in Diwani calligraphy, gold color, about 12 inches wide.", time: "2 days ago" },
+    { from: "owner",    text: "What a beautiful occasion! I can definitely do that. Let me put together a quote for you. The Diwani style in gold will be stunning ðŸŒŸ", time: "2 days ago" },
     { from: "customer", text: "Thank you so much! Also wondering if you can add a small olive branch motif on the sides?", time: "1 day ago" },
-    { from: "owner",    text: "Absolutely — I've attached a mockup with the olive branches. Let me know what you think!", time: "5 hours ago" },
+    { from: "owner",    text: "Absolutely â€” I've attached a mockup with the olive branches. Let me know what you think!", time: "5 hours ago" },
   ],
   2: [
-    { from: "customer", text: "Congratulations plaque for my son graduating from U of M. عائلة حداد in modern style, white.", time: "3 days ago" },
+    { from: "customer", text: "Congratulations plaque for my son graduating from U of M. Ø¹Ø§Ø¦Ù„Ø© Ø­Ø¯Ø§Ø¯ in modern style, white.", time: "3 days ago" },
     { from: "owner",    text: "Mabrook to your son! Here's a quote: base plaque $45 + custom Arabic text $20 = $65. Rush fee waived since we have 10 days.", time: "2 days ago" },
   ],
 };
@@ -781,7 +781,7 @@ function CustomOrdersPage() {
       {/* Filter Rail */}
       <div style={{ width: 168, background: COLORS.cream2, borderRight: `0.5px solid ${COLORS.wheat}`, padding: "20px 12px", overflowY: "auto", flexShrink: 0 }}>
         <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.2, color: COLORS.textMuted, marginBottom: 10, fontFamily: FONTS.body }}>STATUS</div>
-        {[["all", "All Requests"], ["urgent", "🔴 Urgent"], ["soon", "🟡 Needs Reply"]].map(([v, l]) => (
+        {[["all", "All Requests"], ["urgent", "ðŸ”´ Urgent"], ["soon", "ðŸŸ¡ Needs Reply"]].map(([v, l]) => (
           <div key={v} onClick={() => setStageFilter(v)} style={{ padding: "7px 10px", borderRadius: 8, fontSize: 12, fontFamily: FONTS.body, cursor: "pointer", marginBottom: 3, background: stageFilter === v ? COLORS.saffron + "22" : "transparent", color: stageFilter === v ? COLORS.saffron : COLORS.inkBrown, fontWeight: stageFilter === v ? 600 : 400 }}>{l}</div>
         ))}
         <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.2, color: COLORS.textMuted, margin: "16px 0 10px", fontFamily: FONTS.body }}>PIPELINE</div>
@@ -811,10 +811,10 @@ function CustomOrdersPage() {
                 <span style={{ fontSize: 10, color: urgency.color, fontFamily: FONTS.body }}>{urgency.label}</span>
               </div>
               <div style={{ fontFamily: FONTS.arabic, fontSize: 16, color: COLORS.saffron, direction: "rtl", textAlign: "right", marginBottom: 4 }}>{order.arabicText}</div>
-              <div style={{ fontSize: 11, color: COLORS.textMuted, fontFamily: FONTS.body, marginBottom: 6, lineHeight: 1.4 }}>{order.snippet?.slice(0, 60)}…</div>
+              <div style={{ fontSize: 11, color: COLORS.textMuted, fontFamily: FONTS.body, marginBottom: 6, lineHeight: 1.4 }}>{order.snippet?.slice(0, 60)}â€¦</div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span style={{ fontSize: 9, background: stage.bg, color: stage.color, padding: "2px 7px", borderRadius: 8, fontWeight: 600 }}>{stage.label}</span>
-                <span style={{ fontSize: 10, color: COLORS.textMuted }}>📅 {order.deadline}</span>
+                <span style={{ fontSize: 10, color: COLORS.textMuted }}>ðŸ“… {order.deadline}</span>
               </div>
             </div>
           );
@@ -834,7 +834,7 @@ function CustomOrdersPage() {
                   <span style={{ fontSize: 9, background: COLORS.saffron, color: "#FFF", padding: "2px 7px", borderRadius: 5, fontWeight: 700 }}>VIP</span>
                 )}
               </div>
-              <div style={{ fontSize: 11, color: COLORS.textMuted, fontFamily: FONTS.body }}>{selectedOrder.flag} {selectedOrder.heritage} · {CUSTOMERS_DATA.find(c => c.id === selectedOrder.customerId)?.email}</div>
+              <div style={{ fontSize: 11, color: COLORS.textMuted, fontFamily: FONTS.body }}>{selectedOrder.flag} {selectedOrder.heritage} Â· {CUSTOMERS_DATA.find(c => c.id === selectedOrder.customerId)?.email}</div>
             </div>
             {/* Pipeline progress */}
             <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
@@ -881,10 +881,10 @@ function CustomOrdersPage() {
 
           {/* Reply Box */}
           <div style={{ padding: "12px 20px", borderTop: `0.5px solid ${COLORS.wheat}`, background: "#FFF", flexShrink: 0 }}>
-            <textarea value={replyText} onChange={e => setReplyText(e.target.value)} placeholder="Write a reply…" style={{ width: "100%", minHeight: 72, padding: "10px 12px", border: `0.5px solid ${COLORS.wheat}`, borderRadius: 8, fontSize: 13, fontFamily: FONTS.body, resize: "none", outline: "none", boxSizing: "border-box", marginBottom: 8 }} />
+            <textarea value={replyText} onChange={e => setReplyText(e.target.value)} placeholder="Write a replyâ€¦" style={{ width: "100%", minHeight: 72, padding: "10px 12px", border: `0.5px solid ${COLORS.wheat}`, borderRadius: 8, fontSize: 13, fontFamily: FONTS.body, resize: "none", outline: "none", boxSizing: "border-box", marginBottom: 8 }} />
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ display: "flex", gap: 6 }}>
-                {["📎 Attach", "🖼 Mockup", "📋 Template", "🌐 Translate"].map(t => (
+                {["ðŸ“Ž Attach", "ðŸ–¼ Mockup", "ðŸ“‹ Template", "ðŸŒ Translate"].map(t => (
                   <GhostBtn key={t} style={{ padding: "5px 10px", fontSize: 10 }}>{t}</GhostBtn>
                 ))}
               </div>
@@ -899,7 +899,7 @@ function CustomOrdersPage() {
   );
 }
 
-// ─── ANALYTICS PAGE ────────────────────────────────────────────────────────────
+// â”€â”€â”€ ANALYTICS PAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const ANALYTICS_TREND = [
   { date: "May 1", revenue: 310, orders: 5 }, { date: "May 3", revenue: 480, orders: 8 },
   { date: "May 5", revenue: 390, orders: 6 }, { date: "May 7", revenue: 620, orders: 10 },
@@ -907,9 +907,9 @@ const ANALYTICS_TREND = [
   { date: "May 13", revenue: 920, orders: 15 },
 ];
 const COUNTRY_DATA = [
-  { country: "🇺🇸 USA", orders: 47, pct: 58 }, { country: "🇨🇦 Canada", orders: 18, pct: 22 },
-  { country: "🇬🇧 UK", orders: 9, pct: 11 }, { country: "🇦🇺 Australia", orders: 4, pct: 5 },
-  { country: "🇩🇪 Germany", orders: 3, pct: 4 },
+  { country: "ðŸ‡ºðŸ‡¸ USA", orders: 47, pct: 58 }, { country: "ðŸ‡¨ðŸ‡¦ Canada", orders: 18, pct: 22 },
+  { country: "ðŸ‡¬ðŸ‡§ UK", orders: 9, pct: 11 }, { country: "ðŸ‡¦ðŸ‡º Australia", orders: 4, pct: 5 },
+  { country: "ðŸ‡©ðŸ‡ª Germany", orders: 3, pct: 4 },
 ];
 const TRAFFIC_DATA = [
   { source: "Instagram", visits: 1240, pct: 44 }, { source: "Direct", visits: 680, pct: 24 },
@@ -939,7 +939,7 @@ function AnalyticsPage() {
         <div style={{ flex: 2, minWidth: 200, background: COLORS.charcoal, borderRadius: 10, padding: "18px 20px" }}>
           <div style={{ fontSize: 10, color: COLORS.wheat, letterSpacing: 0.8, fontFamily: FONTS.body, marginBottom: 4 }}>TOTAL REVENUE</div>
           <div style={{ fontFamily: FONTS.display, fontSize: 36, fontWeight: 700, color: "#FFF" }}>$4,520</div>
-          <div style={{ fontSize: 11, color: COLORS.saffronLight }}>↑ 23% vs previous {range}</div>
+          <div style={{ fontSize: 11, color: COLORS.saffronLight }}>â†‘ 23% vs previous {range}</div>
           <div style={{ marginTop: 10, height: 50 }}>
             <ResponsiveContainer width="100%" height={50}>
               <AreaChart data={ANALYTICS_TREND}>
@@ -949,9 +949,9 @@ function AnalyticsPage() {
             </ResponsiveContainer>
           </div>
         </div>
-        <StatCard label="ORDERS" value="81" sub="↑ 12 vs prev period" />
-        <StatCard label="AVG ORDER VALUE" value="$55.80" sub="↑ $4.20 this period" />
-        <StatCard label="NEW CUSTOMERS" value="24" sub="↑ 6 vs prev period" />
+        <StatCard label="ORDERS" value="81" sub="â†‘ 12 vs prev period" />
+        <StatCard label="AVG ORDER VALUE" value="$55.80" sub="â†‘ $4.20 this period" />
+        <StatCard label="NEW CUSTOMERS" value="24" sub="â†‘ 6 vs prev period" />
       </div>
 
       {/* Revenue Trend */}
@@ -1042,10 +1042,10 @@ function AnalyticsPage() {
         <SectionCard style={{ marginBottom: 0 }}>
           <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body, marginBottom: 12 }}>Smart Alerts</div>
           {[
-            { type: "warn", msg: "Lebanese Cedar Stand has been out of stock for 7 days — restock soon" },
-            { type: "good", msg: "Revenue up 23% this week — your best 7-day streak this month!" },
-            { type: "info", msg: "5 custom order requests waiting — oldest is 3 days old" },
-            { type: "warn", msg: "Kufic Calligraphy Frame low stock (7 units) — consider restocking" },
+            { type: "warn", msg: "Lebanese Cedar Stand has been out of stock for 7 days â€” restock soon" },
+            { type: "good", msg: "Revenue up 23% this week â€” your best 7-day streak this month!" },
+            { type: "info", msg: "5 custom order requests waiting â€” oldest is 3 days old" },
+            { type: "warn", msg: "Kufic Calligraphy Frame low stock (7 units) â€” consider restocking" },
           ].map((a, i) => {
             const c = a.type === "warn" ? COLORS.terracotta : a.type === "good" ? COLORS.olive : COLORS.damascene;
             return (
@@ -1060,7 +1060,7 @@ function AnalyticsPage() {
   );
 }
 
-// ─── DISCOUNTS PAGE ────────────────────────────────────────────────────────────
+// â”€â”€â”€ DISCOUNTS PAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function DiscountsPage() {
   const [tab, setTab] = useState("codes");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -1085,11 +1085,11 @@ function DiscountsPage() {
       <div style={{ position: "sticky", top: -24, zIndex: 10, background: COLORS.cream, margin: "-24px -32px 0", padding: "24px 32px 14px", borderBottom: `0.5px solid ${COLORS.wheat}`, boxShadow: "0 4px 12px rgba(0,0,0,0.04)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
           <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal, flex: 1 }}>Discounts</div>
-          <GhostBtn onClick={() => setShowTemplates(true)}>📋 Templates</GhostBtn>
+          <GhostBtn onClick={() => setShowTemplates(true)}>ðŸ“‹ Templates</GhostBtn>
           <PrimaryBtn onClick={() => setShowCreate(true)}>+ Create Code</PrimaryBtn>
         </div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-          {[["codes", "🎟 Promo Codes"], ["sales", "🔥 Auto Sales"], ["bundles", "📦 Bundles"]].map(([v, l]) => (
+          {[["codes", "ðŸŽŸ Promo Codes"], ["sales", "ðŸ”¥ Auto Sales"], ["bundles", "ðŸ“¦ Bundles"]].map(([v, l]) => (
             <FilterPill key={v} label={l} active={tab === v} onClick={() => setTab(v)} />
           ))}
           <div style={{ flex: 1 }} />
@@ -1119,7 +1119,7 @@ function DiscountsPage() {
               </div>
               <div style={{ textAlign: "right" }}>
                 <div style={{ fontSize: 24, fontWeight: 700, color: "#FFF", fontFamily: FONTS.body }}>{d.type === "percent" ? `${d.value}%` : d.type === "free_shipping" ? "Free Ship" : `$${d.value}`}</div>
-                <div style={{ fontSize: 10, color: COLORS.textMuted, fontFamily: FONTS.body }}>{d.usageCount} uses · ${d.revenue} rev</div>
+                <div style={{ fontSize: 10, color: COLORS.textMuted, fontFamily: FONTS.body }}>{d.usageCount} uses Â· ${d.revenue} rev</div>
               </div>
             </div>
           ))}
@@ -1157,11 +1157,11 @@ function DiscountsPage() {
                     )}
                   </td>
                   <td style={{ padding: "12px 8px", fontSize: 13, fontWeight: 600, color: COLORS.charcoal }}>${d.revenue.toLocaleString()}</td>
-                  <td style={{ padding: "12px 8px", fontSize: 10, color: COLORS.textMuted }}>{d.startsAt}{d.endsAt ? ` – ${d.endsAt}` : " · Ongoing"}</td>
+                  <td style={{ padding: "12px 8px", fontSize: 10, color: COLORS.textMuted }}>{d.startsAt}{d.endsAt ? ` â€“ ${d.endsAt}` : " Â· Ongoing"}</td>
                   <td style={{ padding: "12px 8px" }}>
                     <div style={{ display: "flex", gap: 4 }}>
                       <GhostBtn style={{ padding: "4px 8px", fontSize: 10 }}>Edit</GhostBtn>
-                      <GhostBtn style={{ padding: "4px 8px", fontSize: 10 }}>⋯</GhostBtn>
+                      <GhostBtn style={{ padding: "4px 8px", fontSize: 10 }}>â‹¯</GhostBtn>
                     </div>
                   </td>
                 </tr>
@@ -1173,7 +1173,7 @@ function DiscountsPage() {
       {tab !== "codes" && (
         <SectionCard>
           <div style={{ textAlign: "center", padding: "40px 0", color: COLORS.textMuted, fontFamily: FONTS.body, fontSize: 13 }}>
-            {tab === "sales" ? "🔥 Set up automatic sales — coming soon" : "📦 Bundle deals — coming soon"}
+            {tab === "sales" ? "ðŸ”¥ Set up automatic sales â€” coming soon" : "ðŸ“¦ Bundle deals â€” coming soon"}
           </div>
         </SectionCard>
       )}
@@ -1185,7 +1185,7 @@ function DiscountsPage() {
           <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: "min(520px, 92vw)", background: COLORS.cream, zIndex: 101, boxShadow: "-20px 0 60px rgba(0,0,0,0.3)", animation: "slideIn 0.3s ease", overflowY: "auto", padding: 28 }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20 }}>
               <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal }}>Discount Templates</div>
-              <button onClick={() => setShowTemplates(false)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: COLORS.textMuted }}>✕</button>
+              <button onClick={() => setShowTemplates(false)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: COLORS.textMuted }}>âœ•</button>
             </div>
             {TEMPLATES.map(group => (
               <div key={group.group} style={{ marginBottom: 20 }}>
@@ -1211,7 +1211,7 @@ function DiscountsPage() {
           <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: "min(520px, 92vw)", background: COLORS.cream, zIndex: 101, boxShadow: "-20px 0 60px rgba(0,0,0,0.3)", animation: "slideIn 0.3s ease", overflowY: "auto", padding: 28 }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 24 }}>
               <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal }}>Create Discount Code</div>
-              <button onClick={() => setShowCreate(false)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: COLORS.textMuted }}>✕</button>
+              <button onClick={() => setShowCreate(false)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: COLORS.textMuted }}>âœ•</button>
             </div>
             {[["Discount Code", "code", "WELCOME10"], ["Campaign Name", "name", "New Customer Welcome"]].map(([label, key, ph]) => (
               <div key={key} style={{ marginBottom: 14 }}>
@@ -1248,7 +1248,7 @@ function DiscountsPage() {
   );
 }
 
-// ─── EMAIL & MARKETING PAGE ────────────────────────────────────────────────────
+// â”€â”€â”€ EMAIL & MARKETING PAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const CAMPAIGNS_DATA = [
   { id: 1, name: "Eid al-Adha Collection Drop", status: "sent", date: "Jun 5", opens: 68, clicks: 31, revenue: 840 },
   { id: 2, name: "New Customer Welcome Series", status: "active", date: "Ongoing", opens: 74, clicks: 42, revenue: 1240 },
@@ -1256,12 +1256,12 @@ const CAMPAIGNS_DATA = [
   { id: 4, name: "Wedding Season Lookbook", status: "draft", date: "Scheduled Jun 20", opens: 0, clicks: 0, revenue: 0 },
 ];
 const AUTOMATIONS = [
-  { icon: "✅", name: "Order Confirmation", trigger: "Immediately after purchase", active: true, sent: 81, openRate: 94 },
-  { icon: "🚚", name: "Shipping Update", trigger: "When tracking added", active: true, sent: 67, openRate: 89 },
-  { icon: "👋", name: "Welcome Series", trigger: "On signup (3 emails, 7 days)", active: true, sent: 24, openRate: 71 },
-  { icon: "🛒", name: "Abandoned Cart", trigger: "1 hour after cart abandoned", active: false, sent: 12, openRate: 38 },
-  { icon: "✦", name: "Custom Order Milestones", trigger: "Quote sent / Mockup ready / Approved", active: true, sent: 19, openRate: 86 },
-  { icon: "💌", name: "Win-Back", trigger: "90 days since last order", active: false, sent: 8, openRate: 29 },
+  { icon: "âœ…", name: "Order Confirmation", trigger: "Immediately after purchase", active: true, sent: 81, openRate: 94 },
+  { icon: "ðŸšš", name: "Shipping Update", trigger: "When tracking added", active: true, sent: 67, openRate: 89 },
+  { icon: "ðŸ‘‹", name: "Welcome Series", trigger: "On signup (3 emails, 7 days)", active: true, sent: 24, openRate: 71 },
+  { icon: "ðŸ›’", name: "Abandoned Cart", trigger: "1 hour after cart abandoned", active: false, sent: 12, openRate: 38 },
+  { icon: "âœ¦", name: "Custom Order Milestones", trigger: "Quote sent / Mockup ready / Approved", active: true, sent: 19, openRate: 86 },
+  { icon: "ðŸ’Œ", name: "Win-Back", trigger: "90 days since last order", active: false, sent: 8, openRate: 29 },
 ];
 
 function EmailMarketingPage() {
@@ -1278,7 +1278,7 @@ function EmailMarketingPage() {
           <PrimaryBtn>+ New Campaign</PrimaryBtn>
         </div>
         <div style={{ display: "flex", gap: 6 }}>
-          {[["campaigns", "📧 Campaigns"], ["automations", "⚡ Automations"], ["subscribers", "👥 Subscribers"], ["templates", "📋 Templates"]].map(([v, l]) => (
+          {[["campaigns", "ðŸ“§ Campaigns"], ["automations", "âš¡ Automations"], ["subscribers", "ðŸ‘¥ Subscribers"], ["templates", "ðŸ“‹ Templates"]].map(([v, l]) => (
             <FilterPill key={v} label={l} active={tab === v} onClick={() => setTab(v)} />
           ))}
         </div>
@@ -1286,9 +1286,9 @@ function EmailMarketingPage() {
       <div style={{ height: 14 }} />
 
       <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
-        <StatCard label="SUBSCRIBERS" value="284" sub="↑ 12 this month" />
+        <StatCard label="SUBSCRIBERS" value="284" sub="â†‘ 12 this month" />
         <StatCard label="AVG OPEN RATE" value="68%" sub="Industry avg 38%" dark />
-        <StatCard label="AVG CLICK RATE" value="31%" sub="↑ 4% this month" />
+        <StatCard label="AVG CLICK RATE" value="31%" sub="â†‘ 4% this month" />
         <StatCard label="REVENUE FROM EMAIL" value="$2,470" sub="this month" />
       </div>
 
@@ -1296,7 +1296,7 @@ function EmailMarketingPage() {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 16 }}>
           <div>
             {CAMPAIGNS_DATA.map(c => {
-              const statusIcon = c.status === "sent" ? "✓" : c.status === "active" ? "●" : "○";
+              const statusIcon = c.status === "sent" ? "âœ“" : c.status === "active" ? "â—" : "â—‹";
               const statusColor = c.status === "sent" ? COLORS.olive : c.status === "active" ? COLORS.saffron : COLORS.textMuted;
               return (
                 <SectionCard key={c.id} style={{ marginBottom: 10, cursor: "pointer" }}>
@@ -1323,7 +1323,7 @@ function EmailMarketingPage() {
             <SectionCard style={{ marginBottom: 12 }}>
               <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body, marginBottom: 12 }}>Subscriber Health</div>
               <div style={{ fontFamily: FONTS.display, fontSize: 36, fontWeight: 700, color: COLORS.charcoal }}>284</div>
-              <div style={{ fontSize: 11, color: COLORS.olive, marginBottom: 12 }}>↑ 12 subscribers this month</div>
+              <div style={{ fontSize: 11, color: COLORS.olive, marginBottom: 12 }}>â†‘ 12 subscribers this month</div>
               {[["VIP", 18, COLORS.saffron], ["Repeat buyers", 42, COLORS.damascene], ["Newsletter only", 184, COLORS.olive], ["Inactive 90d", 40, COLORS.terracotta]].map(([seg, n, c]) => (
                 <div key={seg} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "5px 0", borderBottom: `0.5px solid ${COLORS.wheat}`, fontSize: 12, fontFamily: FONTS.body }}>
                   <span style={{ display: "flex", alignItems: "center", gap: 6 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: c, display: "inline-block" }}/>{seg}</span>
@@ -1332,8 +1332,8 @@ function EmailMarketingPage() {
               ))}
             </SectionCard>
             <div style={{ background: COLORS.saffron + "18", border: `0.5px solid ${COLORS.saffron}44`, borderRadius: 10, padding: "14px 16px" }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.saffron, letterSpacing: 0.8, marginBottom: 10, fontFamily: FONTS.body }}>✦ SMART SUGGESTIONS</div>
-              {["40 inactive subscribers — send a win-back?", "3 customers have birthdays this month", "Eid al-Adha in 3 weeks — start a campaign now", "5 new VIPs this month — send a thank you"].map((s, i) => (
+              <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.saffron, letterSpacing: 0.8, marginBottom: 10, fontFamily: FONTS.body }}>âœ¦ SMART SUGGESTIONS</div>
+              {["40 inactive subscribers â€” send a win-back?", "3 customers have birthdays this month", "Eid al-Adha in 3 weeks â€” start a campaign now", "5 new VIPs this month â€” send a thank you"].map((s, i) => (
                 <div key={i} style={{ fontSize: 12, color: COLORS.charcoal, fontFamily: FONTS.body, padding: "6px 0", borderBottom: i < 3 ? `0.5px solid ${COLORS.saffron}22` : "none" }}>{s}</div>
               ))}
             </div>
@@ -1369,20 +1369,20 @@ function EmailMarketingPage() {
 
       {tab === "subscribers" && (
         <SectionCard>
-          <div style={{ textAlign: "center", padding: "40px 0", color: COLORS.textMuted, fontFamily: FONTS.body, fontSize: 13 }}>Subscriber management — coming soon. Import/export CSV, segment builder, and more.</div>
+          <div style={{ textAlign: "center", padding: "40px 0", color: COLORS.textMuted, fontFamily: FONTS.body, fontSize: 13 }}>Subscriber management â€” coming soon. Import/export CSV, segment builder, and more.</div>
         </SectionCard>
       )}
 
       {tab === "templates" && (
         <SectionCard>
-          <div style={{ textAlign: "center", padding: "40px 0", color: COLORS.textMuted, fontFamily: FONTS.body, fontSize: 13 }}>Email template library — coming soon. Arabic-friendly layouts, seasonal designs, and brand assets.</div>
+          <div style={{ textAlign: "center", padding: "40px 0", color: COLORS.textMuted, fontFamily: FONTS.body, fontSize: 13 }}>Email template library â€” coming soon. Arabic-friendly layouts, seasonal designs, and brand assets.</div>
         </SectionCard>
       )}
     </div>
   );
 }
 
-// ─── SETTINGS PAGE ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ SETTINGS PAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function SettingsPage({ section: initSection, onNavigate }) {
   const [section, setSection] = useState(initSection || "general");
   const [settings, setSettings] = useState({
@@ -1398,9 +1398,9 @@ function SettingsPage({ section: initSection, onNavigate }) {
   const update = (k, v) => setSettings(s => ({ ...s, [k]: v }));
 
   const SETTINGS_NAV = [
-    { group: "STORE", items: [{ id: "general", label: "General", icon: "🏪" }, { id: "payments", label: "Payments", icon: "💳" }, { id: "shipping", label: "Shipping", icon: "📦" }] },
-    { group: "ACCOUNT", items: [{ id: "notifications", label: "Notifications", icon: "🔔" }, { id: "team", label: "Team", icon: "👥" }] },
-    { group: "LEGAL", items: [{ id: "policies", label: "Policies", icon: "📋" }] },
+    { group: "STORE", items: [{ id: "general", label: "General", icon: "ðŸª" }, { id: "payments", label: "Payments", icon: "ðŸ’³" }, { id: "shipping", label: "Shipping", icon: "ðŸ“¦" }] },
+    { group: "ACCOUNT", items: [{ id: "notifications", label: "Notifications", icon: "ðŸ””" }, { id: "team", label: "Team", icon: "ðŸ‘¥" }] },
+    { group: "LEGAL", items: [{ id: "policies", label: "Policies", icon: "ðŸ“‹" }] },
   ];
 
   const Toggle = ({ value, onChange }) => (
@@ -1421,11 +1421,11 @@ function SettingsPage({ section: initSection, onNavigate }) {
   );
 
   const SHIPPING_ZONES = [
-    { zone: "🇺🇸 USA", standard: "$5.99", express: "$12.99", processing: "3–5 days" },
-    { zone: "🇨🇦 Canada", standard: "$9.99", express: "$18.99", processing: "5–8 days" },
-    { zone: "🇪🇺 Europe", standard: "$14.99", express: "$24.99", processing: "7–12 days" },
-    { zone: "🇦🇺 Australia", standard: "$16.99", express: "$29.99", processing: "10–14 days" },
-    { zone: "🌍 Worldwide", standard: "$19.99", express: "$34.99", processing: "14–21 days" },
+    { zone: "ðŸ‡ºðŸ‡¸ USA", standard: "$5.99", express: "$12.99", processing: "3â€“5 days" },
+    { zone: "ðŸ‡¨ðŸ‡¦ Canada", standard: "$9.99", express: "$18.99", processing: "5â€“8 days" },
+    { zone: "ðŸ‡ªðŸ‡º Europe", standard: "$14.99", express: "$24.99", processing: "7â€“12 days" },
+    { zone: "ðŸ‡¦ðŸ‡º Australia", standard: "$16.99", express: "$29.99", processing: "10â€“14 days" },
+    { zone: "ðŸŒ Worldwide", standard: "$19.99", express: "$34.99", processing: "14â€“21 days" },
   ];
 
   return (
@@ -1452,7 +1452,7 @@ function SettingsPage({ section: initSection, onNavigate }) {
             <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal, marginBottom: 20 }}>General Settings</div>
             <SectionCard>
               <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.textMuted, letterSpacing: 0.8, marginBottom: 14, fontFamily: FONTS.body }}>STORE IDENTITY</div>
-              {[["Store Name", "storeName", "Souk3D"], ["Tagline", "tagline", "Handmade 3D gifts…"], ["Email", "email", "nala@souk3d.com"], ["Phone", "phone", "+1 313…"]].map(([label, key, ph]) => (
+              {[["Store Name", "storeName", "Souk3D"], ["Tagline", "tagline", "Handmade 3D giftsâ€¦"], ["Email", "email", "nala@souk3d.com"], ["Phone", "phone", "+1 313â€¦"]].map(([label, key, ph]) => (
                 <FieldRow key={key} label={label}><TextInput value={settings[key]} onChange={v => update(key, v)} placeholder={ph} /></FieldRow>
               ))}
             </SectionCard>
@@ -1483,7 +1483,7 @@ function SettingsPage({ section: initSection, onNavigate }) {
               <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.textMuted, letterSpacing: 0.8, marginBottom: 14, fontFamily: FONTS.body }}>STRIPE</div>
               <div style={{ background: settings.stripeConnected ? COLORS.olive + "14" : COLORS.terracotta + "14", border: `0.5px solid ${settings.stripeConnected ? COLORS.olive : COLORS.terracotta}44`, borderRadius: 10, padding: "16px 18px", marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body }}>{settings.stripeConnected ? "✅ Stripe Connected" : "⚠️ Stripe Not Connected"}</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body }}>{settings.stripeConnected ? "âœ… Stripe Connected" : "âš ï¸ Stripe Not Connected"}</div>
                   <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 2, fontFamily: FONTS.body }}>{settings.stripeConnected ? "Payments are active" : "Connect Stripe to accept payments"}</div>
                 </div>
                 <PrimaryBtn onClick={() => update("stripeConnected", !settings.stripeConnected)}>{settings.stripeConnected ? "Disconnect" : "Connect Stripe"}</PrimaryBtn>
@@ -1550,7 +1550,7 @@ function SettingsPage({ section: initSection, onNavigate }) {
 
         {!["general", "payments", "shipping"].includes(section) && (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 300, color: COLORS.textMuted, fontFamily: FONTS.body, fontSize: 13 }}>
-            {section.charAt(0).toUpperCase() + section.slice(1)} settings — coming soon
+            {section.charAt(0).toUpperCase() + section.slice(1)} settings â€” coming soon
           </div>
         )}
       </div>
@@ -1558,7 +1558,7 @@ function SettingsPage({ section: initSection, onNavigate }) {
   );
 }
 
-// ─── ADMIN APP (ROOT) ──────────────────────────────────────────────────────────
+// â”€â”€â”€ ADMIN APP (ROOT) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function AdminApp() {
   const [authed, setAuthed] = useState(false);
   const [page, setPage] = useState("dashboard");
