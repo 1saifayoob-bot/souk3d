@@ -255,7 +255,59 @@ function Sidebar({ page, setPage }) {
   );
 }
 
-// ─── DASHBOARD ──────────────────────────────────────────────────────────�flex", alignItems: "center", gap: 14, padding: "10px 0", borderBottom: `0.5px solid ${COLORS.wheat}` }}>
+// ─── DASHBOARD ──────────────────────────────────────────────────────────
+function Dashboard({ onNavigate }) {
+  return (
+    <div style={{ animation: "fadeIn 0.3s ease" }}>
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ fontFamily: FONTS.display, fontSize: 28, fontWeight: 600, color: COLORS.charcoal }}>Good morning, Nala ☀️</div>
+        <div style={{ fontFamily: FONTS.arabic, fontSize: 16, color: COLORS.saffron }}>صباح الخير يا نالا</div>
+        <div style={{ fontSize: 13, color: COLORS.textMuted, fontFamily: FONTS.body, marginTop: 4 }}>Here's what's happening in your store today.</div>
+      </div>
+      <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
+        <StatCard label="TODAY'S REVENUE" value="$520" sub="↑ 18% vs yesterday" dark />
+        <StatCard label="ORDERS" value="8" sub="3 need attention" />
+        <StatCard label="AVG ORDER VALUE" value="$65" sub="↑ $4 this week" />
+        <StatCard label="NEW CUSTOMERS" value="3" sub="2 from Instagram" />
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 16, marginBottom: 16 }}>
+        <SectionCard>
+          <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body, marginBottom: 14 }}>Revenue — Last 7 Days</div>
+          <ResponsiveContainer width="100%" height={180}>
+            <AreaChart data={REVENUE_DATA}>
+              <defs>
+                <linearGradient id="rev" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={COLORS.saffron} stopOpacity={0.3} />
+                  <stop offset="95%" stopColor={COLORS.saffron} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <XAxis dataKey="day" tick={{ fontSize: 10, fontFamily: FONTS.body, fill: COLORS.textMuted }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 10, fontFamily: FONTS.body, fill: COLORS.textMuted }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} />
+              <Tooltip formatter={v => [`$${v}`, "Revenue"]} contentStyle={{ fontFamily: FONTS.body, fontSize: 11, borderRadius: 8, border: `0.5px solid ${COLORS.wheat}` }} />
+              <Area type="monotone" dataKey="revenue" stroke={COLORS.saffron} strokeWidth={2} fill="url(#rev)" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </SectionCard>
+        <SectionCard>
+          <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body, marginBottom: 14 }}>Top Sellers</div>
+          {PRODUCTS_DATA.slice(0, 4).map((p, i) => (
+            <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+              <div style={{ width: 24, height: 24, borderRadius: 6, background: COLORS.saffron + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: COLORS.saffron }}>{i + 1}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 12, fontWeight: 500, color: COLORS.charcoal, fontFamily: FONTS.body }}>{p.name}</div>
+                <div style={{ fontSize: 10, color: COLORS.textMuted }}>{p.orders} orders · ${p.revenue.toFixed(0)}</div>
+              </div>
+            </div>
+          ))}
+        </SectionCard>
+      </div>
+      <SectionCard>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body }}>Recent Orders</div>
+          <GhostBtn onClick={() => onNavigate("orders")}>View All</GhostBtn>
+        </div>
+        {ORDERS_DATA.slice(0, 4).map(o => (
+          <div key={o.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "10px 0", borderBottom: `0.5px solid ${COLORS.wheat}` }}>
             <div style={{ fontSize: 12, fontFamily: FONTS.body, fontWeight: 600, color: COLORS.damascene, width: 60 }}>{o.orderNumber}</div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 12, fontWeight: 500, color: COLORS.charcoal }}>{o.customer}</div>
@@ -327,7 +379,6 @@ function ProductsPage() {
   );
 }
 
-// ─── PRODUCTS PAGE ─────────────────────────────────────────────────────────────
 function ProductsPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
