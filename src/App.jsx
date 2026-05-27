@@ -426,7 +426,7 @@ function CustomOrderForm({ onBack }) {
     { id: "birthday", label: "Birthday", emoji: "🎂", arabic: "عيد ميلاد" },
     { id: "anniversary", label: "Anniversary", emoji: "💞", arabic: "ذكرى سنوية" },
     { id: "housewarming", label: "Housewarming", emoji: "🏡", arabic: "منزل جديد" },
-    { id: "other\, label: "Other", emoji: "✦", arabic: "أخرى" },
+    { id: "other", label: "Other", emoji: "✦", arabic: "أخرى" },
   ];
   const COLORS_LIST = [{ name: "Gold", hex: "#D4881F" }, { name: "White", hex: "#F5F5F5" }, { name: "Black", hex: "#1A1A1A" }, { name: "Blue", hex: "#1E5C8C" }, { name: "Rose Gold", hex: "#C9856F" }];
   const STYLES = ["Diwani", "Modern", "Kufi", "Classic"];
