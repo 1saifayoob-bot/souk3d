@@ -614,7 +614,7 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder }) {
 
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "60px 5%" }}>
         {/* Heritage nav */}
-        <div style={{ marginBottom: 56 }}>
+        <div id="heritage-section" style={{ marginBottom: 56 }}>
           <div style={{ textAlign: "center", marginBottom: 32 }}>
             <div style={{ fontFamily: F.display, fontSize: 36, fontWeight: 600, color: C.charcoal }}>Shop by Heritage</div>
             <div style={{ fontFamily: F.arabic, fontSize: 20, color: C.saffron }}>تسوق حسب التراث</div>
@@ -632,8 +632,8 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder }) {
         </div>
 
         {/* Best sellers */}
-        <div style={{ marginBottom: 56 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 28 }}>
+ {/* Best sellers */}
+        <div id="shop-section" style={{ marginBottom: 56 }}>{{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 28 }}>
             <div>
               <div style={{ fontFamily: F.display, fontSize: 36, fontWeight: 600, color: C.charcoal }}>Best Sellers</div>
               <div style={{ fontFamily: F.arabic, fontSize: 18, color: C.saffron }}>الأكثر مبيعاً</div>
@@ -648,7 +648,8 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder }) {
         </div>
 
         {/* Nala's story */}
-        <div style={{ background: C.charcoal, borderRadius: 20, padding: "48px", marginBottom: 56, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40, alignItems: "center" }}>
+        <div style={/* Nala's story */}
+        <div id="about-section" style={{ background: C.charcoal, borderRadius: 20, padding: "48px", marginBottom: 56,1fr 1fr", gap: 40, alignItems: "center" }}>
           <div>
             <div style={{ fontFamily: F.arabic, fontSize: 20, color: C.saffron, marginBottom: 12 }}>من نالا بكل حب</div>
             <div style={{ fontFamily: F.display, fontSize: 30, fontWeight: 600, color: "#FFF", lineHeight: 1.2, marginBottom: 16 }}>A piece of home in every print.</div>
@@ -785,11 +786,14 @@ export default function App() {
           <div style={{ fontFamily: F.arabic, fontSize: 12, color: C.saffron, lineHeight: 1 }}>سوق ثري دي</div>
         </div>
         <div style={{ display: "flex", gap: 24 }}>
-          {["Shop", "Heritage", "Custom Orders", "About"].map(link => (
-            <span key={link} onClick={() => link === "Custom Orders" && setPage("custom-order")} style={{ fontSize: 13, color: C.charcoal, fontFamily: F.body, cursor: "pointer", fontWeight: 500 }}>{link}</span>
-          ))}
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          {["Shop", "Heritage", "Custom Orders", "About"].m          {["Shop", "Heritage", "Custom Orders", "About"].map(link => (
+            <span key={link} onClick={() => {
+              if (link === "Custom Orders") { setPage("custom-order"); return; }
+              setPage("home"); setViewingProduct(null);
+              const ids = { Shop: "shop-section", Heritage: "heritage-section", About: "about-section" };
+              setTimeout(() => { const el = document.getElementById(ids[link]); if (el) el.scrollIntoView({ behavior: "smooth" }); }, 80);
+            }} style={{ fontSize: 13, color: C.charcoal, fontFamily: F.body, cursor: "pointer", fontWeight: 500 }}>{link}</span>
+          ))}nItems: "center", gap: 16 }}>
           <span style={{ fontSize: 18, cursor: "pointer", color: C.charcoal }}>🔍</span>
           <span style={{ fontSize: 18, cursor: "pointer", color: C.charcoal }}>👤</span>
           <div onClick={() => setCartOpen(true)} style={{ position: "relative", cursor: "pointer" }}>
