@@ -70,7 +70,7 @@ function ProductCard({ product, onView, onAddToCart }) {
   );
 }
 
-// ─── CART DRAWER ───────────────────────────────────────────────────────────────
+// ─── CART DRAWER ─────────────────────────────────────────────────────────────
 function CartDrawer({ cart, onClose, onUpdateQty, onRemove, onCheckout }) {
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
@@ -155,7 +155,7 @@ function CartDrawer({ cart, onClose, onUpdateQty, onRemove, onCheckout }) {
   );
 }
 
-// ─── PRODUCT DETAIL PAGE ──2500────────────────────────────────────────────────────
+// ─── PRODUCT DETAIL PAGE ──2500─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 function ProductDetail({ product, onBack, onAddToCart }) {
   const [tab, setTab] = useState("description");
   const [qty, setQty] = useState(1);
@@ -279,7 +279,7 @@ function ProductDetail({ product, onBack, onAddToCart }) {
   );
 }
 
-// ─── CHECKOUT PAGE ─────────────────────────────────────────────────────────────
+// ─── CHECKOUT PAGE ────────────────────────────────────────────────────────────
 function CheckoutPage({ cart, onBack }) {
   const [contact, setContact] = useState({ email: "", phone: "" });
   const [address, setAddress] = useState({ name: "", line1: "", line2: "", city: "", state: "", zip: "", country: "US" });
@@ -376,7 +376,7 @@ function CheckoutPage({ cart, onBack }) {
               </div>
             </div>
             <button onClick={() => setStep("success")} style={{ width: "100%", padding: "14px", background: C.saffron, color: "#FFF", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, fontFamily: F.body, cursor: "pointer" }}>Place Order · ${total.toFixed(2)}</button>
-          </div>
+        </div>
         </div>
 
         {/* Order summary sidebar */}
@@ -407,7 +407,7 @@ function CheckoutPage({ cart, onBack }) {
   );
 }
 
-// ─── CUSTOM ORDER FORM ─────────────────────────────────────────────────────────
+// ─── CUSTOM ORDER FORM ────────────────────────────────────────────────────────
 function CustomOrderForm({ onBack }) {
   const [step, setStep] = useState(1);
   const [occasion, setOccasion] = useState("");
@@ -426,7 +426,7 @@ function CustomOrderForm({ onBack }) {
     { id: "birthday", label: "Birthday", emoji: "🎂", arabic: "عيد ميلاد" },
     { id: "anniversary", label: "Anniversary", emoji: "💞", arabic: "ذكرى سنوية" },
     { id: "housewarming", label: "Housewarming", emoji: "🏡", arabic: "منزل جديد" },
-    { id: "other", label: "Other", emoji: "✦", arabic: "أخرى" },
+    { id: "other\, label: "Other", emoji: "✦", arabic: "أخرى" },
   ];
   const COLORS_LIST = [{ name: "Gold", hex: "#D4881F" }, { name: "White", hex: "#F5F5F5" }, { name: "Black", hex: "#1A1A1A" }, { name: "Blue", hex: "#1E5C8C" }, { name: "Rose Gold", hex: "#C9856F" }];
   const STYLES = ["Diwani", "Modern", "Kufi", "Classic"];
@@ -572,7 +572,7 @@ function CustomOrderForm({ onBack }) {
   );
 }
 
-// ─── HOMEPAGE ───────────────────────────────────────────────────────────────────
+// ─── HOMEPAGE ─────────────────────────────────────────────────────────────────
 function Homepage({ onViewProduct, onAddToCart, onCustomOrder }) {
   return (
     <div>
@@ -632,8 +632,8 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder }) {
         </div>
 
         {/* Best sellers */}
- {/* Best sellers */}
-        <div id="shop-section" style={{ marginBottom: 56 }}>{{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 28 }}>
+        <div id="shop-section" style={{ marginBottom: 56 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 28 }}>
             <div>
               <div style={{ fontFamily: F.display, fontSize: 36, fontWeight: 600, color: C.charcoal }}>Best Sellers</div>
               <div style={{ fontFamily: F.arabic, fontSize: 18, color: C.saffron }}>الأكثر مبيعاً</div>
@@ -785,14 +785,16 @@ export default function App() {
           <div style={{ fontFamily: F.arabic, fontSize: 12, color: C.saffron, lineHeight: 1 }}>سوق ثري دي</div>
         </div>
         <div style={{ display: "flex", gap: 24 }}>
-          {["Shop", "Heritage", "Custom Orders", "About"].m          {["Shop", "Heritage", "Custom Orders", "About"].map(link => (
+          {["Shop", "Heritage", "Custom Orders", "About"].map(link => (
             <span key={link} onClick={() => {
               if (link === "Custom Orders") { setPage("custom-order"); return; }
               setPage("home"); setViewingProduct(null);
               const ids = { Shop: "shop-section", Heritage: "heritage-section", About: "about-section" };
               setTimeout(() => { const el = document.getElementById(ids[link]); if (el) el.scrollIntoView({ behavior: "smooth" }); }, 80);
             }} style={{ fontSize: 13, color: C.charcoal, fontFamily: F.body, cursor: "pointer", fontWeight: 500 }}>{link}</span>
-          ))}nItems: "center", gap: 16 }}>
+          ))}
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <span style={{ fontSize: 18, cursor: "pointer", color: C.charcoal }}>🔍</span>
           <span style={{ fontSize: 18, cursor: "pointer", color: C.charcoal }}>👤</span>
           <div onClick={() => setCartOpen(true)} style={{ position: "relative", cursor: "pointer" }}>
@@ -823,19 +825,4 @@ export default function App() {
         <CheckoutPage cart={cart} onBack={() => setPage("home")} />
       )}
       {page === "custom-order" && (
-        <CustomOrderForm onBack={() => setPage("home")} />
-      )}
-
-      {/* Cart drawer */}
-      {cartOpen && (
-        <CartDrawer
-          cart={cart}
-          onClose={() => setCartOpen(false)}
-          onUpdateQty={updateQty}
-          onRemove={id => setCart(prev => prev.filter(i => i.id !== id))}
-          onCheckout={() => { setCartOpen(false); setPage("checkout"); }}
-        />
-      )}
-    </div>
-  );
-}
+        <CustomOrd
