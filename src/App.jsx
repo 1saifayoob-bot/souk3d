@@ -648,8 +648,7 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder }) {
         </div>
 
         {/* Nala's story */}
-        <div style={/* Nala's story */}
-        <div id="about-section" style={{ background: C.charcoal, borderRadius: 20, padding: "48px", marginBottom: 56,1fr 1fr", gap: 40, alignItems: "center" }}>
+        <div id="about-section" style={{ background: C.charcoal, borderRadius: 20, padding: "48px", marginBottom: 56, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40, alignItems: "center" }}>
           <div>
             <div style={{ fontFamily: F.arabic, fontSize: 20, color: C.saffron, marginBottom: 12 }}>من نالا بكل حب</div>
             <div style={{ fontFamily: F.display, fontSize: 30, fontWeight: 600, color: "#FFF", lineHeight: 1.2, marginBottom: 16 }}>A piece of home in every print.</div>
