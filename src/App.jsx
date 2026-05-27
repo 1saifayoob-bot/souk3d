@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-// â”€â”€â”€ BRAND CONSTANTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── BRAND CONSTANTS ───────────────────────────────────────────────────────────
 const C = {
   saffron: "#D4881F", saffronLight: "#E8B864", saffronDark: "#A86510",
   terracotta: "#B85C3C", damascene: "#1E5C8C", olive: "#5C6B3F",
@@ -9,32 +9,32 @@ const C = {
 };
 const F = { display: "'Cormorant Garamond', serif", body: "'Outfit', sans-serif", arabic: "'Amiri', serif" };
 
-// â”€â”€â”€ STOREFRONT MOCK DATA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── STOREFRONT MOCK DATA ──────────────────────────────────────────────────────
 const STORE_PRODUCTS = [
-  { id: 1, name: "Damascus Name Plaque", name_ar: "Ù„ÙˆØ­Ø© Ø§Ù„Ø§Ø³Ù… Ø§Ù„Ø¯Ù…Ø´Ù‚ÙŠØ©", category: "Home Decor", country: "Syria", flag: "ðŸ‡¸ðŸ‡¾", price: 44.99, compareAt: 59.99, badge: "Best Seller", stars: 4.9, reviews: 47, emoji: "ðŸº", desc: "Beautifully 3D-printed wall plaque featuring your family name in Diwani calligraphy. Each piece is hand-finished in Detroit and ships worldwide.", customizable: true },
-  { id: 2, name: "Eid Mubarak Lantern", name_ar: "ÙØ§Ù†ÙˆØ³ Ø¹ÙŠØ¯ Ù…Ø¨Ø§Ø±Ùƒ", category: "Seasonal", country: "Pan-Arab", flag: "ðŸŒ", price: 34.99, compareAt: null, badge: "New", stars: 4.8, reviews: 38, emoji: "ðŸª”", desc: "Intricate geometric lantern celebrating Eid al-Fitr and Eid al-Adha. Perfect as a centerpiece or gift.", customizable: false },
-  { id: 3, name: "Palestinian Olive Tree", name_ar: "Ð´Ø¬Ø±Ø© Ø§Ù„Ø²ÙŠØªÙˆÙ† Ø§Ù„ÙÙ„Ø³Ø·ÙŠÙ†ÙŠØ©", category: "Art", country: "Palestine", flag: "ðŸ‡µðŸ‡¸", price: 54.99, compareAt: null, badge: null, stars: 5.0, reviews: 29, emoji: "ðŸ«’", desc: "A symbol of steadfastness and heritage. This sculptural olive tree captures the spirit of Palestinian connection to the land.", customizable: false },
-  { id: 4, name: "Kufic Calligraphy Frame", name_ar: "Ø¥Ø·Ø§Ø± Ø§Ù„Ø®Ø· Ø§Ù„ÙƒÙˆÙÙŠ", category: "Art", country: "Pan-Arab", flag: "ðŸŒ", price: 64.99, compareAt: 79.99, badge: "Sale", stars: 4.7, reviews: 18, emoji: "âœ¦", desc: "Custom Quranic verse or family name rendered in the ancient Kufic script, mounted in a sleek matte frame.", customizable: true },
+  { id: 1, name: "Damascus Name Plaque", name_ar: "لوحة الاسم الدمشقية", category: "Home Decor", country: "Syria", flag: "🇸🇾", price: 44.99, compareAt: 59.99, badge: "Best Seller", stars: 4.9, reviews: 47, emoji: "🏺", desc: "Beautifully 3D-printed wall plaque featuring your family name in Diwani calligraphy. Each piece is hand-finished in Detroit and ships worldwide.", customizable: true },
+  { id: 2, name: "Eid Mubarak Lantern", name_ar: "فانوس عيد مبارك", category: "Seasonal", country: "Pan-Arab", flag: "🌍", price: 34.99, compareAt: null, badge: "New", stars: 4.8, reviews: 38, emoji: "🪔", desc: "Intricate geometric lantern celebrating Eid al-Fitr and Eid al-Adha. Perfect as a centerpiece or gift.", customizable: false },
+  { id: 3, name: "Palestinian Olive Tree", name_ar: "شجرة الزيتون الفلسطينية", category: "Art", country: "Palestine", flag: "🇵🇸", price: 54.99, compareAt: null, badge: null, stars: 5.0, reviews: 29, emoji: "🫒", desc: "A symbol of steadfastness and heritage. This sculptural olive tree captures the spirit of Palestinian connection to the land.", customizable: false },
+  { id: 4, name: "Kufic Calligraphy Frame", name_ar: "إطار الخط الكوفي", category: "Art", country: "Pan-Arab", flag: "🌍", price: 64.99, compareAt: 79.99, badge: "Sale", stars: 4.7, reviews: 18, emoji: "✦", desc: "Custom Quranic verse or family name rendered in the ancient Kufic script, mounted in a sleek matte frame.", customizable: true },
 ];
 
 const HERITAGE_ITEMS = [
-  { country: "Syria", flag: "ðŸ‡¸ðŸ‡¾", arabic: "Ø³ÙˆØ±ÙŠØ§", count: 12, color: C.saffron },
-  { country: "Lebanon", flag: "ðŸ‡±ðŸ‡§", arabic: "Ù„Ø¨Ù†Ø§Ù†", count: 8, color: C.terracotta },
-  { country: "Palestine", flag: "ðŸ‡µðŸ‡¸", arabic: "ÙÙ„Ø³Ø·ÙŠÙ†", count: 10, color: C.damascene },
-  { country: "Egypt", flag: "ðŸ‡ªðŸ‡¬", arabic: "Ù…ØµØ±", count: 7, color: C.olive },
-  { country: "Iraq", flag: "ðŸ‡®ðŸ‡¶", arabic: "Ø§Ù„Ø¹Ø±Ø§Ù‚", count: 6, color: C.saffronDark },
-  { country: "Pan-Arab", flag: "ðŸŒ", arabic: "Ø¹Ø±Ø¨ÙŠ", count: 15, color: C.inkBrown },
+  { country: "Syria", flag: "🇸🇾", arabic: "سوريا", count: 12, color: C.saffron },
+  { country: "Lebanon", flag: "🇱🇧", arabic: "لبنان", count: 8, color: C.terracotta },
+  { country: "Palestine", flag: "🇵🇸", arabic: "فلسطين", count: 10, color: C.damascene },
+  { country: "Egypt", flag: "🇪🇬", arabic: "مصر", count: 7, color: C.olive },
+  { country: "Iraq", flag: "🇮🇶", arabic: "العراق", count: 6, color: C.saffronDark },
+  { country: "Pan-Arab", flag: "🌍", arabic: "عربي", count: 15, color: C.inkBrown },
 ];
 
 const REVIEWS = [
-  { name: "Layla H.", flag: "ðŸ‡ºðŸ‡¸", location: "Detroit, MI", text: "Nala's work is absolutely stunning. The Damascus name plaque hangs above our fireplace and gets compliments every single day. Ordered a second one as a gift!", stars: 5, product: "Damascus Name Plaque", arabic: "Ù…Ù…ØªØ§Ø² Ø¬Ø¯Ø§Ù‹" },
-  { name: "Omar K.", flag: "ðŸ‡¨ðŸ‡¦", location: "Toronto, ON", text: "Finally someone who understands the diaspora experience. Every piece tells a story. Fast shipping to Canada too.", stars: 5, product: "Eid Mubarak Lantern", arabic: "" },
-  { name: "Yara M.", flag: "ðŸ‡¬ðŸ‡§", location: "London, UK", text: "The Palestinian olive tree sculpture is breathtaking. My mother cried when she saw it. It means so much to our family.", stars: 5, product: "Palestinian Olive Tree", arabic: "Ø´ÙƒØ±Ø§Ù‹ Ø¬Ø²ÙŠÙ„Ø§Ù‹" },
+  { name: "Layla H.", flag: "🇺🇸", location: "Detroit, MI", text: "Nala's work is absolutely stunning. The Damascus name plaque hangs above our fireplace and gets compliments every single day. Ordered a second one as a gift!", stars: 5, product: "Damascus Name Plaque", arabic: "ممتاز جداً" },
+  { name: "Omar K.", flag: "🇨🇦", location: "Toronto, ON", text: "Finally someone who understands the diaspora experience. Every piece tells a story. Fast shipping to Canada too.", stars: 5, product: "Eid Mubarak Lantern", arabic: "" },
+  { name: "Yara M.", flag: "🇬🇧", location: "London, UK", text: "The Palestinian olive tree sculpture is breathtaking. My mother cried when she saw it. It means so much to our family.", stars: 5, product: "Palestinian Olive Tree", arabic: "شكراً جزيلاً" },
 ];
 
-// â”€â”€â”€ SHARED STOREFRONT COMPONENTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── SHARED STOREFRONT COMPONENTS ─────────────────────────────────────────────
 function Stars({ count, size = 13 }) {
-  return <span style={{ color: C.saffron, fontSize: size, letterSpacing: 1 }}>{"â˜…".repeat(Math.floor(count))}{"â˜†".repeat(5 - Math.floor(count))}</span>;
+  return <span style={{ color: C.saffron, fontSize: size, letterSpacing: 1 }}>{"★".repeat(Math.floor(count))}{"☆".repeat(5 - Math.floor(count))}</span>;
 }
 
 function ProductCard({ product, onView, onAddToCart }) {
@@ -47,7 +47,7 @@ function ProductCard({ product, onView, onAddToCart }) {
           <div style={{ position: "absolute", top: 12, left: 12, background: product.badge === "Sale" ? C.terracotta : product.badge === "New" ? C.damascene : C.saffron, color: "#FFF", fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 10, fontFamily: F.body }}>{product.badge}</div>
         )}
         {product.customizable && (
-          <div style={{ position: "absolute", top: 12, right: 12, background: C.olive, color: "#FFF", fontSize: 9, fontWeight: 700, padding: "3px 9px", borderRadius: 10, fontFamily: F.body }}>âœ¦ Custom</div>
+          <div style={{ position: "absolute", top: 12, right: 12, background: C.olive, color: "#FFF", fontSize: 9, fontWeight: 700, padding: "3px 9px", borderRadius: 10, fontFamily: F.body }}>✦ Custom</div>
         )}
       </div>
       <div style={{ padding: "14px 16px" }}>
@@ -70,7 +70,7 @@ function ProductCard({ product, onView, onAddToCart }) {
   );
 }
 
-// â”€â”€â”€ CART DRAWER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── CART DRAWER ───────────────────────────────────────────────────────────────
 function CartDrawer({ cart, onClose, onUpdateQty, onRemove, onCheckout }) {
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
@@ -87,7 +87,7 @@ function CartDrawer({ cart, onClose, onUpdateQty, onRemove, onCheckout }) {
         {/* Header */}
         <div style={{ padding: "20px 22px", borderBottom: `0.5px solid ${C.wheat}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
           <div style={{ fontFamily: F.display, fontSize: 22, fontWeight: 600, color: C.charcoal }}>Your Cart ({cart.length})</div>
-          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: C.textMuted }}>âœ•</button>
+          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: C.textMuted }}>✕</button>
         </div>
 
         {/* Free shipping bar */}
@@ -101,7 +101,7 @@ function CartDrawer({ cart, onClose, onUpdateQty, onRemove, onCheckout }) {
         )}
         {subtotal >= 75 && (
           <div style={{ padding: "10px 22px", background: C.olive + "18", borderBottom: `0.5px solid ${C.wheat}` }}>
-            <div style={{ fontSize: 11, color: C.olive, fontFamily: F.body, fontWeight: 600 }}>ðŸŽ‰ You've unlocked free shipping!</div>
+            <div style={{ fontSize: 11, color: C.olive, fontFamily: F.body, fontWeight: 600 }}>🎉 You've unlocked free shipping!</div>
           </div>
         )}
 
@@ -109,7 +109,7 @@ function CartDrawer({ cart, onClose, onUpdateQty, onRemove, onCheckout }) {
         <div style={{ flex: 1, overflowY: "auto", padding: "16px 22px" }}>
           {cart.length === 0 && (
             <div style={{ textAlign: "center", padding: "60px 0", color: C.textMuted, fontFamily: F.body }}>
-              <div style={{ fontSize: 40, marginBottom: 12 }}>ðŸ›’</div>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>🛒</div>
               <div>Your cart is empty</div>
             </div>
           )}
@@ -121,13 +121,13 @@ function CartDrawer({ cart, onClose, onUpdateQty, onRemove, onCheckout }) {
                 {item.customText && <div style={{ fontFamily: F.arabic, fontSize: 14, color: C.saffron, direction: "rtl", textAlign: "right" }}>{item.customText}</div>}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 8 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, border: `0.5px solid ${C.wheat}`, borderRadius: 6, overflow: "hidden" }}>
-                    <button onClick={() => onUpdateQty(item.id, item.qty - 1)} style={{ width: 28, height: 28, background: "none", border: "none", cursor: "pointer", fontSize: 14 }}>âˆ’</button>
+                    <button onClick={() => onUpdateQty(item.id, item.qty - 1)} style={{ width: 28, height: 28, background: "none", border: "none", cursor: "pointer", fontSize: 14 }}>−</button>
                     <span style={{ fontSize: 13, fontFamily: F.body, fontWeight: 600 }}>{item.qty}</span>
                     <button onClick={() => onUpdateQty(item.id, item.qty + 1)} style={{ width: 28, height: 28, background: "none", border: "none", cursor: "pointer", fontSize: 14 }}>+</button>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{ fontSize: 14, fontWeight: 700, color: C.charcoal }}>${(item.price * item.qty).toFixed(2)}</span>
-                    <button onClick={() => onRemove(item.id)} style={{ background: "none", border: "none", color: C.textMuted, cursor: "pointer", fontSize: 12 }}>âœ•</button>
+                    <button onClick={() => onRemove(item.id)} style={{ background: "none", border: "none", color: C.textMuted, cursor: "pointer", fontSize: 12 }}>✕</button>
                   </div>
                 </div>
               </div>
@@ -141,21 +141,21 @@ function CartDrawer({ cart, onClose, onUpdateQty, onRemove, onCheckout }) {
             <input value={promoCode} onChange={e => setPromoCode(e.target.value)} placeholder="Promo code" style={{ flex: 1, padding: "9px 12px", border: `0.5px solid ${C.wheat}`, borderRadius: 8, fontSize: 12, fontFamily: F.body, outline: "none" }} />
             <button onClick={() => { if (promoCode.toUpperCase() === "WELCOME10") setPromoApplied(true); }} style={{ padding: "9px 14px", background: C.charcoal, color: "#FFF", border: "none", borderRadius: 8, fontSize: 12, fontFamily: F.body, cursor: "pointer" }}>Apply</button>
           </div>
-          {promoApplied && <div style={{ fontSize: 11, color: C.olive, marginBottom: 8, fontFamily: F.body }}>âœ“ WELCOME10 applied â€” 10% off!</div>}
+          {promoApplied && <div style={{ fontSize: 11, color: C.olive, marginBottom: 8, fontFamily: F.body }}>✓ WELCOME10 applied — 10% off!</div>}
           {[["Subtotal", `$${subtotal.toFixed(2)}`], ["Shipping", subtotal >= 75 ? "Free" : "$5.99"], ...(promoApplied ? [["Discount (10%)", `-$${discount.toFixed(2)}`]] : [])].map(([k, v]) => (
             <div key={k} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, fontFamily: F.body, marginBottom: 4, color: k === "Discount (10%)" ? C.olive : C.charcoal }}><span>{k}</span><span style={{ fontWeight: 500 }}>{v}</span></div>
           ))}
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 16, fontWeight: 700, color: C.charcoal, fontFamily: F.body, borderTop: `0.5px solid ${C.wheat}`, paddingTop: 10, marginTop: 6, marginBottom: 14 }}>
             <span>Total</span><span>${total.toFixed(2)}</span>
           </div>
-          <button onClick={onCheckout} disabled={cart.length === 0} style={{ width: "100%", padding: "14px", background: cart.length === 0 ? C.wheat : C.charcoal, color: "#FFF", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, fontFamily: F.body, cursor: cart.length === 0 ? "not-allowed" : "pointer", letterSpacing: 0.5 }}>Checkout Â· ${total.toFixed(2)}</button>
+          <button onClick={onCheckout} disabled={cart.length === 0} style={{ width: "100%", padding: "14px", background: cart.length === 0 ? C.wheat : C.charcoal, color: "#FFF", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, fontFamily: F.body, cursor: cart.length === 0 ? "not-allowed" : "pointer", letterSpacing: 0.5 }}>Checkout · ${total.toFixed(2)}</button>
         </div>
       </div>
     </>
   );
 }
 
-// â”€â”€â”€ PRODUCT DETAIL PAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── PRODUCT DETAIL PAGE ──2500────────────────────────────────────────────────────
 function ProductDetail({ product, onBack, onAddToCart }) {
   const [tab, setTab] = useState("description");
   const [qty, setQty] = useState(1);
@@ -211,8 +211,8 @@ function ProductDetail({ product, onBack, onAddToCart }) {
           {/* Customization card */}
           {product.customizable && (
             <div style={{ background: C.charcoal, borderRadius: 12, padding: "16px 18px", marginBottom: 20 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: C.saffronLight, letterSpacing: 0.8, marginBottom: 12, fontFamily: F.body }}>âœ¦ ARABIC CUSTOMIZATION</div>
-              <input value={customText} onChange={e => setCustomText(e.target.value)} placeholder="Ø£ÙƒØªØ¨ Ù†ØµÙƒ Ø¨Ø§Ù„Ø¹Ø±Ø¨ÙŠ Ù‡Ù†(§â€¦" style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.1)", border: `0.5px solid rgba(255,255,255,0.2)`, borderRadius: 8, fontSize: 18, fontFamily: F.arabic, color: "#FFF", outline: "none", direction: "rtl", textAlign: "right", marginBottom: 10, boxSizing: "border-box" }} />
+              <div style={{ fontSize: 11, fontWeight: 700, color: C.saffronLight, letterSpacing: 0.8, marginBottom: 12, fontFamily: F.body }}>✦ ARABIC CUSTOMIZATION</div>
+              <input value={customText} onChange={e => setCustomText(e.target.value)} placeholder="أكتب نصك بالعربي هنا…" style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.1)", border: `0.5px solid rgba(255,255,255,0.2)`, borderRadius: 8, fontSize: 18, fontFamily: F.arabic, color: "#FFF", outline: "none", direction: "rtl", textAlign: "right", marginBottom: 10, boxSizing: "border-box" }} />
               {customText && <div style={{ fontFamily: F.arabic, fontSize: 28, color: C.saffron, direction: "rtl", textAlign: "right", marginBottom: 10 }}>{customText}</div>}
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {STYLES.map(s => (
@@ -225,7 +225,7 @@ function ProductDetail({ product, onBack, onAddToCart }) {
           {/* Qty + CTA */}
           <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 16 }}>
             <div style={{ display: "flex", alignItems: "center", border: `0.5px solid ${C.wheat}`, borderRadius: 8, overflow: "hidden" }}>
-              <button onClick={() => setQty(Math.max(1, qty - 1))} style={{ width: 36, height: 44, background: "none", border: "none", cursor: "pointer", fontSize: 16 }}>âˆ’</button>
+              <button onClick={() => setQty(Math.max(1, qty - 1))} style={{ width: 36, height: 44, background: "none", border: "none", cursor: "pointer", fontSize: 16 }}>−</button>
               <span style={{ width: 40, textAlign: "center", fontSize: 15, fontWeight: 600, fontFamily: F.body }}>{qty}</span>
               <button onClick={() => setQty(qty + 1)} style={{ width: 36, height: 44, background: "none", border: "none", cursor: "pointer", fontSize: 16 }}>+</button>
             </div>
@@ -235,7 +235,7 @@ function ProductDetail({ product, onBack, onAddToCart }) {
 
           {/* Trust badges */}
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-            {["ðŸ”’ Secure payment", "ðŸšš Free ship $75+", "âœ¦ Handmade", "ðŸ”„ Easy returns"].map(b => (
+            {["🔒 Secure payment", "🚚 Free ship $75+", "✦ Handmade", "🔄 Easy returns"].map(b => (
               <span key={b} style={{ fontSize: 11, color: C.textMuted, fontFamily: F.body }}>{b}</span>
             ))}
           </div>
@@ -250,9 +250,9 @@ function ProductDetail({ product, onBack, onAddToCart }) {
       </div>
       <div style={{ fontSize: 14, color: C.textMuted, fontFamily: F.body, lineHeight: 1.8, marginBottom: 40, maxWidth: 700 }}>
         {tab === "description" && product.desc}
-        {tab === "specifications" && "Material: PLA+ filament Â· Dimensions: approx. 8\" Ã— 6\" Â· Weight: 180g Â· Finish: Matte white (custom colors available) Â· Mounting: Keyhole slots on back (hardware included)"}
-        {tab === "shipping" && "Processing time: 3â€“5 business days Â· USA: Standard $5.99 (5â€“8 days), Express $12.99 (2â€“3 days) Â· Canada: $9.99 standard Â· International: From $14.99 Â· Free shipping on orders $75+"}
-        {tab === "faq" && "Q: Can I request any Arabic text? A: Yes! Any name, verse, or phrase in any Arabic calligraphy style. Q: Do you ship internationally? A: Yes, we ship worldwide. Q: How long does a custom order take? A: 5â€“7 business days plus shipping."}
+        {tab === "specifications" && "Material: PLA+ filament · Dimensions: approx. 8\" × 6\" · Weight: 180g · Finish: Matte white (custom colors available) · Mounting: Keyhole slots on back (hardware included)"}
+        {tab === "shipping" && "Processing time: 3–5 business days · USA: Standard $5.99 (5–8 days), Express $12.99 (2–3 days) · Canada: $9.99 standard · International: From $14.99 · Free shipping on orders $75+"}
+        {tab === "faq" && "Q: Can I request any Arabic text? A: Yes! Any name, verse, or phrase in any Arabic calligraphy style. Q: Do you ship internationally? A: Yes, we ship worldwide. Q: How long does a custom order take? A: 5–7 business days plus shipping."}
       </div>
 
       {/* Reviews */}
@@ -266,7 +266,7 @@ function ProductDetail({ product, onBack, onAddToCart }) {
                   <div style={{ fontSize: 13, fontWeight: 600, color: C.charcoal, fontFamily: F.body }}>{r.flag} {r.name}</div>
                   <div style={{ fontSize: 11, color: C.textMuted, fontFamily: F.body }}>{r.location}</div>
                 </div>
-                <div style={{ fontSize: 9, background: C.olive + "22", color: C.olive, padding: "2px 7px", borderRadius: 6, fontWeight: 600, height: "fit-content", fontFamily: F.body }}>âœ“ Verified</div>
+                <div style={{ fontSize: 9, background: C.olive + "22", color: C.olive, padding: "2px 7px", borderRadius: 6, fontWeight: 600, height: "fit-content", fontFamily: F.body }}>✓ Verified</div>
               </div>
               <Stars count={r.stars} />
               <p style={{ fontSize: 13, color: C.charcoal, fontFamily: F.body, lineHeight: 1.6, marginTop: 8, marginBottom: r.arabic ? 6 : 0 }}>{r.text}</p>
@@ -279,7 +279,7 @@ function ProductDetail({ product, onBack, onAddToCart }) {
   );
 }
 
-// â”€â”€â”€ CHECKOUT PAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── CHECKOUT PAGE ─────────────────────────────────────────────────────────────
 function CheckoutPage({ cart, onBack }) {
   const [contact, setContact] = useState({ email: "", phone: "" });
   const [address, setAddress] = useState({ name: "", line1: "", line2: "", city: "", state: "", zip: "", country: "US" });
@@ -294,10 +294,10 @@ function CheckoutPage({ cart, onBack }) {
   if (step === "success") {
     return (
       <div style={{ maxWidth: 520, margin: "80px auto", textAlign: "center", padding: "0 20px" }}>
-        <div style={{ fontSize: 64, marginBottom: 20 }}>ðŸŽ‰</div>
+        <div style={{ fontSize: 64, marginBottom: 20 }}>🎉</div>
         <div style={{ fontFamily: F.display, fontSize: 36, fontWeight: 600, color: C.charcoal, marginBottom: 8 }}>Order Confirmed!</div>
-        <div style={{ fontFamily: F.arabic, fontSize: 22, color: C.saffron, marginBottom: 16 }}>Ù…Ø¨Ø±ÙˆÙƒ Ø·Ù„Ø¨Ùƒ!</div>
-        <p style={{ fontSize: 14, color: C.textMuted, fontFamily: F.body, lineHeight: 1.7, marginBottom: 24 }}>Your order has been received. Nala will begin crafting your pieces within 1-2 business days. You'll receive an email confirmation shortly.</p>
+        <div style={{ fontFamily: F.arabic, fontSize: 22, color: C.saffron, marginBottom: 16 }}>مبروك طلبك!</div>
+        <p style={{ fontSize: 14, color: C.textMuted, fontFamily: F.body, lineHeight: 1.7, marginBottom: 24 }}>Your order has been received. Nala will begin crafting your pieces within 1–2 business days. You'll receive an email confirmation shortly.</p>
         <button onClick={onBack} style={{ padding: "13px 32px", background: C.charcoal, color: "#FFF", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 600, fontFamily: F.body, cursor: "pointer" }}>Continue Shopping</button>
       </div>
     );
@@ -315,7 +315,7 @@ function CheckoutPage({ cart, onBack }) {
             <button key={name} style={{ flex: 1, padding: "12px", background: bg, color: "#FFF", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: F.body }}>{name}</button>
           ))}
         </div>
-        <div style={{ textAlign: "center", fontSize: 11, color: C.textMuted, marginTop: 12, fontFamily: F.body }}>â€” or continue below â€”</div>
+        <div style={{ textAlign: "center", fontSize: 11, color: C.textMuted, marginTop: 12, fontFamily: F.body }}>— or continue below —</div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 24 }}>
@@ -348,7 +348,7 @@ function CheckoutPage({ cart, onBack }) {
           {/* Shipping method */}
           <div style={{ background: "#FFF", border: `0.5px solid ${C.wheat}`, borderRadius: 12, padding: "20px", marginBottom: 16 }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: C.charcoal, fontFamily: F.body, marginBottom: 14 }}>Shipping Method</div>
-            {[["standard", "Standard (5-8 days)", subtotal >= 75 ? "Free" : "$5.99"], ["express", "Express (2-3 days)", "$12.99"]].map(([val, label, price]) => (
+            {[["standard", "Standard (5–8 days)", subtotal >= 75 ? "Free" : "$5.99"], ["express", "Express (2–3 days)", "$12.99"]].map(([val, label, price]) => (
               <div key={val} onClick={() => setShippingMethod(val)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px", border: `0.5px solid ${shippingMethod === val ? C.saffron : C.wheat}`, borderRadius: 8, cursor: "pointer", marginBottom: 8, background: shippingMethod === val ? C.saffron + "0A" : "#FFF" }}>
                 <div style={{ width: 18, height: 18, borderRadius: "50%", border: `2px solid ${shippingMethod === val ? C.saffron : C.wheat}`, background: shippingMethod === val ? C.saffron : "#FFF", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   {shippingMethod === val && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#FFF" }} />}
@@ -361,8 +361,8 @@ function CheckoutPage({ cart, onBack }) {
 
           {/* Gift message */}
           <div style={{ background: C.terracotta + "0E", border: `0.5px solid ${C.terracotta}44`, borderRadius: 12, padding: "16px 20px", marginBottom: 16 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: C.terracotta, fontFamily: F.body, marginBottom: 8 }}>ðŸŽ Add a gift message</div>
-            <textarea value={giftMessage} onChange={e => setGiftMessage(e.target.value)} placeholder="Write a personal message for the recipientâ€¦" style={{ width: "100%", minHeight: 72, padding: "10px 12px", border: `0.5px solid ${C.terracotta}44`, borderRadius: 8, fontSize: 13, fontFamily: F.body, background: "transparent", outline: "none", resize: "none", boxSizing: "border-box" }} />
+            <div style={{ fontSize: 13, fontWeight: 600, color: C.terracotta, fontFamily: F.body, marginBottom: 8 }}>🎁 Add a gift message</div>
+            <textarea value={giftMessage} onChange={e => setGiftMessage(e.target.value)} placeholder="Write a personal message for the recipient…" style={{ width: "100%", minHeight: 72, padding: "10px 12px", border: `0.5px solid ${C.terracotta}44`, borderRadius: 8, fontSize: 13, fontFamily: F.body, background: "transparent", outline: "none", resize: "none", boxSizing: "border-box" }} />
           </div>
 
           {/* Payment */}
@@ -375,7 +375,7 @@ function CheckoutPage({ cart, onBack }) {
                 <input placeholder="CVC" style={{ flex: 1, border: "none", background: "transparent", fontSize: 13, fontFamily: "monospace", outline: "none" }} />
               </div>
             </div>
-            <button onClick={() => setStep("success")} style={{ width: "100%", padding: "14px", background: C.saffron, color: "#FFF", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, fontFamily: F.body, cursor: "pointer" }}>Place Order Â· ${total.toFixed(2)}</button>
+            <button onClick={() => setStep("success")} style={{ width: "100%", padding: "14px", background: C.saffron, color: "#FFF", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, fontFamily: F.body, cursor: "pointer" }}>Place Order · ${total.toFixed(2)}</button>
           </div>
         </div>
 
@@ -387,7 +387,7 @@ function CheckoutPage({ cart, onBack }) {
               <div key={item.id} style={{ display: "flex", gap: 10, marginBottom: 12, alignItems: "center" }}>
                 <div style={{ width: 48, height: 48, background: `linear-gradient(135deg, ${C.cream2} 0%, ${C.wheat}44 100%)`, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0, position: "relative" }}>
                   {item.emoji}
-                  <div style={{ position: "absolute", top: -6, right: -6, width: 18, height: 18, background: C.charcoal, color: "#FFF", borderRadius: "50%", fontSize: 10, fontWeight: 700, display: "flex", alignItlignItems: "center", justifyContent: "center" }}>{item.qty}</div>
+                  <div style={{ position: "absolute", top: -6, right: -6, width: 18, height: 18, background: C.charcoal, color: "#FFF", borderRadius: "50%", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{item.qty}</div>
                 </div>
                 <div style={{ flex: 1, fontSize: 12, fontFamily: F.body }}>{item.name}</div>
                 <div style={{ fontSize: 13, fontWeight: 600 }}>${(item.price * item.qty).toFixed(2)}</div>
@@ -407,7 +407,7 @@ function CheckoutPage({ cart, onBack }) {
   );
 }
 
-// â”€â”€â”€ CUSTOM ORDER FORM â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── CUSTOM ORDER FORM ─────────────────────────────────────────────────────────
 function CustomOrderForm({ onBack }) {
   const [step, setStep] = useState(1);
   const [occasion, setOccasion] = useState("");
@@ -419,14 +419,14 @@ function CustomOrderForm({ onBack }) {
   const [submitted, setSubmitted] = useState(false);
 
   const OCCASIONS = [
-    { id: "wedding", label: "Wedding", emoji: "ðŸ’", arabic: "Ø²ÙØ§Ù" },
-    { id: "graduation", label: "Graduation", emoji: "ðŸŽ“", arabic: "ØªØ®Ø±Ø¬" },
-    { id: "baby", label: "New Baby", emoji: "ðŸ‘¶", arabic: "Ù…ÙˆÙ„ÙˆØ¯ Ø¬Ø¯ÙŠØ¯" },
-    { id: "eid", label: "Eid", emoji: "ðŸŒ™", arabic: "Ø¹ÙŠØ¯" },
-    { id: "birthday", label: "Birthday", emoji: "ðŸŽ‚", arabic: "Ø¹ÙŠØ¯ Ù…ÙŠÙ„Ø§Ø¯" },
-    { id: "anniversary", label: "Anniversary", emoji: "ðŸ’ž", arabic: "Ø°ÙƒØ±Ù‰ Ø³Ù†ÙˆÙŠØ©" },
-    { id: "housewarming", label: "Housewarming", emoji: "ðŸ¡", arabic: "Ù…Ù†Ø²Ù„ Ø¬Ø¯ÙŠØ¯" },
-    { id: "other", label: "Other", emoji: "âœ¦", arabic: "Ø£Ø®Ø±Ù‰" },
+    { id: "wedding", label: "Wedding", emoji: "💍", arabic: "زفاف" },
+    { id: "graduation", label: "Graduation", emoji: "🎓", arabic: "تخرج" },
+    { id: "baby", label: "New Baby", emoji: "👶", arabic: "مولود جديد" },
+    { id: "eid", label: "Eid", emoji: "🌙", arabic: "عيد" },
+    { id: "birthday", label: "Birthday", emoji: "🎂", arabic: "عيد ميلاد" },
+    { id: "anniversary", label: "Anniversary", emoji: "💞", arabic: "ذكرى سنوية" },
+    { id: "housewarming", label: "Housewarming", emoji: "🏡", arabic: "منزل جديد" },
+    { id: "other\, label: "Other", emoji: "✦", arabic: "أخرى" },
   ];
   const COLORS_LIST = [{ name: "Gold", hex: "#D4881F" }, { name: "White", hex: "#F5F5F5" }, { name: "Black", hex: "#1A1A1A" }, { name: "Blue", hex: "#1E5C8C" }, { name: "Rose Gold", hex: "#C9856F" }];
   const STYLES = ["Diwani", "Modern", "Kufi", "Classic"];
@@ -434,9 +434,9 @@ function CustomOrderForm({ onBack }) {
   if (submitted) {
     return (
       <div style={{ maxWidth: 520, margin: "80px auto", textAlign: "center", padding: "0 20px" }}>
-        <div style={{ fontSize: 64, marginBottom: 20 }}>âœ¦</div>
+        <div style={{ fontSize: 64, marginBottom: 20 }}>✦</div>
         <div style={{ fontFamily: F.display, fontSize: 32, fontWeight: 600, color: C.charcoal, marginBottom: 8 }}>Request Received!</div>
-        <div style={{ fontFamily: F.arabic, fontSize: 24, color: C.saffron, marginBottom: 16 }}>ØªÙ… Ø§Ø³ØªÙ„Ø§Ù… Ø·Ù„Ø¨Ùƒ!</div>
+        <div style={{ fontFamily: F.arabic, fontSize: 24, color: C.saffron, marginBottom: 16 }}>تم استلام طلبك!</div>
         <p style={{ fontSize: 14, color: C.textMuted, fontFamily: F.body, lineHeight: 1.7, marginBottom: 24 }}>Nala will review your request and send you a personalized quote within 24 hours. Check your email and WhatsApp!</p>
         <button onClick={onBack} style={{ padding: "13px 32px", background: C.saffron, color: "#FFF", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 600, fontFamily: F.body, cursor: "pointer" }}>Back to Shop</button>
       </div>
@@ -448,9 +448,9 @@ function CustomOrderForm({ onBack }) {
       {/* Hero header */}
       <div style={{ background: C.charcoal, borderRadius: 16, padding: "32px", textAlign: "center", marginBottom: 32 }}>
         <div style={{ fontFamily: F.display, fontSize: 32, fontWeight: 600, color: "#FFF", marginBottom: 8 }}>Custom Order Request</div>
-        <div style={{ fontFamily: F.arabic, fontSize: 22, color: C.saffron, marginBottom: 16 }}>Ø·Ù„Ø¨ Ù…Ø®ØµØµ</div>
+        <div style={{ fontFamily: F.arabic, fontSize: 22, color: C.saffron, marginBottom: 16 }}>طلب مخصص</div>
         <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-          {["âœ¦ Handmade for you", "ðŸ’¬ Reply in 24h", "ðŸ”’ No payment until approved"].map(t => (
+          {["✦ Handmade for you", "💬 Reply in 24h", "🔒 No payment until approved"].map(t => (
             <span key={t} style={{ fontSize: 11, color: C.wheat, fontFamily: F.body, background: "rgba(255,255,255,0.1)", padding: "4px 12px", borderRadius: 12 }}>{t}</span>
           ))}
         </div>
@@ -481,7 +481,7 @@ function CustomOrderForm({ onBack }) {
               </div>
             ))}
           </div>
-          <button onClick={() => occasion && setStep(2)} style={{ width: "100%", padding: "14px", background: occasion ? C.saffron : C.wheat, color: occasion ? "#FFF" : C.textMuted, border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, fontFamily: F.body, cursor: occasion ? "pointer" : "not-allowed" }}>Continue â†’</button>
+          <button onClick={() => occasion && setStep(2)} style={{ width: "100%", padding: "14px", background: occasion ? C.saffron : C.wheat, color: occasion ? "#FFF" : C.textMuted, border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, fontFamily: F.body, cursor: occasion ? "pointer" : "not-allowed" }}>Continue →</button>
         </div>
       )}
 
@@ -492,7 +492,7 @@ function CustomOrderForm({ onBack }) {
           {/* Arabic text input */}
           <div style={{ background: C.charcoal, borderRadius: 12, padding: "18px", marginBottom: 16 }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: C.saffronLight, letterSpacing: 0.8, marginBottom: 10, fontFamily: F.body }}>YOUR ARABIC TEXT</div>
-            <input value={arabicText} onChange={e => setArabicText(e.target.value)} placeholder="Ø£ÙƒØªØ¨ Ø§Ø³Ù…Ùƒ Ø£Ùˆ Ù†ØµÙƒ Ù‡Ù†Ø§â€¦" style={{ width: "100%", background: "rgba(255,255,255,0.1)", border: `0.5px solid rgba(255,255,255,0.2)`, borderRadius: 8, padding: "12px", fontSize: 20, fontFamily: F.arabic, color: "#FFF", outline: "none", direction: "rtl", textAlign: "right", marginBottom: 8, boxSizing: "border-box" }} />
+            <input value={arabicText} onChange={e => setArabicText(e.target.value)} placeholder="أكتب اسمك أو نصك هنا…" style={{ width: "100%", background: "rgba(255,255,255,0.1)", border: `0.5px solid rgba(255,255,255,0.2)`, borderRadius: 8, padding: "12px", fontSize: 20, fontFamily: F.arabic, color: "#FFF", outline: "none", direction: "rtl", textAlign: "right", marginBottom: 8, boxSizing: "border-box" }} />
             {arabicText && (
               <div style={{ fontFamily: F.arabic, fontSize: 40, color: C.saffron, direction: "rtl", textAlign: "right", lineHeight: 1.4 }}>{arabicText}</div>
             )}
@@ -524,12 +524,12 @@ function CustomOrderForm({ onBack }) {
           {/* Notes */}
           <div style={{ marginBottom: 20 }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, letterSpacing: 0.8, marginBottom: 8, fontFamily: F.body }}>ADDITIONAL NOTES (optional)</div>
-            <textarea value={formData.notes} onChange={e => setFormData(p => ({ ...p, notes: e.target.value }))} placeholder="Size, special instructions, reference imagesâ€¦" style={{ width: "100%", minHeight: 80, padding: "10px 12px", border: `0.5px solid ${C.wheat}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none", resize: "none", boxSizing: "border-box" }} />
+            <textarea value={formData.notes} onChange={e => setFormData(p => ({ ...p, notes: e.target.value }))} placeholder="Size, special instructions, reference images…" style={{ width: "100%", minHeight: 80, padding: "10px 12px", border: `0.5px solid ${C.wheat}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none", resize: "none", boxSizing: "border-box" }} />
           </div>
 
           <div style={{ display: "flex", gap: 10 }}>
-            <button onClick={() => setStep(1)} style={{ flex: 1, padding: "13px", background: "#FFF", color: C.charcoal, border: `0.5px solid ${C.wheat}`, borderRadius: 10, fontSize: 14, fontWeight: 600, fontFamily: F.body, cursor: "pointer" }}>â† Back</button>
-            <button onClick={() => arabicText && setStep(3)} style={{ flex: 2, padding: "13px", background: arabicText ? C.saffron : C.wheat, color: arabicText ? "#FFF" : C.textMuted, border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, fontFamily: F.body, cursor: arabicText ? "pointer" : "not-allowed" }}>Continue â†’</button>
+            <button onClick={() => setStep(1)} style={{ flex: 1, padding: "13px", background: "#FFF", color: C.charcoal, border: `0.5px solid ${C.wheat}`, borderRadius: 10, fontSize: 14, fontWeight: 600, fontFamily: F.body, cursor: "pointer" }}>← Back</button>
+            <button onClick={() => arabicText && setStep(3)} style={{ flex: 2, padding: "13px", background: arabicText ? C.saffron : C.wheat, color: arabicText ? "#FFF" : C.textMuted, border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, fontFamily: F.body, cursor: arabicText ? "pointer" : "not-allowed" }}>Continue →</button>
           </div>
         </div>
       )}
@@ -547,14 +547,14 @@ function CustomOrderForm({ onBack }) {
             <div style={{ fontSize: 11, fontWeight: 600, color: C.textMuted, marginBottom: 6, fontFamily: F.body }}>DEADLINE (optional)</div>
             <input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} style={{ width: "100%", padding: "11px 12px", border: `0.5px solid ${C.wheat}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none", boxSizing: "border-box" }} />
             {deadline && new Date(deadline) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) && (
-              <div style={{ fontSize: 11, color: C.terracotta, marginTop: 6, fontFamily: F.body }}>âš ï¸ Rush orders within 7 days may incur a $15 rush fee.</div>
+              <div style={{ fontSize: 11, color: C.terracotta, marginTop: 6, fontFamily: F.body }}>⚠️ Rush orders within 7 days may incur a $15 rush fee.</div>
             )}
           </div>
 
           {/* What happens next */}
           <div style={{ background: C.cream2, border: `0.5px solid ${C.wheat}`, borderRadius: 12, padding: "16px 18px", marginBottom: 20 }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: C.charcoal, marginBottom: 10, fontFamily: F.body }}>What happens next?</div>
-            {["Nala reviews your request (within 24h)", "You receive a custom quote by email", "Approve the quote â€” no payment until you approve", "Nala crafts your piece (3â€“5 days)", "Ships directly to you worldwide ðŸš€"].map((s, i) => (
+            {["Nala reviews your request (within 24h)", "You receive a custom quote by email", "Approve the quote — no payment until you approve", "Nala crafts your piece (3–5 days)", "Ships directly to you worldwide 🚀"].map((s, i) => (
               <div key={i} style={{ display: "flex", gap: 10, marginBottom: 6, alignItems: "flex-start" }}>
                 <div style={{ width: 20, height: 20, borderRadius: "50%", background: C.saffron, color: "#FFF", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
                 <div style={{ fontSize: 12, color: C.charcoal, fontFamily: F.body, lineHeight: 1.5 }}>{s}</div>
@@ -563,8 +563,8 @@ function CustomOrderForm({ onBack }) {
           </div>
 
           <div style={{ display: "flex", gap: 10 }}>
-            <button onClick={() => setStep(2)} style={{ flex: 1, padding: "13px", background: "#FFF", color: C.charcoal, border: `0.5px solid ${C.wheat}`, borderRadius: 10, fontSize: 14, fontWeight: 600, fontFamily: F.body, cursor: "pointer" }}>â† Back</button>
-            <button onClick={() => formData.name && formData.email && setSubmitted(true)} style={{ flex: 2, padding: "13px", background: formData.name && formData.email ? C.saffron : C.wheat, color: formData.name && formData.email ? "#FFF" : C.textMuted, border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, fontFamily: F.body, cursor: formData.name && formData.email ? "pointer" : "not-allowed" }}>Submit Request âœ¦</button>
+            <button onClick={() => setStep(2)} style={{ flex: 1, padding: "13px", background: "#FFF", color: C.charcoal, border: `0.5px solid ${C.wheat}`, borderRadius: 10, fontSize: 14, fontWeight: 600, fontFamily: F.body, cursor: "pointer" }}>← Back</button>
+            <button onClick={() => formData.name && formData.email && setSubmitted(true)} style={{ flex: 2, padding: "13px", background: formData.name && formData.email ? C.saffron : C.wheat, color: formData.name && formData.email ? "#FFF" : C.textMuted, border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, fontFamily: F.body, cursor: formData.name && formData.email ? "pointer" : "not-allowed" }}>Submit Request ✦</button>
           </div>
         </div>
       )}
@@ -572,22 +572,22 @@ function CustomOrderForm({ onBack }) {
   );
 }
 
-// â”€â”€â”€ HOMEPAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── HOMEPAGE ───────────────────────────────────────────────────────────────────
 function Homepage({ onViewProduct, onAddToCart, onCustomOrder }) {
   return (
     <div>
       {/* Hero */}
       <div style={{ background: `linear-gradient(160deg, ${C.charcoal} 0%, ${C.inkBrown} 60%, #1a0f08 100%)`, padding: "80px 5% 90px", position: "relative", overflow: "hidden" }}>
         {/* Decorative Arabic patterns */}
-        <div style={{ position: "absolute", right: "5%", top: "50%", transform: "translateY(-50%)", fontFamily: F.arabic, fontSize: 180, color: "rgba(255,255,255,0.03)", direction: "rtl", lineHeight: 1, userSelect: "none", pointerEvents: "none" }}>Ø¨Ø³Ù… Ø§Ù„Ù„Ù‡</div>
+        <div style={{ position: "absolute", right: "5%", top: "50%", transform: "translateY(-50%)", fontFamily: F.arabic, fontSize: 180, color: "rgba(255,255,255,0.03)", direction: "rtl", lineHeight: 1, userSelect: "none", pointerEvents: "none" }}>بسم الله</div>
         <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center" }}>
           <div>
-            <div style={{ fontFamily: F.arabic, fontSize: 28, color: C.saffron, marginBottom: 12 }}>Ø£Ù‡Ù„Ø§Ù‹ ÙˆØ³Ù‡Ù„Ø§Ù‹</div>
+            <div style={{ fontFamily: F.arabic, fontSize: 28, color: C.saffron, marginBottom: 12 }}>أهلاً وسهلاً</div>
             <div style={{ fontFamily: F.display, fontSize: 56, fontWeight: 600, color: "#FFF", lineHeight: 1.1, marginBottom: 16 }}>Gifts that carry your story home.</div>
             <p style={{ fontSize: 16, color: "#C9B99A", fontFamily: F.body, lineHeight: 1.7, marginBottom: 32, maxWidth: 440 }}>Handmade 3D-printed gifts celebrating Arab heritage, crafted with love in Detroit by Nala. Every piece tells a diaspora story.</p>
             <div style={{ display: "flex", gap: 14 }}>
               <button onClick={() => window.scrollTo({ top: 600, behavior: "smooth" })} style={{ padding: "15px 32px", background: C.saffron, color: "#FFF", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, fontFamily: F.body, cursor: "pointer" }}>Shop Now</button>
-              <button onClick={onCustomOrder} style={{ padding: "15px 32px", background: "transparent", color: "#FFF", border: `1.5px solid rgba(255,255,255,0.3)`, borderRadius: 10, fontSize: 14, fontWeight: 600, fontFamily: F.body, cursor: "pointer" }}>Custom Order âœ¦</button>
+              <button onClick={onCustomOrder} style={{ padding: "15px 32px", background: "transparent", color: "#FFF", border: `1.5px solid rgba(255,255,255,0.3)`, borderRadius: 10, fontSize: 14, fontWeight: 600, fontFamily: F.body, cursor: "pointer" }}>Custom Order ✦</button>
             </div>
           </div>
           {/* Floating product cards */}
@@ -606,7 +606,7 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder }) {
       {/* Trust badges */}
       <div style={{ background: C.charcoal, padding: "14px 5%" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", justifyContent: "center", gap: 40, flexWrap: "wrap" }}>
-          {["âœ¦ Handmade in Detroit", "ðŸŒ Ships Worldwide", "ðŸ’¬ Arabic Customer Support", "ðŸ”„ Easy Returns"].map(t => (
+          {["✦ Handmade in Detroit", "🌍 Ships Worldwide", "💬 Arabic Customer Support", "🔄 Easy Returns"].map(t => (
             <span key={t} style={{ fontSize: 12, color: C.wheat, fontFamily: F.body }}>{t}</span>
           ))}
         </div>
@@ -617,7 +617,7 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder }) {
         <div style={{ marginBottom: 56 }}>
           <div style={{ textAlign: "center", marginBottom: 32 }}>
             <div style={{ fontFamily: F.display, fontSize: 36, fontWeight: 600, color: C.charcoal }}>Shop by Heritage</div>
-            <div style={{ fontFamily: F.arabic, fontSize: 20, color: C.saffron }}>ØªØ³ÙˆÙ‚ Ø­Ø³Ø¨ Ø§Ù„ØªØ±Ø§Ø«</div>
+            <div style={{ fontFamily: F.arabic, fontSize: 20, color: C.saffron }}>تسوق حسب التراث</div>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12 }}>
             {HERITAGE_ITEMS.map(h => (
@@ -636,9 +636,9 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder }) {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 28 }}>
             <div>
               <div style={{ fontFamily: F.display, fontSize: 36, fontWeight: 600, color: C.charcoal }}>Best Sellers</div>
-              <div style={{ fontFamily: F.arabic, fontSize: 18, color: C.saffron }}>Ø§Ù„Ø£ÙƒØ«Ø± Ù…Ø¨ÙŠØ¹Ø§Ù‹</div>
+              <div style={{ fontFamily: F.arabic, fontSize: 18, color: C.saffron }}>الأكثر مبيعاً</div>
             </div>
-            <button style={{ fontSize: 13, color: C.saffron, background: "none", border: "none", cursor: "pointer", fontFamily: F.body, fontWeight: 600 }}>View all â†’</button>
+            <button style={{ fontSize: 13, color: C.saffron, background: "none", border: "none", cursor: "pointer", fontFamily: F.body, fontWeight: 600 }}>View all →</button>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 18 }}>
             {STORE_PRODUCTS.map(p => (
@@ -650,14 +650,14 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder }) {
         {/* Nala's story */}
         <div style={{ background: C.charcoal, borderRadius: 20, padding: "48px", marginBottom: 56, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40, alignItems: "center" }}>
           <div>
-            <div style={{ fontFamily: F.arabic, fontSize: 20, color: C.saffron, marginBottom: 12 }}>Ù…Ù† Ù†Ø§Ù„Ø§ Ø¨ÙƒÙ„ Ø­Ø¨</div>
+            <div style={{ fontFamily: F.arabic, fontSize: 20, color: C.saffron, marginBottom: 12 }}>من نالا بكل حب</div>
             <div style={{ fontFamily: F.display, fontSize: 30, fontWeight: 600, color: "#FFF", lineHeight: 1.2, marginBottom: 16 }}>A piece of home in every print.</div>
-            <p style={{ fontSize: 14, color: "#C9B99A", fontFamily: F.body, lineHeight: 1.8, marginBottom: 20 }}>Growing up in the Arab diaspora, I always searched for gifts that felt like home â€” pieces that held our language, our patterns, our stories. When I couldn't find them, I decided to make them. Every Souk3D piece is printed, finished, and packed by my own hands in Detroit.</p>
-            <div style={{ fontFamily: F.display, fontSize: 22, color: C.saffron, fontStyle: "italic" }}>â€” Nala âœ¦</div>
+            <p style={{ fontSize: 14, color: "#C9B99A", fontFamily: F.body, lineHeight: 1.8, marginBottom: 20 }}>Growing up in the Arab diaspora, I always searched for gifts that felt like home — pieces that held our language, our patterns, our stories. When I couldn't find them, I decided to make them. Every Souk3D piece is printed, finished, and packed by my own hands in Detroit.</p>
+            <div style={{ fontFamily: F.display, fontSize: 22, color: C.saffron, fontStyle: "italic" }}>— Nala ✦</div>
           </div>
           <div style={{ textAlign: "center" }}>
-            <div style={{ width: 160, height: 160, borderRadius: "50%", background: `linear-gradient(135deg, ${C.saffron}44 0%, ${C.terracotta}44 100%)`, margin: "0 auto 16px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 72 }}>ðŸº</div>
-            <div style={{ fontFamily: F.arabic, fontSize: 24, color: C.wheat }}>Ø³ÙˆÙ‚ Ø«Ø±ÙŠ Ø¯ÙŠ</div>
+            <div style={{ width: 160, height: 160, borderRadius: "50%", background: `linear-gradient(135deg, ${C.saffron}44 0%, ${C.terracotta}44 100%)`, margin: "0 auto 16px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 72 }}>🏺</div>
+            <div style={{ fontFamily: F.arabic, fontSize: 24, color: C.wheat }}>سوق ثري دي</div>
           </div>
         </div>
 
@@ -668,9 +668,9 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder }) {
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
             {[
-              { title: "Eid Gifts", arabic: "Ù‡Ø¯Ø§ÙŠØ§ Ø§Ù„Ø¹ÙŠØ¯", emoji: "ðŸŒ™", color: C.saffron },
-              { title: "Weddings", arabic: "Ø§Ù„Ø£Ø¹Ø±Ø§Ø³", emoji: "ðŸ’", color: C.terracotta },
-              { title: "Graduation", arabic: "Ø§Ù„ØªØ®Ø±Ø¬", emoji: "ðŸŽ“", color: C.damascene },
+              { title: "Eid Gifts", arabic: "هدايا العيد", emoji: "🌙", color: C.saffron },
+              { title: "Weddings", arabic: "الأعراس", emoji: "💍", color: C.terracotta },
+              { title: "Graduation", arabic: "التخرج", emoji: "🎓", color: C.damascene },
             ].map(occ => (
               <div key={occ.title} style={{ background: occ.color + "14", border: `0.5px solid ${occ.color}44`, borderRadius: 16, padding: "32px 20px", textAlign: "center", cursor: "pointer" }}>
                 <div style={{ fontSize: 48, marginBottom: 12 }}>{occ.emoji}</div>
@@ -697,7 +697,7 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder }) {
                     <div style={{ fontSize: 13, fontWeight: 600, color: C.charcoal, fontFamily: F.body }}>{r.flag} {r.name}</div>
                     <div style={{ fontSize: 11, color: C.textMuted, fontFamily: F.body }}>{r.location}</div>
                   </div>
-                  <div style={{ fontSize: 9, background: C.olive + "22", color: C.olive, padding: "3px 8px", borderRadius: 6, fontWeight: 700, fontFamily: F.body }}>âœ“ Verified</div>
+                  <div style={{ fontSize: 9, background: C.olive + "22", color: C.olive, padding: "3px 8px", borderRadius: 6, fontWeight: 700, fontFamily: F.body }}>✓ Verified</div>
                 </div>
               </div>
             ))}
@@ -707,7 +707,7 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder }) {
         {/* Newsletter */}
         <div style={{ background: C.saffron + "14", border: `0.5px solid ${C.saffron}44`, borderRadius: 20, padding: "40px", textAlign: "center", marginBottom: 40 }}>
           <div style={{ fontFamily: F.display, fontSize: 28, fontWeight: 600, color: C.charcoal, marginBottom: 6 }}>Join the Souk3D Family</div>
-          <div style={{ fontFamily: F.arabic, fontSize: 18, color: C.saffron, marginBottom: 12 }}>Ø§Ù†Ø¶Ù… Ø¥Ù„Ù‰ Ø¹Ø§Ø¦Ù„ØªÙ†Ø§</div>
+          <div style={{ fontFamily: F.arabic, fontSize: 18, color: C.saffron, marginBottom: 12 }}>انضم إلى عائلتنا</div>
           <p style={{ fontSize: 14, color: C.textMuted, fontFamily: F.body, marginBottom: 20 }}>Get 10% off your first order with code <strong style={{ color: C.saffron }}>WELCOME10</strong> when you subscribe.</p>
           <div style={{ display: "flex", gap: 10, maxWidth: 420, margin: "0 auto" }}>
             <input placeholder="your@email.com" style={{ flex: 1, padding: "12px 14px", border: `0.5px solid ${C.wheat}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }} />
@@ -722,7 +722,7 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder }) {
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 32, marginBottom: 32 }}>
             <div>
               <div style={{ fontFamily: F.display, fontSize: 24, fontWeight: 600, color: "#FFF", marginBottom: 4 }}>Souk3D</div>
-              <div style={{ fontFamily: F.arabic, fontSize: 16, color: C.saffron, marginBottom: 12 }}>Ø³ÙˆÙ‚ Ø«Ø±ÙŠ Ø¯ÙŠ</div>
+              <div style={{ fontFamily: F.arabic, fontSize: 16, color: C.saffron, marginBottom: 12 }}>سوق ثري دي</div>
               <p style={{ fontSize: 12, color: "#9A8878", fontFamily: F.body, lineHeight: 1.7 }}>Handmade 3D-printed gifts for the Arab diaspora, crafted with love in Detroit, MI.</p>
             </div>
             {[
@@ -739,8 +739,8 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder }) {
             ))}
           </div>
           <div style={{ borderTop: `0.5px solid ${C.inkBrown}`, paddingTop: 20, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
-            <div style={{ fontSize: 12, color: "#6A5848", fontFamily: F.body }}>Â© 2025 Souk3D by Nala. All rights reserved.</div>
-            <div style={{ fontSize: 12, color: "#6A5848", fontFamily: F.body }}>Made with â¤ï¸ in Detroit, MI</div>
+            <div style={{ fontSize: 12, color: "#6A5848", fontFamily: F.body }}>© 2025 Souk3D by Nala. All rights reserved.</div>
+            <div style={{ fontSize: 12, color: "#6A5848", fontFamily: F.body }}>Made with ❤️ in Detroit, MI</div>
           </div>
         </div>
       </div>
@@ -748,7 +748,7 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder }) {
   );
 }
 
-// â”€â”€â”€ STOREFRONT ROOT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── STOREFRONT ROOT ──────────────────────────────────────────────────────────
 export default function App() {
   const [page, setPage] = useState("home");
   const [viewingProduct, setViewingProduct] = useState(null);
@@ -775,14 +775,14 @@ export default function App() {
     <div style={{ minHeight: "100vh", background: C.cream }}>
       {/* Announcement bar */}
       <div style={{ background: C.charcoal, color: C.saffronLight, textAlign: "center", padding: "9px", fontSize: 12, fontFamily: F.body }}>
-        ðŸŽ‰ Use code <strong>WELCOME10</strong> for 10% off your first order Â· Free shipping on $75+ orders
+        🎉 Use code <strong>WELCOME10</strong> for 10% off your first order · Free shipping on $75+ orders
       </div>
 
       {/* Navigation */}
       <nav style={{ background: C.cream, borderBottom: `0.5px solid ${C.wheat}`, padding: "14px 5%", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}>
         <div onClick={() => { setPage("home"); setViewingProduct(null); }} style={{ cursor: "pointer" }}>
           <div style={{ fontFamily: F.display, fontSize: 22, fontWeight: 600, color: C.charcoal }}>Souk3D</div>
-          <div style={{ fontFamily: F.arabic, fontSize: 12, color: C.saffron, lineHeight: 1 }}>Ø³ÙˆÙ‚ Ø«Ø±ÙŠ Ø¯ÙŠ</div>
+          <div style={{ fontFamily: F.arabic, fontSize: 12, color: C.saffron, lineHeight: 1 }}>سوق ثري دي</div>
         </div>
         <div style={{ display: "flex", gap: 24 }}>
           {["Shop", "Heritage", "Custom Orders", "About"].map(link => (
@@ -790,10 +790,10 @@ export default function App() {
           ))}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <span style={{ fontSize: 18, cursor: "pointer", color: C.charcoal }}>ðŸ”</span>
-          <span style={{ fontSize: 18, cursor: "pointer", color: C.charcoal }}>ðŸ‘¤</span>
+          <span style={{ fontSize: 18, cursor: "pointer", color: C.charcoal }}>🔍</span>
+          <span style={{ fontSize: 18, cursor: "pointer", color: C.charcoal }}>👤</span>
           <div onClick={() => setCartOpen(true)} style={{ position: "relative", cursor: "pointer" }}>
-            <span style={{ fontSize: 18, color: C.charcoal }}>ðŸ›’</span>
+            <span style={{ fontSize: 18, color: C.charcoal }}>🛒</span>
             {cartCount > 0 && (
               <div style={{ position: "absolute", top: -6, right: -6, width: 18, height: 18, background: C.saffron, color: "#FFF", borderRadius: "50%", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{cartCount}</div>
             )}
