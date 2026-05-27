@@ -825,4 +825,19 @@ export default function App() {
         <CheckoutPage cart={cart} onBack={() => setPage("home")} />
       )}
       {page === "custom-order" && (
-        <CustomOrd
+        <CustomOrderForm onBack={() => setPage("home")} />
+      )}
+
+      {/* Cart drawer */}
+      {cartOpen && (
+        <CartDrawer
+          cart={cart}
+          onClose={() => setCartOpen(false)}
+          onUpdateQty={updateQty}
+          onRemove={id => setCart(prev => prev.filter(i => i.id !== id))}
+          onCheckout={() => { setCartOpen(false); setPage("checkout"); }}
+        />
+      )}
+    </div>
+  );
+}
