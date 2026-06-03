@@ -15,7 +15,7 @@ const FONTS = {
 };
 
 // ─── MOCK DATA ─────────────────────────────────────────────────────────────────
-const PRODUCTS_DATA = [
+const DEFAULT_PRODUCTS = [
   { id: 1, sku: "S3D-001", name: "Damascus Name Plaque", name_ar: "لوحة الاسم الدمشقية", category: "Home Decor", country: "Syria", price: 44.99, cost: 12, stock: 23, status: "active", featured: true, orders: 47, revenue: 2114.53 },
   { id: 2, sku: "S3D-002", name: "Eid Mubarak Lantern", name_ar: "فانوس عيد مبارك", category: "Seasonal", country: "Pan-Arab", price: 34.99, cost: 9, stock: 41, status: "active", featured: true, orders: 38, revenue: 1329.62 },
   { id: 3, sku: "S3D-003", name: "Palestinian Olive Tree", name_ar: "شجرة الزيتون الفلسطينية", category: "Art", country: "Palestine", price: 54.99, cost: 15, stock: 12, status: "active", featured: false, orders: 29, revenue: 1594.71 },
@@ -290,7 +290,7 @@ function Dashboard({ onNavigate }) {
         </SectionCard>
         <SectionCard>
           <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body, marginBottom: 14 }}>Top Sellers</div>
-          {PRODUCTS_DATA.slice(0, 4).map((p, i) => (
+          {DEFAULT_PRODUCTS.slice(0, 4).map((p, i) => (
             <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
               <div style={{ width: 24, height: 24, borderRadius: 6, background: COLORS.saffron + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: COLORS.saffron }}>{i + 1}</div>
               <div style={{ flex: 1 }}>
@@ -322,14 +322,193 @@ function Dashboard({ onNavigate }) {
   );
 }
 
+// ─── COUNTRY ₒ FLAG MAP ────────────────────────────────────────────────────────
+const COUNTRY_FLAGS = {
+  Syria: "🇸🇾", Lebanon: "🇱🇧", Palestine: "🇵🇸",
+  "Pan-Arab": "🌍", Egypt: "🇪🇬", Iraq: "🇮🇶",
+  Jordan: "🇯🇴", Morocco: "🇲🇦", Tunisia: "🇹🇳", Other: "🌐",
+};
+
+// ─── PRODUCT FORM MODAL ────────────────────────────────────────────────────────
+function ProductFormModal({ product, onSave, onClose }) {
+  const empty = {
+    name: "", name_ar: "", category: "Home Decor", country: "Syria",
+    price: "", compareAt: "", cost: "", stock: "", status: "active",
+    featured: false, emoji: "🏺", desc: "", customizable: false, badge: "",
+  };
+  const [form, setForm] = useState(product ? {
+    ...product,
+    price: String(product.price || ""),
+    compareAt: product.compareAt ? String(product.compareAt) : "",
+    cost: String(product.cost || ""),
+    stock: String(product.stock || ""),
+    badge: product.badge || "",
+  } : empty);
+
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const handleSave = () => {
+    if (!form.name.trim() || !form.price) return alert("Name and price are required.");
+    const isEdit = !!product;
+    const saved = {
+      ...form,
+      id: product?.id || Date.now(),
+      sku: product?.sku || ("S3D-" + String(Date.now()).slice(-4)),
+      flag: COUNTRY_FLAGS[form.country] || "🌐",
+      price: parseFloat(form.price) || 0,
+      cost: parseFloat(form.cost) || 0,
+      stock: parseInt(form.stock) || 0,
+      compareAt: form.compareAt ? parseFloat(form.compareAt) : null,
+      badge: form.badge || null,
+      orders: product?.orders || 0,
+      revenue: product?.revenue || 0,
+      stars: product?.stars || 0,
+      reviews: product?.reviews || 0,
+    };
+    onSave(saved, isEdit);
+  };
+
+  const inputStyle = (isArabic) => ({
+    width: "100%", padding: "8px 12px", border: `0.5px solid ${COLORS.wheat}`,
+    borderRadius: 8, fontSize: 13, outline: "none", background: "#fff", boxSizing: "border-box",
+    fontFamily: isArabic ? FONTS.arabic : FONTS.body, direction: isArabic ? "rtl" : "ltr",
+  });
+  const labelStyle = {
+    display: "block", fontSize: 10, fontWeight: 600, color: COLORS.textMuted,
+    letterSpacing: 0.5, marginBottom: 4,
+  };
+  const field = (label, key, type = "text", placeholder = "", isArabic = false) => (
+    <div style={{ marginBottom: 14 }}>
+      <label style={labelStyle}>{label}</label>
+      <input type={type} value={form[key]} onChange={e => set(key, e.target.value)}
+        placeholder={placeholder} style={inputStyle(isArabic)} />
+    </div>
+  );
+  const selectField = (label, key, options) => (
+    <div style={{ marginBottom: 14 }}>
+      <label style={labelStyle}>{label}</label>
+      <select value={form[key]} onChange={e => set(key, e.target.value)}
+        style={{ ...inputStyle(false), cursor: "pointer" }}>
+        {options.map(o => typeof o === "string"
+          ? <option key={o} value={o}>{o}</option>
+          : <option key={o.value} value={o.value}>{o.label}</option>
+        )}
+      </select>
+    </div>
+  );
+
+  return (
+    <>
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(42,31,24,0.55)", zIndex: 200 }} />
+      <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: "min(520px, 96vw)", background: COLORS.cream, zIndex: 201, boxShadow: "-20px 0 60px rgba(0,0,0,0.35)", animation: "slideIn 0.3s ease", overflowY: "auto", padding: 28, boxSizing: "border-box" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+          <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal }}>{product ? "Edit Product" : "New Product"}</div>
+          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: COLORS.textMuted }}>✕</button>
+        </div>
+
+        {field("PRODUCT NAME (English)", "name", "text", "e.g. Damascus Name Plaque")}
+        {field("اسم المنتج (Arabic)", "name_ar", "text", "e.g. لوحة الاسم الدمشقية", true)}
+
+        <div style={{ marginBottom: 14 }}>
+          <label style={labelStyle}>DESCRIPTION</label>
+          <textarea value={form.desc} onChange={e => set("desc", e.target.value)}
+            placeholder="Product description shown on the storefront…" rows={3}
+            style={{ ...inputStyle(false), resize: "vertical" }} />
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          {selectField("CATEGORY", "category", ["Home Decor", "Art", "Seasonal", "Jewelry", "Accessories", "Other"])}
+          {selectField("HERITAGE / COUNTRY", "country", Object.keys(COUNTRY_FLAGS))}
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+          {field("PRICE ($)", "price", "number", "44.99")}
+          {field("COMPARE AT ($)", "compareAt", "number", "59.99")}
+          {field("COST ($)", "cost", "number", "12.00")}
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          {field("STOCK (units)", "stock", "number", "10")}
+          {selectField("STATUS", "status", [
+            { value: "active", label: "Active" },
+            { value: "draft", label: "Draft" },
+            { value: "out_of_stock", label: "Out of Stock" },
+          ])}
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          {field("EMOJI / ICON", "emoji", "text", "🏺")}
+          {selectField("BADGE (optional)", "badge", [
+            { value: "", label: "None" },
+            { value: "Best Seller", label: "Best Seller" },
+            { value: "New", label: "New" },
+            { value: "Sale", label: "Sale" },
+            { value: "Limited", label: "Limited" },
+          ])}
+        </div>
+
+        <div style={{ display: "flex", gap: 24, marginBottom: 20 }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontFamily: FONTS.body, cursor: "pointer" }}>
+            <input type="checkbox" checked={!!form.featured} onChange={e => set("featured", e.target.checked)} />
+            Featured on homepage
+          </label>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontFamily: FONTS.body, cursor: "pointer" }}>
+            <input type="checkbox" checked={!!form.customizable} onChange={e => set("customizable", e.target.checked)} />
+            Accepts custom text
+          </label>
+        </div>
+
+        <div style={{ display: "flex", gap: 8 }}>
+          <PrimaryBtn onClick={handleSave} style={{ flex: 1 }}>{product ? "Save Changes" : "Add Product"}</PrimaryBtn>
+          <GhostBtn onClick={onClose} style={{ flex: 1 }}>Cancel</GhostBtn>
+        </div>
+      </div>
+    </>
+  );
+}
+
 // ─── PRODUCTS PAGE ─────────────────────────────────────────────────────────────
 function ProductsPage() {
+  const [products, setProducts] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("souk3d_products")) || DEFAULT_PRODUCTS; }
+    catch { return DEFAULT_PRODUCTS; }
+  });
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selected, setSelected] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+  const [editProduct, setEditProduct] = useState(null);
 
-  const filtered = PRODUCTS_DATA.filter(p => {
-    const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase());
+  const saveProducts = (updated) => {
+    localStorage.setItem("souk3d_products", JSON.stringify(updated));
+    setProducts(updated);
+  };
+
+  const handleSave = (product, isEdit) => {
+    const updated = isEdit
+      ? products.map(p => p.id === product.id ? product : p)
+      : [...products, product];
+    saveProducts(updated);
+    setShowForm(false);
+    setEditProduct(null);
+    setSelected(null);
+  };
+
+  const handleDelete = (id) => {
+    if (!window.confirm("Delete this product? This cannot be undone.")) return;
+    saveProducts(products.filter(p => p.id !== id));
+    setSelected(null);
+  };
+
+  const openEdit = (p) => {
+    setEditProduct(p);
+    setShowForm(true);
+    setSelected(null);
+  };
+
+  const filtered = products.filter(p => {
+    const q = search.toLowerCase();
+    const matchSearch = p.name.toLowerCase().includes(q) || (p.sku || "").toLowerCase().includes(q);
     const matchStatus = statusFilter === "all" || p.status === statusFilter;
     return matchSearch && matchStatus;
   });
@@ -339,7 +518,7 @@ function ProductsPage() {
       <div style={{ position: "sticky", top: -24, zIndex: 10, background: COLORS.cream, margin: "-24px -32px 0", padding: "24px 32px 14px", borderBottom: `0.5px solid ${COLORS.wheat}`, boxShadow: "0 4px 12px rgba(0,0,0,0.04)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
           <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal, marginRight: "auto" }}>Products</div>
-          <PrimaryBtn>+ New Product</PrimaryBtn>
+          <PrimaryBtn onClick={() => { setEditProduct(null); setShowForm(true); }}>+ New Product</PrimaryBtn>
         </div>
         <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search products…" style={{ flex: 1, minWidth: 180, padding: "7px 12px", border: `0.5px solid ${COLORS.wheat}`, borderRadius: 8, fontSize: 12, fontFamily: FONTS.body, outline: "none" }} />
@@ -361,28 +540,40 @@ function ProductsPage() {
           <tbody>
             {filtered.map(p => (
               <tr key={p.id} onClick={() => setSelected(p)} style={{ borderBottom: `0.5px solid ${COLORS.wheat}`, cursor: "pointer" }}>
-                <td style={{ padding: "12px 8px", fontSize: 11, color: COLORS.textMuted }}>{p.sku}</td>
+                <td style={{ padding: "12px 8px", fontSize: 11, color: COLORS.textMuted }}>{p.sku || "—"}</td>
                 <td style={{ padding: "12px 8px" }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: COLORS.charcoal }}>{p.name}</div>
-                  <div style={{ fontSize: 11, fontFamily: FONTS.arabic, color: COLORS.textMuted }}>{p.name_ar}</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 18 }}>{p.emoji || "🏺"}</span>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 500, color: COLORS.charcoal }}>{p.name}</div>
+                      <div style={{ fontSize: 11, fontFamily: FONTS.arabic, color: COLORS.textMuted }}>{p.name_ar}</div>
+                    </div>
+                  </div>
                 </td>
                 <td style={{ padding: "12px 8px", fontSize: 13, fontWeight: 600, color: COLORS.charcoal }}>${p.price}</td>
-                <td style={{ padding: "12px 8px", fontSize: 12, color: COLORS.textMuted }}>${p.cost}</td>
+                <td style={{ padding: "12px 8px", fontSize: 12, color: COLORS.textMuted }}>${p.cost || 0}</td>
                 <td style={{ padding: "12px 8px", fontSize: 12, color: p.stock === 0 ? COLORS.terracotta : COLORS.charcoal, fontWeight: p.stock < 5 ? 600 : 400 }}>{p.stock === 0 ? "Out" : p.stock}</td>
-                <td style={{ padding: "12px 8px", fontSize: 12, color: COLORS.charcoal }}>{p.orders}</td>
+                <td style={{ padding: "12px 8px", fontSize: 12, color: COLORS.charcoal }}>{p.orders || 0}</td>
                 <td style={{ padding: "12px 8px" }}><Badge status={p.status} /></td>
-                <td style={{ padding: "12px 8px" }}><GhostBtn style={{ padding: "4px 10px", fontSize: 10 }}>Edit</GhostBtn></td>
+                <td style={{ padding: "12px 8px" }}>
+                  <GhostBtn onClick={(e) => { e.stopPropagation(); openEdit(p); }} style={{ padding: "4px 10px", fontSize: 10 }}>Edit</GhostBtn>
+                </td>
               </tr>
             ))}
+            {filtered.length === 0 && (
+              <tr><td colSpan={8} style={{ padding: "32px 8px", textAlign: "center", color: COLORS.textMuted, fontSize: 13, fontFamily: FONTS.body }}>No products found. Click "+ New Product" to add one.</td></tr>
+            )}
           </tbody>
         </table>
       </SectionCard>
+
       {selected && (
         <>
           <div onClick={() => setSelected(null)} style={{ position: "fixed", inset: 0, background: "rgba(42,31,24,0.5)", zIndex: 100 }} />
           <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: "min(580px, 92vw)", background: COLORS.cream, zIndex: 101, boxShadow: "-20px 0 60px rgba(0,0,0,0.3)", animation: "slideIn 0.3s ease", overflowY: "auto", padding: 28 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
               <div>
+                <div style={{ fontSize: 28 }}>{selected.emoji || "🏺"}</div>
                 <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal }}>{selected.name}</div>
                 <div style={{ fontFamily: FONTS.arabic, fontSize: 16, color: COLORS.saffron }}>{selected.name_ar}</div>
               </div>
@@ -391,24 +582,44 @@ function ProductsPage() {
             <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
               <StatCard label="PRICE" value={`$${selected.price}`} />
               <StatCard label="STOCK" value={selected.stock} />
-              <StatCard label="ORDERS" value={selected.orders} />
-              <StatCard label="REVENUE" value={`$${selected.revenue?.toFixed(0) || 0}`} />
+              <StatCard label="ORDERS" value={selected.orders || 0} />
+              <StatCard label="REVENUE" value={`$${(selected.revenue || 0).toFixed(0)}`} />
             </div>
             <SectionCard>
               <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.textMuted, marginBottom: 12, letterSpacing: 0.5 }}>DETAILS</div>
-              {[["SKU", selected.sku], ["Category", selected.category], ["Country", selected.country], ["Cost", `$${selected.cost}`], ["Status", selected.status]].map(([k, v]) => (
+              {[
+                ["SKU", selected.sku || "—"],
+                ["Category", selected.category],
+                ["Heritage", `${selected.flag || ""} ${selected.country}`],
+                ["Cost", `$${selected.cost || 0}`],
+                ["Badge", selected.badge || "None"],
+                ["Featured", selected.featured ? "Yes" : "No"],
+                ["Customizable", selected.customizable ? "Yes" : "No"],
+                ["Status", selected.status],
+              ].map(([k, v]) => (
                 <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: `0.5px solid ${COLORS.wheat}`, fontSize: 12, fontFamily: FONTS.body }}>
                   <span style={{ color: COLORS.textMuted }}>{k}</span>
                   <span style={{ color: COLORS.charcoal, fontWeight: 500 }}>{v}</span>
                 </div>
               ))}
+              {selected.desc && (
+                <div style={{ marginTop: 10, fontSize: 12, color: COLORS.textMuted, fontFamily: FONTS.body, lineHeight: 1.6 }}>{selected.desc}</div>
+              )}
             </SectionCard>
             <div style={{ display: "flex", gap: 8 }}>
-              <PrimaryBtn style={{ flex: 1 }}>Edit Product</PrimaryBtn>
-              <GhostBtn style={{ flex: 1 }}>Duplicate</GhostBtn>
+              <PrimaryBtn onClick={() => openEdit(selected)} style={{ flex: 1 }}>Edit Product</PrimaryBtn>
+              <GhostBtn onClick={() => handleDelete(selected.id)} style={{ flex: 1, color: COLORS.terracotta, borderColor: COLORS.terracotta }}>Delete</GhostBtn>
             </div>
           </div>
         </>
+      )}
+
+      {showForm && (
+        <ProductFormModal
+          product={editProduct}
+          onSave={handleSave}
+          onClose={() => { setShowForm(false); setEditProduct(null); }}
+        />
       )}
     </div>
   );
@@ -768,7 +979,7 @@ function CustomOrdersPage() {
 
   const messages = MOCK_MESSAGES[selectedOrder?.id] || [];
 
-  const STAGES_ORDERED = ["new", "quote", "mockup", "approved", "production"];
+  const STARE_ORDERED = ["new", "quote", "mockup", "approved", "production"];
 
   return (
     <div style={{ animation: "fadeIn 0.3s ease", display: "flex", height: "calc(100vh - 48px)", margin: "-24px -32px", overflow: "hidden" }}>
@@ -781,7 +992,7 @@ function CustomOrdersPage() {
         ))}
         <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.2, color: COLORS.textMuted, margin: "16px 0 10px", fontFamily: FONTS.body }}>PIPELINE</div>
         {Object.entries(CUSTOM_STAGE_INFO).map(([k, s]) => (
-          <div key={k} onClick={() => setStageFilter(k)} style={{ padding: "7px 10px", borderRadius: 8, fontSize: 12, fontFamily: FONTS.body, cursor: "pointer", marginBottom: 3, background: stageFilter === k ? s.color + "22" : "transparent", color: stageFilter === k ? s.color : COLORS.inkBrown, fontWeight: stageFilter === k ? 600 : 400 }}>{s.label}</div>
+          <div key={k} onClick={() => setStageFilter(ki} style={{ padding: "7px 10px", borderRadius: 8, fontSize: 12, fontFamily: FONTS.body, cursor: "pointer", marginBottom: 3, background: stageFilter === k ? s.color + "22" : "transparent", color: stageFilter === k ? s.color : COLORS.inkBrown, fontWeight: stageFilter === k ? 600 : 400 }}>{s.label}</div>
         ))}
         <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.2, color: COLORS.textMuted, margin: "16px 0 10px", fontFamily: FONTS.body }}>OCCASION</div>
         {["Wedding", "Graduation", "Baby", "Birthday", "Eid"].map(o => (
@@ -1070,7 +1281,7 @@ function DiscountsPage() {
 
   const TEMPLATES = [
     { group: "Diaspora Calendar", items: [{ code: "RAMADAN20", label: "Ramadan Kareem 20%" }, { code: "EID15", label: "Eid Mubarak 15%" }, { code: "NAKBA74", label: "Nakba Day Solidarity" }] },
-    { group: "Universal", items: [{ code: "WELCOME10", label: "New Customer 10%" }, { code: "WINBACK20", label: "Win-Back 20%" }, { code: "VIP25", label: "VIP Loyalty 25%" }] },
+    { group: "Universal", items: [{ code: "WEECOME10", label: "New Customer 10%" }, { code: "WINBACK20", label: "Win-Back 20%" }, { code: "VIP25", label: "VIP Loyalty 25%" }] },
     { group: "Seasonal", items: [{ code: "WEDDING15", label: "Wedding Season 15%" }, { code: "GRAD10", label: "Graduation 10%" }] },
     { group: "Sales", items: [{ code: "BFCM30", label: "Black Friday 30%" }, { code: "HOLIDAY15", label: "Holiday 15%" }] },
   ];
@@ -1244,7 +1455,7 @@ function DiscountsPage() {
 }
 
 // ─── EMAIL & MARKETING PAGE ────────────────────────────────────────────────────
-const CAMPAIGNS_DATA = [
+const CAMPAI@�S_DATA = [
   { id: 1, name: "Eid al-Adha Collection Drop", status: "sent", date: "Jun 5", opens: 68, clicks: 31, revenue: 840 },
   { id: 2, name: "New Customer Welcome Series", status: "active", date: "Ongoing", opens: 74, clicks: 42, revenue: 1240 },
   { id: 3, name: "Ramadan Win-Back Flow", status: "sent", date: "Mar 15", opens: 41, clicks: 18, revenue: 390 },
@@ -1269,313 +1480,4 @@ function EmailMarketingPage() {
     <div style={{ animation: "fadeIn 0.3s ease" }}>
       <div style={{ position: "sticky", top: -24, zIndex: 10, background: COLORS.cream, margin: "-24px -32px 0", padding: "24px 32px 14px", borderBottom: `0.5px solid ${COLORS.wheat}`, boxShadow: "0 4px 12px rgba(0,0,0,0.04)" }}>
         <div style={{ display: "flex", alignItems: "center", marginBottom: 12 }}>
-          <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal, flex: 1 }}>Email & Marketing</div>
-          <PrimaryBtn>+ New Campaign</PrimaryBtn>
-        </div>
-        <div style={{ display: "flex", gap: 6 }}>
-          {[["campaigns", "📧 Campaigns"], ["automations", "⚡ Automations"], ["subscribers", "👥 Subscribers"], ["templates", "📋 Templates"]].map(([v, l]) => (
-            <FilterPill key={v} label={l} active={tab === v} onClick={() => setTab(v)} />
-          ))}
-        </div>
-      </div>
-      <div style={{ height: 14 }} />
-
-      <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
-        <StatCard label="SUBSCRIBERS" value="284" sub="↑ 12 this month" />
-        <StatCard label="AVG OPEN RATE" value="68%" sub="Industry avg 38%" dark />
-        <StatCard label="AVG CLICK RATE" value="31%" sub="↑ 4% this month" />
-        <StatCard label="REVENUE FROM EMAIL" value="$2,470" sub="this month" />
-      </div>
-
-      {tab === "campaigns" && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 16 }}>
-          <div>
-            {CAMPAIGNS_DATA.map(c => {
-              const statusIcon = c.status === "sent" ? "✓" : c.status === "active" ? "●" : "○";
-              const statusColor = c.status === "sent" ? COLORS.olive : c.status === "active" ? COLORS.saffron : COLORS.textMuted;
-              return (
-                <SectionCard key={c.id} style={{ marginBottom: 10, cursor: "pointer" }}>
-                  <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-                    <div style={{ fontSize: 16, color: statusColor, marginTop: 1 }}>{statusIcon}</div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body }}>{c.name}</div>
-                      <div style={{ fontSize: 11, color: COLORS.textMuted, fontFamily: FONTS.body, marginTop: 2 }}>{c.date}</div>
-                    </div>
-                    {c.status === "sent" && (
-                      <div style={{ display: "flex", gap: 16, textAlign: "right" }}>
-                        <div><div style={{ fontSize: 13, fontWeight: 700, color: COLORS.charcoal }}>{c.opens}%</div><div style={{ fontSize: 9, color: COLORS.textMuted }}>Opens</div></div>
-                        <div><div style={{ fontSize: 13, fontWeight: 700, color: COLORS.charcoal }}>{c.clicks}%</div><div style={{ fontSize: 9, color: COLORS.textMuted }}>Clicks</div></div>
-                        <div><div style={{ fontSize: 13, fontWeight: 700, color: COLORS.charcoal }}>${c.revenue}</div><div style={{ fontSize: 9, color: COLORS.textMuted }}>Revenue</div></div>
-                      </div>
-                    )}
-                    {c.status !== "sent" && <Badge status={c.status === "active" ? "active" : "scheduled"} />}
-                  </div>
-                </SectionCard>
-              );
-            })}
-          </div>
-          <div>
-            <SectionCard style={{ marginBottom: 12 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body, marginBottom: 12 }}>Subscriber Health</div>
-              <div style={{ fontFamily: FONTS.display, fontSize: 36, fontWeight: 700, color: COLORS.charcoal }}>284</div>
-              <div style={{ fontSize: 11, color: COLORS.olive, marginBottom: 12 }}>↑ 12 subscribers this month</div>
-              {[["VIP", 18, COLORS.saffron], ["Repeat buyers", 42, COLORS.damascene], ["Newsletter only", 184, COLORS.olive], ["Inactive 90d", 40, COLORS.terracotta]].map(([seg, n, c]) => (
-                <div key={seg} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "5px 0", borderBottom: `0.5px solid ${COLORS.wheat}`, fontSize: 12, fontFamily: FONTS.body }}>
-                  <span style={{ display: "flex", alignItems: "center", gap: 6 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: c, display: "inline-block" }}/>{seg}</span>
-                  <span style={{ fontWeight: 600, color: COLORS.charcoal }}>{n}</span>
-                </div>
-              ))}
-            </SectionCard>
-            <div style={{ background: COLORS.saffron + "18", border: `0.5px solid ${COLORS.saffron}44`, borderRadius: 10, padding: "14px 16px" }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.saffron, letterSpacing: 0.8, marginBottom: 10, fontFamily: FONTS.body }}>✦ SMART SUGGESTIONS</div>
-              {["40 inactive subscribers — send a win-back?", "3 customers have birthdays this month", "Eid al-Adha in 3 weeks — start a campaign now", "5 new VIPs this month — send a thank you"].map((s, i) => (
-                <div key={i} style={{ fontSize: 12, color: COLORS.charcoal, fontFamily: FONTS.body, padding: "6px 0", borderBottom: i < 3 ? `0.5px solid ${COLORS.saffron}22` : "none" }}>{s}</div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {tab === "automations" && (
-        <div>
-          {automations.map((a, idx) => (
-            <SectionCard key={idx} style={{ marginBottom: 10 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                <div style={{ fontSize: 22 }}>{a.icon}</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body }}>{a.name}</div>
-                  <div style={{ fontSize: 11, color: COLORS.textMuted, fontFamily: FONTS.body, marginTop: 2 }}>{a.trigger}</div>
-                </div>
-                {a.sent > 0 && (
-                  <div style={{ display: "flex", gap: 16, textAlign: "right", marginRight: 12 }}>
-                    <div><div style={{ fontSize: 13, fontWeight: 700, color: COLORS.charcoal }}>{a.sent}</div><div style={{ fontSize: 9, color: COLORS.textMuted }}>Sent</div></div>
-                    <div><div style={{ fontSize: 13, fontWeight: 700, color: COLORS.charcoal }}>{a.openRate}%</div><div style={{ fontSize: 9, color: COLORS.textMuted }}>Opens</div></div>
-                  </div>
-                )}
-                {/* Toggle */}
-                <div onClick={() => toggleAuto(idx)} style={{ width: 42, height: 24, borderRadius: 12, background: a.active ? COLORS.saffron : COLORS.wheat, cursor: "pointer", position: "relative", transition: "background 0.2s", flexShrink: 0 }}>
-                  <div style={{ position: "absolute", top: 3, left: a.active ? 21 : 3, width: 18, height: 18, borderRadius: "50%", background: "#FFF", transition: "left 0.2s", boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }} />
-                </div>
-              </div>
-            </SectionCard>
-          ))}
-        </div>
-      )}
-
-      {tab === "subscribers" && (
-        <SectionCard>
-          <div style={{ textAlign: "center", padding: "40px 0", color: COLORS.textMuted, fontFamily: FONTS.body, fontSize: 13 }}>Subscriber management — coming soon. Import/export CSV, segment builder, and more.</div>
-        </SectionCard>
-      )}
-
-      {tab === "templates" && (
-        <SectionCard>
-          <div style={{ textAlign: "center", padding: "40px 0", color: COLORS.textMuted, fontFamily: FONTS.body, fontSize: 13 }}>Email template library — coming soon. Arabic-friendly layouts, seasonal designs, and brand assets.</div>
-        </SectionCard>
-      )}
-    </div>
-  );
-}
-
-// ─── SETTINGS PAGE ─────────────────────────────────────────────────────────────
-function SettingsPage({ section: initSection, onNavigate }) {
-  const [section, setSection] = useState(initSection || "general");
-  const [settings, setSettings] = useState({
-    storeName: "Souk3D", tagline: "Handmade 3D-Printed Arab Gifts", description: "Authentic gifts for the Arab diaspora, handcrafted by Nala in Detroit, MI.",
-    email: "nala@souk3d.com", phone: "+1 313 555-0100",
-    instagram: "@souk3d", tiktok: "@souk3d", pinterest: "@souk3d", etsy: "Souk3D",
-    currency: "USD", language: "en",
-    guestCheckout: true, heritageFilters: true, customOrdersEnabled: true, maintenanceMode: false,
-    stripeConnected: false, stripeMode: "test",
-    processingDays: "3-5",
-    freeShippingThreshold: 75,
-  });
-  const update = (k, v) => setSettings(s => ({ ...s, [k]: v }));
-
-  const SETTINGS_NAV = [
-    { group: "STORE", items: [{ id: "general", label: "General", icon: "🏪" }, { id: "payments", label: "Payments", icon: "💳" }, { id: "shipping", label: "Shipping", icon: "📦" }] },
-    { group: "ACCOUNT", items: [{ id: "notifications", label: "Notifications", icon: "🔔" }, { id: "team", label: "Team", icon: "👥" }] },
-    { group: "LEGAL", items: [{ id: "policies", label: "Policies", icon: "📋" }] },
-  ];
-
-  const Toggle = ({ value, onChange }) => (
-    <div onClick={() => onChange(!value)} style={{ width: 42, height: 24, borderRadius: 12, background: value ? COLORS.saffron : COLORS.wheat, cursor: "pointer", position: "relative", flexShrink: 0 }}>
-      <div style={{ position: "absolute", top: 3, left: value ? 21 : 3, width: 18, height: 18, borderRadius: "50%", background: "#FFF", boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }} />
-    </div>
-  );
-
-  const FieldRow = ({ label, children }) => (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0", borderBottom: `0.5px solid ${COLORS.wheat}` }}>
-      <div style={{ fontSize: 13, color: COLORS.charcoal, fontFamily: FONTS.body }}>{label}</div>
-      {children}
-    </div>
-  );
-
-  const TextInput = ({ value, onChange, placeholder }) => (
-    <input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} style={{ padding: "7px 12px", border: `0.5px solid ${COLORS.wheat}`, borderRadius: 8, fontSize: 13, fontFamily: FONTS.body, outline: "none", minWidth: 220 }} />
-  );
-
-  const SHIPPING_ZONES = [
-    { zone: "🇺🇸 USA", standard: "$5.99", express: "$12.99", processing: "3–5 days" },
-    { zone: "🇨🇦 Canada", standard: "$9.99", express: "$18.99", processing: "5–8 days" },
-    { zone: "🇪🇺 Europe", standard: "$14.99", express: "$24.99", processing: "7–12 days" },
-    { zone: "🇦🇺 Australia", standard: "$16.99", express: "$29.99", processing: "10–14 days" },
-    { zone: "🌍 Worldwide", standard: "$19.99", express: "$34.99", processing: "14–21 days" },
-  ];
-
-  return (
-    <div style={{ display: "flex", gap: 24 }}>
-      {/* Settings sidebar */}
-      <div style={{ width: 200, flexShrink: 0 }}>
-        {SETTINGS_NAV.map(({ group, items }) => (
-          <div key={group} style={{ marginBottom: 18 }}>
-            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1.5, color: COLORS.textMuted, marginBottom: 6, fontFamily: FONTS.body }}>{group}</div>
-            {items.map(item => (
-              <div key={item.id} onClick={() => { setSection(item.id); onNavigate && onNavigate(`settings-${item.id}`); }} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderRadius: 8, cursor: "pointer", marginBottom: 2, background: section === item.id ? COLORS.saffron + "18" : "transparent", color: section === item.id ? COLORS.saffron : COLORS.inkBrown }}>
-                <span>{item.icon}</span>
-                <span style={{ fontSize: 13, fontFamily: FONTS.body, fontWeight: section === item.id ? 600 : 400 }}>{item.label}</span>
-              </div>
-            ))}
-          </div>
-        ))}
-      </div>
-
-      {/* Settings content */}
-      <div style={{ flex: 1 }}>
-        {section === "general" && (
-          <div style={{ animation: "fadeIn 0.3s ease" }}>
-            <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal, marginBottom: 20 }}>General Settings</div>
-            <SectionCard>
-              <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.textMuted, letterSpacing: 0.8, marginBottom: 14, fontFamily: FONTS.body }}>STORE IDENTITY</div>
-              {[["Store Name", "storeName", "Souk3D"], ["Tagline", "tagline", "Handmade 3D gifts…"], ["Email", "email", "nala@souk3d.com"], ["Phone", "phone", "+1 313…"]].map(([label, key, ph]) => (
-                <FieldRow key={key} label={label}><TextInput value={settings[key]} onChange={v => update(key, v)} placeholder={ph} /></FieldRow>
-              ))}
-            </SectionCard>
-            <SectionCard>
-              <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.textMuted, letterSpacing: 0.8, marginBottom: 14, fontFamily: FONTS.body }}>DESCRIPTION</div>
-              <textarea value={settings.description} onChange={e => update("description", e.target.value)} style={{ width: "100%", minHeight: 80, padding: "10px 12px", border: `0.5px solid ${COLORS.wheat}`, borderRadius: 8, fontSize: 13, fontFamily: FONTS.body, resize: "vertical", outline: "none", boxSizing: "border-box" }} />
-            </SectionCard>
-            <SectionCard>
-              <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.textMuted, letterSpacing: 0.8, marginBottom: 14, fontFamily: FONTS.body }}>SOCIAL LINKS</div>
-              {[["Instagram", "instagram", "@souk3d"], ["TikTok", "tiktok", "@souk3d"], ["Pinterest", "pinterest", "@souk3d"], ["Etsy", "etsy", "Souk3D"]].map(([label, key, ph]) => (
-                <FieldRow key={key} label={label}><TextInput value={settings[key]} onChange={v => update(key, v)} placeholder={ph} /></FieldRow>
-              ))}
-            </SectionCard>
-            <SectionCard>
-              <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.textMuted, letterSpacing: 0.8, marginBottom: 14, fontFamily: FONTS.body }}>CUSTOMER EXPERIENCE</div>
-              {[["Guest Checkout", "guestCheckout"], ["Heritage Filters", "heritageFilters"], ["Custom Orders Enabled", "customOrdersEnabled"], ["Maintenance Mode", "maintenanceMode"]].map(([label, key]) => (
-                <FieldRow key={key} label={label}><Toggle value={settings[key]} onChange={v => update(key, v)} /></FieldRow>
-              ))}
-            </SectionCard>
-            <PrimaryBtn>Save Changes</PrimaryBtn>
-          </div>
-        )}
-
-        {section === "payments" && (
-          <div style={{ animation: "fadeIn 0.3s ease" }}>
-            <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal, marginBottom: 20 }}>Payments</div>
-            <SectionCard>
-              <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.textMuted, letterSpacing: 0.8, marginBottom: 14, fontFamily: FONTS.body }}>STRIPE</div>
-              <div style={{ background: settings.stripeConnected ? COLORS.olive + "14" : COLORS.terracotta + "14", border: `0.5px solid ${settings.stripeConnected ? COLORS.olive : COLORS.terracotta}44`, borderRadius: 10, padding: "16px 18px", marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body }}>{settings.stripeConnected ? "✅ Stripe Connected" : "⚠️ Stripe Not Connected"}</div>
-                  <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 2, fontFamily: FONTS.body }}>{settings.stripeConnected ? "Payments are active" : "Connect Stripe to accept payments"}</div>
-                </div>
-                <PrimaryBtn onClick={() => update("stripeConnected", !settings.stripeConnected)}>{settings.stripeConnected ? "Disconnect" : "Connect Stripe"}</PrimaryBtn>
-              </div>
-              <FieldRow label="Mode">
-                <div style={{ display: "flex", gap: 8 }}>
-                  {["test", "live"].map(m => (
-                    <button key={m} onClick={() => update("stripeMode", m)} style={{ padding: "6px 14px", border: `0.5px solid ${settings.stripeMode === m ? COLORS.saffron : COLORS.wheat}`, borderRadius: 8, background: settings.stripeMode === m ? COLORS.saffron + "18" : "#FFF", color: settings.stripeMode === m ? COLORS.saffron : COLORS.charcoal, fontSize: 12, fontFamily: FONTS.body, cursor: "pointer", fontWeight: settings.stripeMode === m ? 600 : 400 }}>{m.charAt(0).toUpperCase() + m.slice(1)}</button>
-                  ))}
-                </div>
-              </FieldRow>
-            </SectionCard>
-            <SectionCard>
-              <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.textMuted, letterSpacing: 0.8, marginBottom: 14, fontFamily: FONTS.body }}>ACCEPTED METHODS</div>
-              {["Visa / Mastercard", "Apple Pay", "Google Pay", "Shop Pay"].map(m => (
-                <FieldRow key={m} label={m}><Toggle value={true} onChange={() => {}} /></FieldRow>
-              ))}
-            </SectionCard>
-          </div>
-        )}
-
-        {section === "shipping" && (
-          <div style={{ animation: "fadeIn 0.3s ease" }}>
-            <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal, marginBottom: 20 }}>Shipping</div>
-            <SectionCard>
-              <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.textMuted, letterSpacing: 0.8, marginBottom: 14, fontFamily: FONTS.body }}>PROCESSING</div>
-              <FieldRow label="Processing Time">
-                <select value={settings.processingDays} onChange={e => update("processingDays", e.target.value)} style={{ padding: "7px 12px", border: `0.5px solid ${COLORS.wheat}`, borderRadius: 8, fontSize: 13, fontFamily: FONTS.body, outline: "none" }}>
-                  {["1-2", "2-3", "3-5", "5-7", "7-10"].map(v => <option key={v} value={v}>{v} business days</option>)}
-                </select>
-              </FieldRow>
-              <FieldRow label="Free Shipping Threshold">
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <span style={{ fontSize: 13, color: COLORS.textMuted }}>$</span>
-                  <input type="number" value={settings.freeShippingThreshold} onChange={e => update("freeShippingThreshold", e.target.value)} style={{ width: 80, padding: "7px 10px", border: `0.5px solid ${COLORS.wheat}`, borderRadius: 8, fontSize: 13, fontFamily: FONTS.body, outline: "none" }} />
-                </div>
-              </FieldRow>
-            </SectionCard>
-            <SectionCard>
-              <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.textMuted, letterSpacing: 0.8, marginBottom: 14, fontFamily: FONTS.body }}>SHIPPING ZONES</div>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: FONTS.body }}>
-                <thead>
-                  <tr style={{ borderBottom: `0.5px solid ${COLORS.wheat}` }}>
-                    {["Zone", "Standard", "Express", "Processing"].map(h => (
-                      <th key={h} style={{ textAlign: "left", fontSize: 10, fontWeight: 600, color: COLORS.textMuted, padding: "0 8px 8px" }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {SHIPPING_ZONES.map(z => (
-                    <tr key={z.zone} style={{ borderBottom: `0.5px solid ${COLORS.wheat}` }}>
-                      <td style={{ padding: "10px 8px", fontSize: 13, fontFamily: FONTS.body }}>{z.zone}</td>
-                      <td style={{ padding: "10px 8px", fontSize: 13, fontWeight: 600, color: COLORS.charcoal }}>{z.standard}</td>
-                      <td style={{ padding: "10px 8px", fontSize: 13, fontWeight: 600, color: COLORS.charcoal }}>{z.express}</td>
-                      <td style={{ padding: "10px 8px", fontSize: 11, color: COLORS.textMuted }}>{z.processing}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </SectionCard>
-            <PrimaryBtn>Save Shipping Settings</PrimaryBtn>
-          </div>
-        )}
-
-        {!["general", "payments", "shipping"].includes(section) && (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 300, color: COLORS.textMuted, fontFamily: FONTS.body, fontSize: 13 }}>
-            {section.charAt(0).toUpperCase() + section.slice(1)} settings — coming soon
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ─── ADMIN APP (ROOT) ──────────────────────────────────────────────────────────
-export default function AdminApp() {
-  const [authed, setAuthed] = useState(false);
-  const [page, setPage] = useState("dashboard");
-
-  if (!authed) return <LoginPage onLogin={() => setAuthed(true)} />;
-
-  return (
-    <div style={{ display: "flex", minHeight: "100vh", background: COLORS.cream }}>
-      <Sidebar page={page} setPage={setPage} />
-      <div style={{ flex: 1, padding: "24px 32px", overflowY: "auto", minHeight: "100vh" }}>
-        {page === "dashboard"        && <Dashboard onNavigate={setPage} />}
-        {page === "products"         && <ProductsPage onNavigate={setPage} />}
-        {page === "orders"           && <OrdersPage onNavigate={setPage} />}
-        {page === "customers"        && <CustomersPage onNavigate={setPage} />}
-        {page === "custom-orders"    && <CustomOrdersPage onNavigate={setPage} />}
-        {page === "analytics"        && <AnalyticsPage onNavigate={setPage} />}
-        {page === "discounts"        && <DiscountsPage onNavigate={setPage} />}
-        {page === "email"            && <EmailMarketingPage onNavigate={setPage} />}
-        {page === "settings-general"   && <SettingsPage section="general"   onNavigate={setPage} />}
-        {page === "settings-payments"  && <SettingsPage section="payments"  onNavigate={setPage} />}
-        {page === "settings-shipping"  && <SettingsPage section="shipping"  onNavigate={setPage} />}
-      </div>
-    </div>
-  );
-}
+          <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal,
