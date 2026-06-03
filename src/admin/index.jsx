@@ -1455,7 +1455,7 @@ function DiscountsPage() {
 }
 
 // ─── EMAIL & MARKETING PAGE ────────────────────────────────────────────────────
-const CAMPAI@�S_DATA = [
+const CAMPAIGNS_DATA = [
   { id: 1, name: "Eid al-Adha Collection Drop", status: "sent", date: "Jun 5", opens: 68, clicks: 31, revenue: 840 },
   { id: 2, name: "New Customer Welcome Series", status: "active", date: "Ongoing", opens: 74, clicks: 42, revenue: 1240 },
   { id: 3, name: "Ramadan Win-Back Flow", status: "sent", date: "Mar 15", opens: 41, clicks: 18, revenue: 390 },
