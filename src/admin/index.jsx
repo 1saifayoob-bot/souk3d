@@ -992,7 +992,7 @@ function CustomOrdersPage() {
         ))}
         <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.2, color: COLORS.textMuted, margin: "16px 0 10px", fontFamily: FONTS.body }}>PIPELINE</div>
         {Object.entries(CUSTOM_STAGE_INFO).map(([k, s]) => (
-          <div key={k} onClick={() => setStageFilter(ki} style={{ padding: "7px 10px", borderRadius: 8, fontSize: 12, fontFamily: FONTS.body, cursor: "pointer", marginBottom: 3, background: stageFilter === k ? s.color + "22" : "transparent", color: stageFilter === k ? s.color : COLORS.inkBrown, fontWeight: stageFilter === k ? 600 : 400 }}>{s.label}</div>
+          <div key={k} onClick={() => setStageFilter(k)} style={{ padding: "7px 10px", borderRadius: 8, fontSize: 12, fontFamily: FONTS.body, cursor: "pointer", marginBottom: 3, background: stageFilter === k ? s.color + "22" : "transparent", color: stageFilter === k ? s.color : COLORS.inkBrown, fontWeight: stageFilter === k ? 600 : 400 }}>{s.label}</div>
         ))}
         <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.2, color: COLORS.textMuted, margin: "16px 0 10px", fontFamily: FONTS.body }}>OCCASION</div>
         {["Wedding", "Graduation", "Baby", "Birthday", "Eid"].map(o => (
