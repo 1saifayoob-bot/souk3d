@@ -712,10 +712,10 @@ const ORDER_STAGES = [
 function OrdersPage() {
   const [view, setView] = useState("kanban");
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [orders, setOrders] = useState(ORDERS_DATA);
+  const [orders, setOrders] = useState(() => { try { return JSON.parse(localStorage.getItem("souk3d_orders")) || ORDERS_DATA; } catch { return ORDERS_DATA; } });
 
   const moveOrder = (orderId, newStatus) => {
-    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+    setOrders(prev => { const next = prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o); localStorage.setItem("souk3d_orders", JSON.stringify(next)); return next; });
   };
 
   const getByStatus = (status) => orders.filter(o => o.status === status);
@@ -1349,10 +1349,12 @@ function DiscountsPage() {
   const [showTemplates, setShowTemplates] = useState(false);
   const [newCode, setNewCode] = useState({ code: "", name: "", type: "percent", value: "", minOrder: "", limit: "" });
 
-  const filtered = DISCOUNTS_DATA.filter(d => statusFilter === "all" || d.status === statusFilter);
-  const totalUsed = DISCOUNTS_DATA.reduce((s, d) => s + d.usageCount, 0);
-  const totalRevenue = DISCOUNTS_DATA.reduce((s, d) => s + d.revenue, 0);
-  const topCode = DISCOUNTS_DATA.reduce((a, b) => a.revenue > b.revenue ? a : b);
+  const [discounts, setDiscounts] = useState(() => { try { return JSON.parse(localStorage.getItem("souk3d_discounts")) || DISCOUNTS_DATA; } catch { return DISCOUNTS_DATA; } });
+  const saveDiscounts = (d) => { setDiscounts(d); localStorage.setItem("souk3d_discounts", JSON.stringify(d)); };
+  const filtered = discounts.filter(d => statusFilter === "all" || d.status === statusFilter);
+  const totalUsed = discounts.reduce((s, d) => s + d.usageCount, 0);
+  const totalRevenue = discounts.reduce((s, d) => s + d.revenue, 0);
+  const topCode = discounts.reduce((a, b) => a.revenue > b.revenue ? a : b, discounts[0] || {});
 
   const TEMPLATES = [
     { group: "Diaspora Calendar", items: [{ code: "RAMADAN20", label: "Ramadan Kareem 20%" }, { code: "EID15", label: "Eid Mubarak 15%" }, { code: "NAKBA74", label: "Nakba Day Solidarity" }] },
@@ -1519,7 +1521,7 @@ function DiscountsPage() {
               </div>
             </div>
             <div style={{ display: "flex", gap: 8 }}>
-              <PrimaryBtn style={{ flex: 1 }} onClick={() => setShowCreate(false)}>Create Code</PrimaryBtn>
+              <PrimaryBtn style={{ flex: 1 }} onClick={() => { if(!newCode.code||!newCode.value)return; const nd=[...discounts,{id:Date.now(),code:newCode.code.toUpperCase(),name:newCode.name||newCode.code,type:newCode.type,value:parseFloat(newCode.value)||0,minOrder:parseFloat(newCode.minOrder)||0,usageCount:0,usageLimit:parseInt(newCode.limit)||null,revenue:0,status:"active"}]; saveDiscounts(nd); setNewCode({code:"",name:"",type:"percent",value:"",minOrder:"",limit:""}); setShowCreate(false); }}>Create Code</PrimaryBtn>
               <GhostBtn style={{ flex: 1 }} onClick={() => setShowCreate(false)}>Cancel</GhostBtn>
             </div>
           </div>
@@ -1612,12 +1614,13 @@ function EmailMarketingPage() {
 // --- SETTINGS PAGE ---
 function SettingsPage() {
   const [saved, setSaved] = useState(false);
-  const [storeName, setStoreName] = useState("Souk3D");
-  const [storeEmail, setStoreEmail] = useState("hello@souk3d.com");
-  const [currency, setCurrency] = useState("USD");
-  const [timezone, setTimezone] = useState("UTC+3 (Riyadh)");
+  const _ss = (() => { try { return JSON.parse(localStorage.getItem("souk3d_settings")) || {}; } catch { return {}; } })();
+  const [storeName, setStoreName] = useState(_ss.storeName || "Souk3D");
+  const [storeEmail, setStoreEmail] = useState(_ss.storeEmail || "hello@souk3d.com");
+  const [currency, setCurrency] = useState(_ss.currency || "USD");
+  const [timezone, setTimezone] = useState(_ss.timezone || "UTC+3 (Riyadh)");
 
-  const handleSave = () => { setSaved(true); setTimeout(() => setSaved(false), 2500); };
+  const handleSave = () => { localStorage.setItem("souk3d_settings", JSON.stringify({storeName,storeEmail,currency,timezone})); setSaved(true); setTimeout(() => setSaved(false), 2500); };
 
   return (
     <div style={{ animation: "fadeIn 0.3s ease" }}>
