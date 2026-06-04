@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useCallback } from "react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart, PieChart, Pie, Cell, BarChart, Bar } from "recharts";
+import { removeBackground } from "@imgly/background-removal";
 
 // ─── BRAND CONSTANTS ───────────────────────────────────────────────────────────
 const COLORS = {
@@ -330,11 +331,39 @@ const COUNTRY_FLAGS = {
 };
 
 // ─── PRODUCT FORM MODAL ────────────────────────────────────────────────────────
+// ─── AI LISTING GENERATOR ──────────────────────────────────────────────────────
+const LISTING_TEMPLATES = {
+  "Home Decor": { intros: ["Handcrafted with meticulous care,","A timeless piece of craftsmanship,","Rooted in centuries of tradition,"], mids: ["this stunning piece brings the warmth of Arab heritage into your home.","this piece is the perfect centrepiece for any space.","this handmade creation tells a story of culture and artistry."], ctas: ["Perfect as a gift or a personal keepsake.","A conversation-starting addition to any home.","Cherished for generations."] },
+  "Art": { intros: ["A masterpiece of Arab artistry,","Born from skilled hands and a rich tradition,","Inspired by the beauty of the Arab world,"], mids: ["this original piece captures the soul of its heritage.","this artwork brings colour and culture to any wall.","this creation is a window into a vibrant cultural legacy."], ctas: ["Own a piece of living history.","Elevate your space with authentic art.","A unique statement piece."] },
+  "Seasonal": { intros: ["Celebrate in style with","Mark the occasion beautifully with","A special edition piece —"], mids: ["this festive creation crafted to honour your most cherished celebrations.","this seasonal piece designed to make every moment memorable.","this limited creation made to bring joy to the whole family."], ctas: ["Order early — these sell fast.","The perfect seasonal gift.","Limited availability."] },
+  "default": { intros: ["Crafted with passion and precision,","A beautiful example of Arab craftsmanship,","Made with love and tradition,"], mids: ["this unique piece reflects the rich cultural heritage of the Arab world.","this handmade item brings authenticity and warmth to its owner.","this carefully crafted item is a tribute to traditional artistry."], ctas: ["A meaningful gift for any occasion.","Ships worldwide.","Personalisation available on request."] },
+};
+const ARABIC_PATTERNS = { "Plaque":"لوحة","Lantern":"فانوس","Frame":"إطار","Box":"صندوق","Stand":"حامل","Arch":"قوس","Tree":"شجرة","Map":"خريطة","Name":"اسم","Star":"نجمة","Moon":"هلال","Gift":"هدية","Wall":"جداري","Art":"فن","Decor":"ديكور","Custom":"مخصص","Set":"طقم","Holder":"حامل","Sign":"لافتة" };
+const COUNTRY_AR = { "Syria":"سوري","Palestine":"فلسطيني","Lebanon":"لبناني","Jordan":"أردني","Egypt":"مصري","Iraq":"عراقي","Morocco":"مغربي" };
+function generateListing(name, category, country) {
+  const tmpl = LISTING_TEMPLATES[category] || LISTING_TEMPLATES.default;
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const desc = pick(tmpl.intros) + " " + pick(tmpl.mids) + " " + pick(tmpl.ctas);
+  const words = name.split(" ");
+  let nameAr = words.map(w => ARABIC_PATTERNS[w] || "").filter(Boolean).join(" ");
+  if (!nameAr) nameAr = (COUNTRY_AR[country] ? "قطعة " + COUNTRY_AR[country] + " مميزة" : "قطعة حرفية مميزة");
+  const priceTiers = { "Home Decor":44.99,"Art":89.99,"Seasonal":34.99,"Jewelry":59.99,"Accessories":29.99,"Other":39.99 };
+  const badge = category === "Seasonal" ? "Limited" : Math.random() > 0.6 ? "Best Seller" : "";
+  return { desc, name_ar: nameAr, price: String(priceTiers[category] || 44.99), badge };
+}
+const BG_STYLES = [
+  { id: "cream", label: "Cream", colors: ["#FAF3E7","#E8D5A8"] },
+  { id: "charcoal", label: "Charcoal", colors: ["#2A1F18","#3D2817"] },
+  { id: "saffron", label: "Saffron", colors: ["#FAF3E7","#E8B864"] },
+  { id: "white", label: "White", colors: ["#FFFFFF","#F5F5F5"] },
+];
+
 function ProductFormModal({ product, onSave, onClose }) {
   const empty = {
     name: "", name_ar: "", category: "Home Decor", country: "Syria",
     price: "", compareAt: "", cost: "", stock: "", status: "active",
     featured: false, emoji: "🏺", desc: "", customizable: false, badge: "",
+    imageUrl: "", imageBg: "cream",
   };
   const [form, setForm] = useState(product ? {
     ...product,
@@ -346,6 +375,28 @@ function ProductFormModal({ product, onSave, onClose }) {
   } : empty);
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  const fileRef = useRef(null);
+  const [removing, setRemoving] = useState(false);
+  const handleImageUpload = useCallback(async (file) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const raw = e.target.result;
+      setRemoving(true);
+      try {
+        const blob = await fetch(raw).then(r => r.blob());
+        const resultBlob = await removeBackground(blob);
+        set("imageUrl", URL.createObjectURL(resultBlob));
+      } catch { set("imageUrl", raw); }
+      setRemoving(false);
+    };
+    reader.readAsDataURL(file);
+  }, []);
+  const handleGenerate = () => {
+    if (!form.name.trim()) { alert("Enter a product name first."); return; }
+    const r = generateListing(form.name, form.category, form.country);
+    setForm(f => ({ ...f, ...r }));
+  };
 
   const handleSave = () => {
     if (!form.name.trim() || !form.price) return alert("Name and price are required.");
@@ -406,14 +457,49 @@ function ProductFormModal({ product, onSave, onClose }) {
           <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: COLORS.textMuted }}>✕</button>
         </div>
 
-        {field("PRODUCT NAME (English)", "name", "text", "e.g. Damascus Name Plaque")}
+        {/* Name + Generate */}
+        <div style={{ marginBottom: 14 }}>
+          <label style={labelStyle}>PRODUCT NAME (English)</label>
+          <div style={{ display: "flex", gap: 8 }}>
+            <input type="text" value={form.name} onChange={e => set("name", e.target.value)}
+              placeholder="e.g. Damascus Name Plaque" style={{ ...inputStyle(false), flex: 1 }} />
+            <button onClick={handleGenerate} style={{ padding: "8px 14px", background: COLORS.saffron, color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontFamily: FONTS.body, fontSize: 12, fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0 }}>✨ Generate</button>
+          </div>
+        </div>
         {field("اسم المنتج (Arabic)", "name_ar", "text", "e.g. لوحة الاسم الدمشقية", true)}
-
         <div style={{ marginBottom: 14 }}>
           <label style={labelStyle}>DESCRIPTION</label>
           <textarea value={form.desc} onChange={e => set("desc", e.target.value)}
             placeholder="Product description shown on the storefront…" rows={3}
             style={{ ...inputStyle(false), resize: "vertical" }} />
+        </div>
+        {/* Image Upload + AI Background */}
+        <div style={{ marginBottom: 14 }}>
+          <label style={labelStyle}>PRODUCT IMAGE</label>
+          <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={e => e.target.files[0] && handleImageUpload(e.target.files[0])} />
+          <div onClick={() => fileRef.current.click()} style={{ border: `2px dashed ${COLORS.wheat}`, borderRadius: 10, padding: 16, textAlign: "center", cursor: "pointer", minHeight: 110, display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", position: "relative", overflow: "hidden" }}>
+            {removing && (<div style={{ position: "absolute", inset: 0, background: "rgba(42,31,24,0.65)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10 }}><span style={{ color: "#fff", fontFamily: FONTS.body, fontSize: 13 }}>✨ Removing background…</span></div>)}
+            {form.imageUrl ? (
+              <div style={{ display: "flex", alignItems: "center", gap: 14, width: "100%" }} onClick={e => e.stopPropagation()}>
+                <div style={{ width: 88, height: 88, borderRadius: 8, flexShrink: 0, overflow: "hidden", background: (BG_STYLES.find(b=>b.id===form.imageBg)||BG_STYLES[0]).colors ? `linear-gradient(135deg, ${(BG_STYLES.find(b=>b.id===form.imageBg)||BG_STYLES[0]).colors[0]}, ${(BG_STYLES.find(b=>b.id===form.imageBg)||BG_STYLES[0]).colors[1]})` : "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <img src={form.imageUrl} alt="" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
+                </div>
+                <div style={{ flex: 1, textAlign: "left" }}>
+                  <div style={{ fontFamily: FONTS.body, fontSize: 11, fontWeight: 600, color: COLORS.textMuted, marginBottom: 6, letterSpacing: 0.5 }}>BRAND BACKGROUND</div>
+                  <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 6 }}>
+                    {BG_STYLES.map(bg => (<button key={bg.id} onClick={() => set("imageBg", bg.id)} style={{ padding: "3px 9px", borderRadius: 5, border: form.imageBg===bg.id ? `2px solid ${COLORS.saffron}` : `1px solid ${COLORS.wheat}`, background: form.imageBg===bg.id ? COLORS.saffronLight : "#fff", fontSize: 11, fontFamily: FONTS.body, cursor: "pointer", fontWeight: form.imageBg===bg.id ? 600 : 400 }}>{bg.label}</button>))}
+                  </div>
+                  <button onClick={() => fileRef.current.click()} style={{ fontSize: 11, fontFamily: FONTS.body, color: COLORS.saffron, background: "none", border: "none", cursor: "pointer", padding: 0, textDecoration: "underline" }}>Change image</button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div style={{ fontSize: 26, marginBottom: 4 }}>📷</div>
+                <div style={{ fontFamily: FONTS.body, fontSize: 12, color: COLORS.textMuted }}>Click to upload product image</div>
+                <div style={{ fontFamily: FONTS.body, fontSize: 11, color: COLORS.wheat, marginTop: 2 }}>AI removes background & applies brand colours</div>
+              </div>
+            )}
+          </div>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
