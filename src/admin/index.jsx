@@ -1,6 +1,5 @@
-import React, { useState, useMemo, useRef, useCallback } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart, PieChart, Pie, Cell, BarChart, Bar } from "recharts";
-import { removeBackground } from "@imgly/background-removal";
 
 // ─── BRAND CONSTANTS ───────────────────────────────────────────────────────────
 const COLORS = {
@@ -376,22 +375,12 @@ function ProductFormModal({ product, onSave, onClose }) {
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
   const fileRef = useRef(null);
-  const [removing, setRemoving] = useState(false);
-  const handleImageUpload = useCallback(async (file) => {
+  const handleImageUpload = (file) => {
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = async (e) => {
-      const raw = e.target.result;
-      setRemoving(true);
-      try {
-        const blob = await fetch(raw).then(r => r.blob());
-        const resultBlob = await removeBackground(blob);
-        set("imageUrl", URL.createObjectURL(resultBlob));
-      } catch { set("imageUrl", raw); }
-      setRemoving(false);
-    };
+    reader.onload = (e) => set("imageUrl", e.target.result);
     reader.readAsDataURL(file);
-  }, []);
+  };
   const handleGenerate = () => {
     if (!form.name.trim()) { alert("Enter a product name first."); return; }
     const r = generateListing(form.name, form.category, form.country);
@@ -478,11 +467,11 @@ function ProductFormModal({ product, onSave, onClose }) {
           <label style={labelStyle}>PRODUCT IMAGE</label>
           <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={e => e.target.files[0] && handleImageUpload(e.target.files[0])} />
           <div onClick={() => fileRef.current.click()} style={{ border: `2px dashed ${COLORS.wheat}`, borderRadius: 10, padding: 16, textAlign: "center", cursor: "pointer", minHeight: 110, display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", position: "relative", overflow: "hidden" }}>
-            {removing && (<div style={{ position: "absolute", inset: 0, background: "rgba(42,31,24,0.65)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10 }}><span style={{ color: "#fff", fontFamily: FONTS.body, fontSize: 13 }}>✨ Removing background…</span></div>)}
+
             {form.imageUrl ? (
               <div style={{ display: "flex", alignItems: "center", gap: 14, width: "100%" }} onClick={e => e.stopPropagation()}>
                 <div style={{ width: 88, height: 88, borderRadius: 8, flexShrink: 0, overflow: "hidden", background: (BG_STYLES.find(b=>b.id===form.imageBg)||BG_STYLES[0]).colors ? `linear-gradient(135deg, ${(BG_STYLES.find(b=>b.id===form.imageBg)||BG_STYLES[0]).colors[0]}, ${(BG_STYLES.find(b=>b.id===form.imageBg)||BG_STYLES[0]).colors[1]})` : "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <img src={form.imageUrl} alt="" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
+                  <img src={form.imageUrl} alt="" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", mixBlendMode: "multiply" }} />
                 </div>
                 <div style={{ flex: 1, textAlign: "left" }}>
                   <div style={{ fontFamily: FONTS.body, fontSize: 11, fontWeight: 600, color: COLORS.textMuted, marginBottom: 6, letterSpacing: 0.5 }}>BRAND BACKGROUND</div>
