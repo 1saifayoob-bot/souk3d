@@ -1620,7 +1620,7 @@ export default function AdminApp() {
   const [page, setPage] = useState("dashboard");
 
   const PAGE_MAP = {
-    dashboard: <DashboardPage />,
+    dashboard: <Dashboard onNavigate={setPage} />,
     products: <ProductsPage />,
     orders: <OrdersPage />,
     customers: <CustomersPage />,
@@ -1662,7 +1662,7 @@ export default function AdminApp() {
       </aside>
 
       <main style={{ flex: 1, padding: "24px 32px", overflowY: "auto" }}>
-        {PAGE_MAP[page] ?? <DashboardPage />}
+        {PAGE_MAP[page] ?? <Dashboard onNavigate={setPage} />}
       </main>
     </div>
   );
