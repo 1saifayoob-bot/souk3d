@@ -1604,7 +1604,7 @@ function SettingsPage() {
 }
 
 // --- MAIN ADMIN APP ---
-const NAV_ITEMS = [
+const ADMIN_PAGES = [
   { id: "dashboard", label: "Dashboard", icon: "SS" },
   { id: "products", label: "Products", icon: "PP" },
   { id: "orders", label: "Orders", icon: "OO" },
@@ -1649,7 +1649,7 @@ export default function AdminApp() {
           <div style={{ fontFamily: FONTS.body, fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 2, letterSpacing: "0.05em" }}>ADMIN PANEL</div>
         </div>
         <nav style={{ flex: 1, padding: "14px 10px", overflowY: "auto" }}>
-          {NAV_ITEMS.map(n => (
+          {ADMIN_PAGES.map(n => (
             <button key={n.id} onClick={() => setPage(n.id)}
               style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 12px", borderRadius: 8, border: "none", cursor: "pointer", marginBottom: 2, textAlign: "left", transition: "all 0.15s", background: page === n.id ? "rgba(212,165,69,0.15)" : "transparent", color: page === n.id ? COLORS.saffron : "rgba(255,255,255,0.55)", fontFamily: FONTS.body, fontSize: 13, fontWeight: page === n.id ? 600 : 400 }}>
               {n.label}
