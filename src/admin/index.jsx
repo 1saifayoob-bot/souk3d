@@ -322,7 +322,7 @@ function Dashboard({ onNavigate }) {
   );
 }
 
-// ─── COUNTRY ₒ FLAG MAP ────────────────────────────────────────────────────────
+// ─── COUNTRY → FLAG MAP ────────────────────────────────────────────────────────
 const COUNTRY_FLAGS = {
   Syria: "🇸🇾", Lebanon: "🇱🇧", Palestine: "🇵🇸",
   "Pan-Arab": "🌍", Egypt: "🇪🇬", Iraq: "🇮🇶",
@@ -979,7 +979,7 @@ function CustomOrdersPage() {
 
   const messages = MOCK_MESSAGES[selectedOrder?.id] || [];
 
-  const STARE_ORDERED = ["new", "quote", "mockup", "approved", "production"];
+  const STAGES_ORDERED = ["new", "quote", "mockup", "approved", "production"];
 
   return (
     <div style={{ animation: "fadeIn 0.3s ease", display: "flex", height: "calc(100vh - 48px)", margin: "-24px -32px", overflow: "hidden" }}>
@@ -1281,7 +1281,7 @@ function DiscountsPage() {
 
   const TEMPLATES = [
     { group: "Diaspora Calendar", items: [{ code: "RAMADAN20", label: "Ramadan Kareem 20%" }, { code: "EID15", label: "Eid Mubarak 15%" }, { code: "NAKBA74", label: "Nakba Day Solidarity" }] },
-    { group: "Universal", items: [{ code: "WEECOME10", label: "New Customer 10%" }, { code: "WINBACK20", label: "Win-Back 20%" }, { code: "VIP25", label: "VIP Loyalty 25%" }] },
+    { group: "Universal", items: [{ code: "WELCOME10", label: "New Customer 10%" }, { code: "WINBACK20", label: "Win-Back 20%" }, { code: "VIP25", label: "VIP Loyalty 25%" }] },
     { group: "Seasonal", items: [{ code: "WEDDING15", label: "Wedding Season 15%" }, { code: "GRAD10", label: "Graduation 10%" }] },
     { group: "Sales", items: [{ code: "BFCM30", label: "Black Friday 30%" }, { code: "HOLIDAY15", label: "Holiday 15%" }] },
   ];
@@ -1480,4 +1480,190 @@ function EmailMarketingPage() {
     <div style={{ animation: "fadeIn 0.3s ease" }}>
       <div style={{ position: "sticky", top: -24, zIndex: 10, background: COLORS.cream, margin: "-24px -32px 0", padding: "24px 32px 14px", borderBottom: `0.5px solid ${COLORS.wheat}`, boxShadow: "0 4px 12px rgba(0,0,0,0.04)" }}>
         <div style={{ display: "flex", alignItems: "center", marginBottom: 12 }}>
-          <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal,
+          <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal, letterSpacing: "0.01em" }}>✉ Email & Marketing</div>
+          <div style={{ fontFamily: FONTS.body, fontSize: 12, color: COLORS.textMuted, marginTop: 2 }}>Manage campaigns & automations</div>
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          {["campaigns", "automations"].map(t => (
+            <button key={t} onClick={() => setTab(t)}
+              style={{ padding: "7px 18px", borderRadius: 8, border: "none", cursor: "pointer", fontFamily: FONTS.body, fontSize: 13, fontWeight: tab === t ? 600 : 400, background: tab === t ? COLORS.saffron : "transparent", color: tab === t ? "#fff" : COLORS.charcoal, transition: "all 0.15s" }}>
+              {t === "campaigns" ? "📣 Campaigns" : "⚡ Automations"}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {tab === "campaigns" && (
+        <div style={{ marginTop: 24 }}>
+          {CAMPAIGNS_DATA.map(c => (
+            <div key={c.id} style={{ background: "#fff", borderRadius: 12, padding: "16px 20px", marginBottom: 12, display: "flex", alignItems: "center", gap: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
+              <div style={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0, background: c.status === "sent" ? "#22c55e" : c.status === "active" ? COLORS.saffron : "#d1d5db" }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontFamily: FONTS.body, fontSize: 14, fontWeight: 600, color: COLORS.charcoal }}>{c.name}</div>
+                <div style={{ fontFamily: FONTS.body, fontSize: 12, color: COLORS.textMuted, marginTop: 2 }}>{c.date}</div>
+              </div>
+              {c.opens > 0 && <div style={{ textAlign: "center", minWidth: 48 }}><div style={{ fontFamily: FONTS.display, fontSize: 16, fontWeight: 700, color: COLORS.charcoal }}>{c.opens}%</div><div style={{ fontFamily: FONTS.body, fontSize: 11, color: COLORS.textMuted }}>Opens</div></div>}
+              {c.clicks > 0 && <div style={{ textAlign: "center", minWidth: 48 }}><div style={{ fontFamily: FONTS.display, fontSize: 16, fontWeight: 700, color: COLORS.charcoal }}>{c.clicks}%</div><div style={{ fontFamily: FONTS.body, fontSize: 11, color: COLORS.textMuted }}>Clicks</div></div>}
+              {c.revenue > 0 && <div style={{ textAlign: "center", minWidth: 60 }}><div style={{ fontFamily: FONTS.display, fontSize: 16, fontWeight: 700, color: COLORS.damascene }}>${c.revenue}</div><div style={{ fontFamily: FONTS.body, fontSize: 11, color: COLORS.textMuted }}>Revenue</div></div>}
+              <span style={{ padding: "3px 10px", borderRadius: 6, fontSize: 11, fontFamily: FONTS.body, fontWeight: 600, background: c.status === "sent" ? "#dcfce7" : c.status === "active" ? "#fef9c3" : "#f3f4f6", color: c.status === "sent" ? "#16a34a" : c.status === "active" ? "#ca8a04" : COLORS.textMuted }}>{c.status}</span>
+            </div>
+          ))}
+          <button style={{ display: "block", width: "100%", padding: 13, borderRadius: 10, border: "1.5px dashed #E8D5A8", background: "transparent", fontFamily: FONTS.body, fontSize: 14, color: COLORS.textMuted, cursor: "pointer", marginTop: 8 }}>+ New Campaign</button>
+        </div>
+      )}
+
+      {tab === "automations" && (
+        <div style={{ marginTop: 24 }}>
+          {automations.map((a, idx) => (
+            <div key={idx} style={{ background: "#fff", borderRadius: 12, padding: "16px 20px", marginBottom: 12, display: "flex", alignItems: "center", gap: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
+              <span style={{ fontSize: 22, width: 32, textAlign: "center", flexShrink: 0 }}>{a.icon}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontFamily: FONTS.body, fontSize: 14, fontWeight: 600, color: COLORS.charcoal }}>{a.name}</div>
+                <div style={{ fontFamily: FONTS.body, fontSize: 12, color: COLORS.textMuted, marginTop: 2 }}>{a.trigger}</div>
+              </div>
+              <div style={{ textAlign: "center", minWidth: 44 }}><div style={{ fontFamily: FONTS.display, fontSize: 16, fontWeight: 700, color: COLORS.charcoal }}>{a.sent}</div><div style={{ fontFamily: FONTS.body, fontSize: 11, color: COLORS.textMuted }}>Sent</div></div>
+              <div style={{ textAlign: "center", minWidth: 52 }}><div style={{ fontFamily: FONTS.display, fontSize: 16, fontWeight: 700, color: COLORS.charcoal }}>{a.openRate}%</div><div style={{ fontFamily: FONTS.body, fontSize: 11, color: COLORS.textMuted }}>Open rate</div></div>
+              <div onClick={() => toggleAuto(idx)} style={{ width: 42, height: 24, borderRadius: 12, cursor: "pointer", background: a.active ? COLORS.saffron : "#d1d5db", position: "relative", flexShrink: 0, transition: "background 0.2s" }}>
+                <div style={{ position: "absolute", top: 3, left: a.active ? 21 : 3, width: 18, height: 18, borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// --- SETTINGS PAGE ---
+function SettingsPage() {
+  const [saved, setSaved] = useState(false);
+  const [storeName, setStoreName] = useState("Souk3D");
+  const [storeEmail, setStoreEmail] = useState("hello@souk3d.com");
+  const [currency, setCurrency] = useState("USD");
+  const [timezone, setTimezone] = useState("UTC+3 (Riyadh)");
+
+  const handleSave = () => { setSaved(true); setTimeout(() => setSaved(false), 2500); };
+
+  return (
+    <div style={{ animation: "fadeIn 0.3s ease" }}>
+      <div style={{ position: "sticky", top: -24, zIndex: 10, background: COLORS.cream, margin: "-24px -32px 0", padding: "24px 32px 16px", borderBottom: "0.5px solid #E8D5A8", boxShadow: "0 4px 12px rgba(0,0,0,0.04)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div>
+          <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal }}>Settings</div>
+          <div style={{ fontFamily: FONTS.body, fontSize: 13, color: COLORS.textMuted, marginTop: 2 }}>Store configuration & preferences</div>
+        </div>
+        <button onClick={handleSave} style={{ padding: "9px 22px", borderRadius: 8, border: "none", cursor: "pointer", background: saved ? "#22c55e" : COLORS.saffron, color: "#fff", fontFamily: FONTS.body, fontSize: 14, fontWeight: 600, transition: "background 0.2s" }}>
+          {saved ? "Saved!" : "Save Changes"}
+        </button>
+      </div>
+
+      <div style={{ marginTop: 28, display: "grid", gap: 20, maxWidth: 640 }}>
+        <div style={{ background: "#fff", borderRadius: 14, padding: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
+          <div style={{ fontFamily: FONTS.display, fontSize: 16, fontWeight: 600, color: COLORS.charcoal, marginBottom: 16, paddingBottom: 12, borderBottom: "1px solid #E8D5A8" }}>Store Details</div>
+          {[["Store Name", storeName, setStoreName, "text"], ["Contact Email", storeEmail, setStoreEmail, "email"]].map(([label, val, setter, type]) => (
+            <div key={label} style={{ marginBottom: 16 }}>
+              <div style={{ fontFamily: FONTS.body, fontSize: 13, fontWeight: 500, color: COLORS.charcoal, marginBottom: 6 }}>{label}</div>
+              <input type={type} value={val} onChange={e => setter(e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: 8, border: "1px solid #E8D5A8", fontFamily: FONTS.body, fontSize: 14, color: COLORS.charcoal, outline: "none", boxSizing: "border-box" }} />
+            </div>
+          ))}
+        </div>
+
+        <div style={{ background: "#fff", borderRadius: 14, padding: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
+          <div style={{ fontFamily: FONTS.display, fontSize: 16, fontWeight: 600, color: COLORS.charcoal, marginBottom: 16, paddingBottom: 12, borderBottom: "1px solid #E8D5A8" }}>Regional</div>
+          {[["Currency", currency, setCurrency, ["USD", "SAR", "AED", "EUR", "GBP"]], ["Timezone", timezone, setTimezone, ["UTC+3 (Riyadh)", "UTC+4 (Dubai)", "UTC+2 (Cairo)", "UTC+0 (London)", "UTC-5 (New York)"]]].map(([label, val, setter, opts]) => (
+            <div key={label} style={{ marginBottom: 16 }}>
+              <div style={{ fontFamily: FONTS.body, fontSize: 13, fontWeight: 500, color: COLORS.charcoal, marginBottom: 6 }}>{label}</div>
+              <select value={val} onChange={e => setter(e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: 8, border: "1px solid #E8D5A8", fontFamily: FONTS.body, fontSize: 14, color: COLORS.charcoal, outline: "none", background: "#fff", boxSizing: "border-box" }}>
+                {opts.map(o => <option key={o} value={o}>{o}</option>)}
+              </select>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ background: "#fff", borderRadius: 14, padding: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
+          <div style={{ fontFamily: FONTS.display, fontSize: 16, fontWeight: 600, color: COLORS.charcoal, marginBottom: 16, paddingBottom: 12, borderBottom: "1px solid #E8D5A8" }}>Notifications</div>
+          {[["New order received", true], ["Low stock alert (less than 5 units)", true], ["Customer messages", true], ["Custom order updates", true], ["Weekly summary", false], ["Marketing reports", false]].map(([label, def]) => (
+            <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+              <span style={{ fontFamily: FONTS.body, fontSize: 14, color: COLORS.charcoal }}>{label}</span>
+              <input type="checkbox" defaultChecked={def} style={{ width: 16, height: 16, cursor: "pointer", accentColor: COLORS.saffron }} />
+            </div>
+          ))}
+        </div>
+
+        <div style={{ background: "#fff", borderRadius: 14, padding: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
+          <div style={{ fontFamily: FONTS.display, fontSize: 16, fontWeight: 600, color: COLORS.charcoal, marginBottom: 16, paddingBottom: 12, borderBottom: "1px solid #E8D5A8" }}>Shipping Rates</div>
+          {[["Standard (5-7 days)", "$8.99"], ["Express (2-3 days)", "$18.99"], ["International (10-15 days)", "$24.99"]].map(([name, price]) => (
+            <div key={name} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <span style={{ fontFamily: FONTS.body, fontSize: 14, color: COLORS.charcoal }}>{name}</span>
+              <span style={{ fontFamily: FONTS.display, fontSize: 15, fontWeight: 600, color: COLORS.charcoal }}>{price}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// --- MAIN ADMIN APP ---
+const NAV_ITEMS = [
+  { id: "dashboard", label: "Dashboard", icon: "SS" },
+  { id: "products", label: "Products", icon: "PP" },
+  { id: "orders", label: "Orders", icon: "OO" },
+  { id: "customers", label: "Customers", icon: "CC" },
+  { id: "custom", label: "Custom Orders", icon: "XX" },
+  { id: "analytics", label: "Analytics", icon: "AA" },
+  { id: "discounts", label: "Discounts", icon: "DD" },
+  { id: "email", label: "Email & Marketing", icon: "EE" },
+  { id: "settings", label: "Settings", icon: "GG" },
+];
+
+export default function AdminApp() {
+  const [page, setPage] = useState("dashboard");
+
+  const PAGE_MAP = {
+    dashboard: <DashboardPage />,
+    products: <ProductsPage />,
+    orders: <OrdersPage />,
+    customers: <CustomersPage />,
+    custom: <CustomOrdersPage />,
+    analytics: <AnalyticsPage />,
+    discounts: <DiscountsPage />,
+    email: <EmailMarketingPage />,
+    settings: <SettingsPage />,
+  };
+
+  return (
+    <div style={{ display: "flex", minHeight: "100vh", background: COLORS.cream }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Amiri:wght@400;700&display=swap');
+        *, *::before, *::after { box-sizing: border-box; }
+        body { margin: 0; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #E8D5A8; border-radius: 2px; }
+      `}</style>
+
+      <aside style={{ width: 224, background: COLORS.charcoal, display: "flex", flexDirection: "column", position: "sticky", top: 0, height: "100vh", flexShrink: 0 }}>
+        <div style={{ padding: "22px 20px 18px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+          <div style={{ fontFamily: FONTS.display, fontSize: 21, fontWeight: 700, color: COLORS.saffron }}>Souk3D</div>
+          <div style={{ fontFamily: FONTS.body, fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 2, letterSpacing: "0.05em" }}>ADMIN PANEL</div>
+        </div>
+        <nav style={{ flex: 1, padding: "14px 10px", overflowY: "auto" }}>
+          {NAV_ITEMS.map(n => (
+            <button key={n.id} onClick={() => setPage(n.id)}
+              style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 12px", borderRadius: 8, border: "none", cursor: "pointer", marginBottom: 2, textAlign: "left", transition: "all 0.15s", background: page === n.id ? "rgba(212,165,69,0.15)" : "transparent", color: page === n.id ? COLORS.saffron : "rgba(255,255,255,0.55)", fontFamily: FONTS.body, fontSize: 13, fontWeight: page === n.id ? 600 : 400 }}>
+              {n.label}
+            </button>
+          ))}
+        </nav>
+        <div style={{ padding: "14px 20px", borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+          <div style={{ fontFamily: FONTS.body, fontSize: 11, color: "rgba(255,255,255,0.25)" }}>Souk3D v1.0</div>
+        </div>
+      </aside>
+
+      <main style={{ flex: 1, padding: "24px 32px", overflowY: "auto" }}>
+        {PAGE_MAP[page] ?? <DashboardPage />}
+      </main>
+    </div>
+  );
+}
