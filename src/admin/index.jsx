@@ -630,7 +630,7 @@ function ProductsPage() {
                 <td style={{ padding: "12px 8px", fontSize: 11, color: COLORS.textMuted }}>{p.sku || "—"}</td>
                 <td style={{ padding: "12px 8px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 18 }}>{p.emoji || "🏺"}</span>
+                    {p.imageUrl ? <img src={p.imageUrl} alt={p.name} style={{ width: 38, height: 38, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} /> : <span style={{ fontSize: 18 }}>{p.emoji || "🏺"}</span>}
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 500, color: COLORS.charcoal }}>{p.name}</div>
                       <div style={{ fontSize: 11, fontFamily: FONTS.arabic, color: COLORS.textMuted }}>{p.name_ar}</div>
@@ -660,7 +660,7 @@ function ProductsPage() {
           <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: "min(580px, 92vw)", background: COLORS.cream, zIndex: 101, boxShadow: "-20px 0 60px rgba(0,0,0,0.3)", animation: "slideIn 0.3s ease", overflowY: "auto", padding: 28 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
               <div>
-                <div style={{ fontSize: 28 }}>{selected.emoji || "🏺"}</div>
+                {selected.imageUrl ? <img src={selected.imageUrl} alt={selected.name} style={{ width: 80, height: 80, borderRadius: 12, objectFit: "cover", marginBottom: 10, display: "block" }} /> : <div style={{ fontSize: 28, marginBottom: 4 }}>{selected.emoji || "🏺"}</div>}
                 <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal }}>{selected.name}</div>
                 <div style={{ fontFamily: FONTS.arabic, fontSize: 16, color: COLORS.saffron }}>{selected.name_ar}</div>
               </div>
