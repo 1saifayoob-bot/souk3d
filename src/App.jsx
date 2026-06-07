@@ -71,7 +71,7 @@ function ProductCard({ product, onView, onAddToCart }) {
   return (
     <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} style={{ background: "#FFF", border: `0.5px solid ${C.wheat}`, borderRadius: 12, overflow: "hidden", cursor: "pointer", transition: "box-shadow 0.2s", boxShadow: hovered ? "0 8px 32px rgba(42,31,24,0.14)" : "none" }}>
       <div onClick={() => onView(product)} style={{ aspectRatio: "1", background: `linear-gradient(135deg, ${C.cream2} 0%, ${C.wheat}44 100%)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 64, position: "relative" }}>
-        {product.emoji}
+        {(product.imageUrl || (product.images && product.images[0] && product.images[0].url)) ? <img src={product.imageUrl || (product.images && product.images[0] && product.images[0].url) || ""} alt={product.name || ""} style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: "inherit" }} /> : product.emoji}
         {product.badge && (
           <div style={{ position: "absolute", top: 12, left: 12, background: product.badge === "Sale" ? C.terracotta : product.badge === "New" ? C.damascene : C.saffron, color: "#FFF", fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 10, fontFamily: F.body }}>{product.badge}</div>
         )}
@@ -212,12 +212,12 @@ function ProductDetail({ product, onBack, onAddToCart }) {
         {/* Gallery */}
         <div>
           <div style={{ aspectRatio: "1", background: `linear-gradient(135deg, ${C.cream2} 0%, ${C.wheat}55 100%)`, borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 120, position: "relative", marginBottom: 12 }}>
-            {product.emoji}
+            {(product.imageUrl || (product.images && product.images[0] && product.images[0].url)) ? <img src={product.imageUrl || (product.images && product.images[0] && product.images[0].url) || ""} alt={product.name || ""} style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: "inherit" }} /> : product.emoji}
             {product.badge && <div style={{ position: "absolute", top: 16, left: 16, background: C.saffron, color: "#FFF", fontSize: 11, fontWeight: 700, padding: "4px 12px", borderRadius: 12, fontFamily: F.body }}>{product.badge}</div>}
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             {[1, 2, 3, 4].map(i => (
-              <div key={i} style={{ flex: 1, aspectRatio: "1", background: `linear-gradient(135deg, ${C.cream2} 0%, ${C.wheat}44 100%)`, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, border: i === 1 ? `2px solid ${C.saffron}` : `0.5px solid ${C.wheat}`, cursor: "pointer" }}>{product.emoji}</div>
+              <div key={i} style={{ flex: 1, aspectRatio: "1", background: `linear-gradient(135deg, ${C.cream2} 0%, ${C.wheat}44 100%)`, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, border: i === 1 ? `2px solid ${C.saffron}` : `0.5px solid ${C.wheat}`, cursor: "pointer" }}>{(product.imageUrl || (product.images && product.images[0] && product.images[0].url)) ? <img src={product.imageUrl || (product.images && product.images[0] && product.images[0].url) || ""} alt={product.name || ""} style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: "inherit" }} /> : product.emoji}</div>
             ))}
           </div>
         </div>
