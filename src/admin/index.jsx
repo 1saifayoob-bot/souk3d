@@ -497,10 +497,12 @@ function ProductFormModal({ product, onSave, onClose }) {
                 </div>
                 {idx === 0 && <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, textAlign: "center", fontSize: 8, fontWeight: 700, color: COLORS.saffron, background: "rgba(255,255,255,0.85)", padding: "1px 0", borderRadius: "0 0 10px 10px" }}>COVER</div>}
                 <button onClick={() => removeImage(idx)} style={{ position: "absolute", top: -6, right: -6, width: 18, height: 18, borderRadius: "50%", background: "#ef4444", color: "#fff", border: "none", cursor: "pointer", fontSize: 12, lineHeight: "18px", padding: 0 }}>×</button>
-                <div style={{ display: "flex", gap: 2, marginTop: 4, justifyContent: "center" }}>
+                <div style={{ display: "flex", gap: 3, marginTop: 5, flexWrap: "wrap", justifyContent: "center" }}>
                   {BG_STYLES.map(bg => (
-                    <div key={bg.id} onClick={() => updateImageBg(idx, bg.id)}
-                      style={{ width: 11, height: 11, borderRadius: "50%", background: bg.colors[0], border: `2px solid ${img.bg===bg.id ? COLORS.saffron : "transparent"}`, cursor: "pointer" }} />
+                    <button key={bg.id} onClick={() => updateImageBg(idx, bg.id)}
+                      style={{ padding: "2px 6px", fontSize: 9, fontFamily: FONTS.body, fontWeight: img.bg===bg.id ? 700 : 400, borderRadius: 4, border: `1.5px solid ${img.bg===bg.id ? COLORS.saffron : COLORS.wheat}`, background: img.bg===bg.id ? COLORS.saffronLight : "#fff", color: img.bg===bg.id ? COLORS.saffron : COLORS.textMuted, cursor: "pointer", whiteSpace: "nowrap" }}>
+                      {bg.label}
+                    </button>
                   ))}
                 </div>
                 <div style={{ display: "flex", gap: 2, marginTop: 3, justifyContent: "center" }}>
