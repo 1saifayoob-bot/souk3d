@@ -513,9 +513,6 @@ function ProductFormModal({ product, onSave, onClose }) {
             </div>
           </div>
         )}
-        <div style={{ display: "none" }}>
-          </div>
-        </div>
         {field("اسم المنتج (Arabic)", "name_ar", "text", "e.g. لوحة الاسم الدمشقية", true)}
         <div style={{ marginBottom: 14 }}>
           <label style={labelStyle}>DESCRIPTION</label>
