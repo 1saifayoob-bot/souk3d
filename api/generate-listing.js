@@ -44,11 +44,11 @@ export default async function handler(req, res) {
 
   const imageSource = buildImageSource(image);
 
-  const promptText = `You are an expert e-commerce copywriter specialising in handmade Arab heritage products sold to the Arab diaspora worldwide. Generate a complete product listing.
+  const promptText = `You are an expert e-commerce SEO copywriter for Souk3D, a store selling handmade and 3D-printed gifts and decor. Write a complete, SEO-optimised product listing based strictly on the ACTUAL product shown or described. IMPORTANT: do not invent a country, nationality, culture, religion or heritage that is not clearly visible in the image or stated in the details below; if none is indicated, write a universal, product-focused listing.
 
 ${imageSource ? "An image of the product is attached. Study it carefully — identify what the item is, its materials, colours, craftsmanship and style — and base the listing on what you actually see in the image.\n" : ""}Product Name: ${name || "(infer an appropriate name from the image)"}
 Category: ${category || "(infer the most fitting category from the product)"}
-Heritage/Country: ${country || "Arab World"}
+Country/heritage (optional, only if clearly relevant): ${country || "(none specified - do not assume one)"}
 Additional hints: ${hints || "none"}
 
 Respond with ONLY a JSON object — no markdown, no code fences, no commentary — with EXACTLY these fields:
