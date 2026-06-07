@@ -378,7 +378,19 @@ function ProductFormModal({ product, onSave, onClose }) {
   const handleImageUpload = (file) => {
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (e) => set("imageUrl", e.target.result);
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 500;
+        const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+        set("imageUrl", canvas.toDataURL("image/jpeg", 0.82));
+      };
+      img.src = e.target.result;
+    };
     reader.readAsDataURL(file);
   };
   const handleGenerate = () => {
@@ -471,7 +483,7 @@ function ProductFormModal({ product, onSave, onClose }) {
             {form.imageUrl ? (
               <div style={{ display: "flex", alignItems: "center", gap: 14, width: "100%" }} onClick={e => e.stopPropagation()}>
                 <div style={{ width: 88, height: 88, borderRadius: 8, flexShrink: 0, overflow: "hidden", background: (BG_STYLES.find(b=>b.id===form.imageBg)||BG_STYLES[0]).colors ? `linear-gradient(135deg, ${(BG_STYLES.find(b=>b.id===form.imageBg)||BG_STYLES[0]).colors[0]}, ${(BG_STYLES.find(b=>b.id===form.imageBg)||BG_STYLES[0]).colors[1]})` : "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <img src={form.imageUrl} alt="" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", mixBlendMode: "multiply" }} />
+                  <img src={form.imageUrl} alt="" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
                 </div>
                 <div style={{ flex: 1, textAlign: "left" }}>
                   <div style={{ fontFamily: FONTS.body, fontSize: 11, fontWeight: 600, color: COLORS.textMuted, marginBottom: 6, letterSpacing: 0.5 }}>BRAND BACKGROUND</div>
