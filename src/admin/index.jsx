@@ -457,28 +457,37 @@ function ProductFormModal({ product, onSave, onClose }) {
   const [imgBusy, setImgBusy] = useState(false);
   const [bgBusy, setBgBusy] = useState(null);
   const handleGenerate = async () => {
-    if (!form.name.trim() && !(form.images && form.images[0] && form.images[0].url)) { alert("Add a product name or image first."); return; }
+    if (!form.name.trim() && !(form.images && form.images[0] && form.images[0].url)) {
+      alert("Add a product name or image first.");
+      return;
+    }
     setGenerating(true);
-    const __gp = genPreview;
-    const __refineHints = __gp ? ((form.hint || "") + " || Refine this existing draft based on my edits: keep my wording where I changed it, fix grammar, polish, and return all fields consistent. EN title: " + (__gp.title_en||"") + " | AR title: " + (__gp.name_ar||"") + " | EN desc: " + (__gp.desc||"") + " | AR desc: " + (__gp.desc_ar||"") + " | Keywords: " + ((__gp.keywords||[]).join(", ")) + " | Badge: " + (__gp.badge||"")).trim() : (form.hint || "");
     try {
+      const draftBits = [];
+      if (form.name) draftBits.push("Current English title: " + form.name);
+      if (form.desc) draftBits.push("Current English description: " + form.desc);
+      if (form.name_ar) draftBits.push("Current Arabic title: " + form.name_ar);
+      if (form.desc_ar) draftBits.push("Current Arabic description: " + form.desc_ar);
+      const refineHints = draftBits.length
+        ? ((form.hint || "") + " || Improve and refine this existing draft, keeping my wording and intent where I set it, fixing grammar and polishing, and return all fields consistent. " + draftBits.join(" | "))
+        : (form.hint || "");
       const res = await fetch("/api/generate-listing", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: form.name, category: form.category, country: form.country, hints: __refineHints, image: (form.images && form.images[0] && form.images[0].url) || "" }),
+        body: JSON.stringify({ name: form.name, category: form.category, country: form.country, hints: refineHints, image: (form.images && form.images[0] && form.images[0].url) || "" }),
       });
       if (!res.ok) throw new Error("API error " + res.status);
       const data = await res.json();
-      setGenPreview({
-        name_ar: data.title_ar || "",
-        desc: data.desc_en || "",
-        desc_ar: data.desc_ar || "",
-        price: String(data.price_suggestion || form.price || "44.99"),
-        badge: data.badge || "",
-        keywords: data.keywords || [],
-        title_en: data.title_en || form.name,
-      });
-    } catch(e) {
+      setForm((f) => ({
+        ...f,
+        name: data.title_en || f.name,
+        name_ar: data.title_ar || f.name_ar,
+        desc: data.desc_en || f.desc,
+        desc_ar: data.desc_ar || f.desc_ar,
+        price: f.price || String(data.price_suggestion || ""),
+        badge: f.badge || data.badge || "",
+      }));
+    } catch (e) {
       alert("Generation failed: " + e.message);
     }
     setGenerating(false);
