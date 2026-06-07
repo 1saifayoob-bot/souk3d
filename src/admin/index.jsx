@@ -400,15 +400,7 @@ function ProductFormModal({ product, onSave, onClose }) {
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
   const fileRef = useRef(null);
   const compressImg = (file) =>
-    new Promise(async (res) => {
-      let src = file;
-      try {
-        const { removeBackground } = await import("@imgly/background-removal");
-        src = await removeBackground(file);
-      } catch (err) {
-        console.warn("Background removal failed; using original image", err);
-        src = file;
-      }
+    new Promise((res) => {
       const reader = new FileReader();
       reader.onload = (e) => {
         const img = new Image();
@@ -424,20 +416,36 @@ function ProductFormModal({ product, onSave, onClose }) {
         };
         img.src = e.target.result;
       };
-      reader.readAsDataURL(src);
+      reader.readAsDataURL(file);
     });
   const handleImageUpload = async (files) => {
     const remaining = 5 - form.images.length;
     const picked = Array.from(files).slice(0, remaining);
     if (picked.length === 0) return;
-    setImgBusy(true);
+    for (const file of picked) {
+      const url = await compressImg(file);
+      setForm((f) => ({ ...f, images: [...f.images, { url, original: url, bg: "cream", bgRemoved: false }] }));
+    }
+  };
+
+  const toggleRemoveBg = async (idx) => {
+    const target = form.images[idx];
+    if (!target) return;
+    if (target.bgRemoved) {
+      setForm((f) => { const a = [...f.images]; a[idx] = { ...a[idx], url: a[idx].original || a[idx].url, bgRemoved: false }; return { ...f, images: a }; });
+      return;
+    }
+    setBgBusy(idx);
     try {
-      for (const file of picked) {
-        const url = await compressImg(file);
-        setForm((f) => ({ ...f, images: [...f.images, { url, bg: "cream" }] }));
-      }
+      const { removeBackground } = await import("@imgly/background-removal");
+      const blob = await removeBackground(target.original || target.url);
+      const url = await compressImg(blob);
+      setForm((f) => { const a = [...f.images]; a[idx] = { ...a[idx], url, bgRemoved: true }; return { ...f, images: a }; });
+    } catch (err) {
+      console.warn("Background removal failed", err);
+      alert("Background removal failed - please try again.");
     } finally {
-      setImgBusy(false);
+      setBgBusy(null);
     }
   };
   const removeImage = (idx) => setForm(f => ({ ...f, images: f.images.filter((_,i) => i!==idx) }));
@@ -447,6 +455,7 @@ function ProductFormModal({ product, onSave, onClose }) {
   const [genPreview, setGenPreview] = useState(null);
   const [generating, setGenerating] = useState(false);
   const [imgBusy, setImgBusy] = useState(false);
+  const [bgBusy, setBgBusy] = useState(null);
   const handleGenerate = async () => {
     if (!form.name.trim() && !(form.images && form.images[0] && form.images[0].url)) { alert("Add a product name or image first."); return; }
     setGenerating(true);
@@ -539,148 +548,141 @@ function ProductFormModal({ product, onSave, onClose }) {
   );
 
   return (
-    <>
-      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(42,31,24,0.55)", zIndex: 200 }} />
-      <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: "min(520px, 96vw)", background: COLORS.cream, zIndex: 201, boxShadow: "-20px 0 60px rgba(0,0,0,0.35)", animation: "slideIn 0.3s ease", overflowY: "auto", padding: 28, boxSizing: "border-box" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-          <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal }}>{product ? "Edit Product" : "New Product"}</div>
-          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: COLORS.textMuted }}>✕</button>
-        </div>
-
-        {/* Name + Generate */}
-        <div style={{ marginBottom: 14 }}>
-          <label style={labelStyle}>PRODUCT NAME (English)</label>
-          <div style={{ display: "flex", gap: 8 }}>
-            <input type="text" value={form.name} onChange={e => set("name", e.target.value)}
-              placeholder="e.g. Damascus Name Plaque" style={{ ...inputStyle(false), flex: 1 }} />
-            <button onClick={handleGenerate} disabled={generating} style={{ padding: "8px 14px", background: generating ? COLORS.textMuted : COLORS.saffron, color: "#fff", border: "none", borderRadius: 8, cursor: generating ? "not-allowed" : "pointer", fontFamily: FONTS.body, fontSize: 12, fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0 }}>{generating ? ((form.images && form.images[0] && form.images[0].url) ? "⏳ Generating from your photo…" : "⏳ Generating…") : "✨ Generate"}</button>
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(40,31,24,0.5)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "24px 12px", overflowY: "auto", zIndex: 1000 }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 720, background: COLORS.cream, borderRadius: 14, border: "1px solid " + COLORS.wheat, overflow: "hidden", fontFamily: FONTS.body, color: COLORS.charcoal }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", borderBottom: "1px solid " + COLORS.wheat, background: "#fff" }}>
+          <div>
+            <div style={{ fontFamily: FONTS.display, fontSize: 23, fontWeight: 600, lineHeight: 1 }}>{product ? "Edit product" : "New product"}</div>
+            <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 3 }}>Create a professional storefront listing</div>
           </div>
-          <input type="text" value={form.hint||""} onChange={e => set("hint", e.target.value)}
-            placeholder="Add hints for better SEO: e.g. 3D printed, Eid gift, metallic, Islamic art..."
-            style={{ ...inputStyle(false), marginTop: 6, fontSize: 11 }} />
+          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 22, color: COLORS.textMuted, cursor: "pointer", lineHeight: 1 }}>×</button>
         </div>
-        {genPreview && (
-            <div style={{ background: "#fff", border: "1.5px solid " + COLORS.saffron, borderRadius: 12, padding: 16, marginBottom: 14 }}>
-              <div style={{ fontFamily: FONTS.body, fontSize: 11, fontWeight: 700, color: COLORS.saffron, letterSpacing: 0.5, marginBottom: 10 }}>✨ GENERATED PREVIEW · EDIT, THEN ACCEPT OR REGENERATE</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
-                <div>
-                  <div style={{ fontSize: 10, fontWeight: 600, color: COLORS.textMuted, marginBottom: 3 }}>ENGLISH NAME</div>
-                  <input value={genPreview.title_en || ""} onChange={(e) => setGenPreview((p) => ({ ...p, title_en: e.target.value }))} style={{ ...inputStyle(false), fontSize: 13 }} />
+        <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: 14, padding: 16 }}>
+          <div>
+            {genPreview && (
+              <div style={{ background: "#fff", border: "1.5px solid " + COLORS.saffron, borderRadius: 12, padding: 14, marginBottom: 14 }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.saffronDark, letterSpacing: 0.5, marginBottom: 10, textTransform: "uppercase" }}>✨ AI preview — edit, then accept or regenerate</div>
+                <label style={labelStyle}>ENGLISH NAME</label>
+                <input value={genPreview.title_en || ""} onChange={(e) => setGenPreview((p) => ({ ...p, title_en: e.target.value }))} style={{ ...inputStyle(false), marginBottom: 8 }} />
+                <label style={{ ...labelStyle, textAlign: "right" }}>ARABIC NAME</label>
+                <input dir="rtl" value={genPreview.name_ar || ""} onChange={(e) => setGenPreview((p) => ({ ...p, name_ar: e.target.value }))} style={{ ...inputStyle(true), marginBottom: 8 }} />
+                <label style={labelStyle}>DESCRIPTION (EN)</label>
+                <textarea value={genPreview.desc || ""} onChange={(e) => setGenPreview((p) => ({ ...p, desc: e.target.value }))} rows={3} style={{ ...inputStyle(false), resize: "vertical", marginBottom: 8 }} />
+                <label style={{ ...labelStyle, textAlign: "right" }}>DESCRIPTION (AR)</label>
+                <textarea dir="rtl" value={genPreview.desc_ar || ""} onChange={(e) => setGenPreview((p) => ({ ...p, desc_ar: e.target.value }))} rows={3} style={{ ...inputStyle(true), resize: "vertical", marginBottom: 8 }} />
+                <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+                  <div style={{ flex: 1 }}><label style={labelStyle}>PRICE</label><input value={genPreview.price || ""} onChange={(e) => setGenPreview((p) => ({ ...p, price: e.target.value }))} style={inputStyle(false)} /></div>
+                  <div style={{ flex: 1 }}><label style={labelStyle}>BADGE</label><input value={genPreview.badge || ""} onChange={(e) => setGenPreview((p) => ({ ...p, badge: e.target.value }))} style={inputStyle(false)} /></div>
                 </div>
-                <div>
-                  <div style={{ fontSize: 10, fontWeight: 600, color: COLORS.textMuted, marginBottom: 3 }}>ARABIC NAME</div>
-                  <input value={genPreview.name_ar || ""} onChange={(e) => setGenPreview((p) => ({ ...p, name_ar: e.target.value }))} dir="rtl" style={{ ...inputStyle(false), fontSize: 14, fontFamily: FONTS.arabic, textAlign: "right" }} />
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={acceptGenerate} style={{ flex: 1, padding: "8px 0", background: COLORS.saffron, color: "#fff", border: "none", borderRadius: 7, cursor: "pointer", fontFamily: FONTS.body, fontSize: 13, fontWeight: 600 }}>✓ Accept</button>
+                  <button onClick={handleGenerate} disabled={generating} style={{ flex: 1, padding: "8px 0", background: "#fff", color: COLORS.saffron, border: "1px solid " + COLORS.saffron, borderRadius: 7, cursor: generating ? "not-allowed" : "pointer", fontFamily: FONTS.body, fontSize: 13, fontWeight: 600 }}>{generating ? "⏳ Regenerating…" : "🔄 Regenerate"}</button>
+                  <button onClick={() => setGenPreview(null)} style={{ flex: "0 0 80px", padding: "8px 0", background: "#fff", color: COLORS.textMuted, border: "1px solid " + COLORS.wheat, borderRadius: 7, cursor: "pointer", fontFamily: FONTS.body, fontSize: 13 }}>Dismiss</button>
                 </div>
-              </div>
-              <div style={{ marginBottom: 8 }}>
-                <div style={{ fontSize: 10, fontWeight: 600, color: COLORS.textMuted, marginBottom: 3 }}>DESCRIPTION (EN)</div>
-                <textarea value={genPreview.desc || ""} onChange={(e) => setGenPreview((p) => ({ ...p, desc: e.target.value }))} rows={3} style={{ ...inputStyle(false), fontSize: 12, lineHeight: 1.5, resize: "vertical" }} />
-              </div>
-              <div style={{ marginBottom: 10 }}>
-                <div style={{ fontSize: 10, fontWeight: 600, color: COLORS.textMuted, marginBottom: 3 }}>DESCRIPTION (AR)</div>
-                <textarea value={genPreview.desc_ar || ""} onChange={(e) => setGenPreview((p) => ({ ...p, desc_ar: e.target.value }))} dir="rtl" rows={3} style={{ ...inputStyle(false), fontSize: 13, fontFamily: FONTS.arabic, textAlign: "right", lineHeight: 1.6, resize: "vertical" }} />
-              </div>
-              <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
-                <div style={{ flex: "0 0 96px" }}>
-                  <div style={{ fontSize: 10, fontWeight: 600, color: COLORS.textMuted, marginBottom: 3 }}>PRICE</div>
-                  <input value={genPreview.price || ""} onChange={(e) => setGenPreview((p) => ({ ...p, price: e.target.value }))} style={{ ...inputStyle(false), fontSize: 12 }} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 10, fontWeight: 600, color: COLORS.textMuted, marginBottom: 3 }}>BADGE</div>
-                  <input value={genPreview.badge || ""} onChange={(e) => setGenPreview((p) => ({ ...p, badge: e.target.value }))} placeholder="Best Seller / New / Sale / Limited" style={{ ...inputStyle(false), fontSize: 12 }} />
-                </div>
-              </div>
-              {genPreview.keywords && genPreview.keywords.length > 0 && (
-                <div style={{ marginBottom: 10 }}>
-                  <div style={{ fontSize: 10, fontWeight: 600, color: COLORS.textMuted, marginBottom: 4 }}>SEO KEYWORDS</div>
-                  <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-                    {genPreview.keywords.map((k, i) => (<span key={i} style={{ background: COLORS.cream2, color: COLORS.charcoal, fontSize: 10, padding: "2px 8px", borderRadius: 12, fontFamily: FONTS.body }}>{k}</span>))}
-                  </div>
-                </div>
-              )}
-              <div style={{ display: "flex", gap: 8 }}>
-                <button onClick={acceptGenerate} style={{ flex: 1, padding: "8px 0", background: COLORS.saffron, color: "#fff", border: "none", borderRadius: 7, cursor: "pointer", fontFamily: FONTS.body, fontSize: 13, fontWeight: 600 }}>✓ Accept</button>
-                <button onClick={handleGenerate} disabled={generating} style={{ flex: 1, padding: "8px 0", background: "#fff", color: COLORS.saffron, border: "1px solid " + COLORS.saffron, borderRadius: 7, cursor: generating ? "not-allowed" : "pointer", fontFamily: FONTS.body, fontSize: 13, fontWeight: 600 }}>{generating ? "⏳ Regenerating…" : "🔄 Regenerate"}</button>
-                <button onClick={() => setGenPreview(null)} style={{ flex: "0 0 84px", padding: "8px 0", background: "#fff", color: COLORS.textMuted, border: "1px solid " + COLORS.wheat, borderRadius: 7, cursor: "pointer", fontFamily: FONTS.body, fontSize: 13 }}>Dismiss</button>
-              </div>
-            </div>
-          )}
-        {field("اسم المنتج (Arabic)", "name_ar", "text", "e.g. لوحة الاسم الدمشقية", true)}
-        <div style={{ marginBottom: 14 }}>
-          <label style={labelStyle}>DESCRIPTION</label>
-          <textarea value={form.desc} onChange={e => set("desc", e.target.value)}
-            placeholder="Product description shown on the storefront…" rows={3}
-            style={{ ...inputStyle(false), resize: "vertical" }} />
-        </div>
-        {/* Multi-Image Upload */}
-        <div style={{ marginBottom: 14 }}>
-          <label style={labelStyle}>PRODUCT IMAGES <span style={{ color: COLORS.textMuted, fontWeight: 400 }}>(up to 5)</span></label>
-          <input ref={fileRef} type="file" accept="image/*" multiple style={{ display: "none" }}
-            onChange={e => handleImageUpload(e.target.files)} />
-          {imgBusy && (
-            <div style={{ fontSize: 11, color: COLORS.saffron, fontFamily: FONTS.body, marginBottom: 8 }}>⏳ Removing background… (first time may take a few seconds)</div>
-          )}
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
-            {form.images.map((img, idx) => (
-              <div key={idx} style={{ position: "relative", display: "inline-block" }}>
-                <div style={{ width: 90, height: 90, borderRadius: 10, background: getBgGrad(img.bg), display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", border: `2px solid ${COLORS.wheat}`, position: "relative" }}>
-                  <img src={img.url} alt="" style={{ maxWidth: "88%", maxHeight: "88%", objectFit: "contain" }} />
-                  {idx === 0 && <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, textAlign: "center", fontSize: 8, fontWeight: 700, color: "#fff", background: COLORS.saffron, padding: "2px 0" }}>COVER</div>}
-                </div>
-                <button onClick={() => removeImage(idx)} style={{ position: "absolute", top: -6, right: -6, width: 18, height: 18, borderRadius: "50%", background: "#ef4444", color: "#fff", border: "none", cursor: "pointer", fontSize: 12, lineHeight: "18px", padding: 0, zIndex: 10 }}>×</button>
-                <select value={img.bg} onChange={e => updateImageBg(idx, e.target.value)}
-                  style={{ width: 90, marginTop: 5, padding: "2px 4px", fontSize: 10, borderRadius: 5, border: `1px solid ${COLORS.wheat}`, fontFamily: FONTS.body, background: "#fff", color: COLORS.charcoal, cursor: "pointer", outline: "none" }}>
-                  {BG_STYLES.map(bg => <option key={bg.id} value={bg.id}>{bg.label}</option>)}
-                </select>
-                <div style={{ display: "flex", gap: 2, marginTop: 3, justifyContent: "center" }}>
-                  {idx>0 && <button onClick={() => moveImage(idx,-1)} style={{ fontSize: 10, padding: "1px 5px", border: `1px solid ${COLORS.wheat}`, borderRadius: 4, background: "#fff", cursor: "pointer" }}>←</button>}
-                  {idx<form.images.length-1 && <button onClick={() => moveImage(idx,1)} style={{ fontSize: 10, padding: "1px 5px", border: `1px solid ${COLORS.wheat}`, borderRadius: 4, background: "#fff", cursor: "pointer" }}>→</button>}
-                </div>
-              </div>
-            ))}
-            {form.images.length < 5 && (
-              <div onClick={() => fileRef.current.click()} style={{ width: 90, height: 90, borderRadius: 10, border: `2px dashed ${COLORS.wheat}`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", background: "#fff", color: COLORS.textMuted }}>
-                <div style={{ fontSize: 22 }}>+</div>
-                <div style={{ fontSize: 10, fontFamily: FONTS.body }}>Add photo</div>
               </div>
             )}
+            <div style={{ background: "#fff", border: "1px solid " + COLORS.wheat, borderRadius: 12, padding: "14px 15px", marginBottom: 14 }}>
+              <div style={{ fontSize: 11, letterSpacing: 0.5, textTransform: "uppercase", color: COLORS.saffronDark, fontWeight: 600, marginBottom: 11 }}>Product details</div>
+              <label style={labelStyle}>PRODUCT NAME (English)</label>
+              <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+                <input type="text" value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="e.g. Damascus Name Plaque" style={{ ...inputStyle(false), flex: 1 }} />
+                <button onClick={handleGenerate} disabled={generating} style={{ background: generating ? COLORS.textMuted : COLORS.saffron, color: "#fff", border: "none", borderRadius: 8, padding: "0 14px", fontWeight: 600, fontSize: 12.5, fontFamily: FONTS.body, cursor: generating ? "not-allowed" : "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>{generating ? "⏳…" : "✨ Generate"}</button>
+              </div>
+              <input type="text" value={form.hint} onChange={(e) => set("hint", e.target.value)} placeholder="Add hints for better SEO — e.g. 3D printed, Eid gift, metallic" style={{ ...inputStyle(false), fontSize: 11.5, marginBottom: 10 }} />
+              <label style={{ ...labelStyle, textAlign: "right" }}>اسم المنتج (Arabic)</label>
+              <input type="text" dir="rtl" value={form.name_ar} onChange={(e) => set("name_ar", e.target.value)} placeholder="مثال: لوحة الاسم" style={inputStyle(true)} />
+            </div>
+            <div style={{ background: "#fff", border: "1px solid " + COLORS.wheat, borderRadius: 12, padding: "14px 15px", marginBottom: 14 }}>
+              <div style={{ fontSize: 11, letterSpacing: 0.5, textTransform: "uppercase", color: COLORS.saffronDark, fontWeight: 600, marginBottom: 11 }}>Product images <span style={{ color: COLORS.textMuted, fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(up to 5)</span></div>
+              <input ref={fileRef} type="file" accept="image/*" multiple style={{ display: "none" }} onChange={(e) => handleImageUpload(e.target.files)} />
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                {form.images.map((img, idx) => (
+                  <div key={idx} style={{ width: 92 }}>
+                    <div style={{ position: "relative", width: 92, height: 92, borderRadius: 9, overflow: "hidden", background: getBgGrad(img.bg) }}>
+                      <img src={img.url} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                      <button onClick={() => removeImage(idx)} style={{ position: "absolute", top: 3, right: 3, width: 18, height: 18, borderRadius: "50%", background: COLORS.terracotta, color: "#fff", border: "none", fontSize: 11, cursor: "pointer", lineHeight: 1 }}>×</button>
+                      {idx === 0 && <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: COLORS.saffron, color: "#fff", fontSize: 8, fontWeight: 600, textAlign: "center", letterSpacing: 0.5, padding: "2px 0" }}>COVER</div>}
+                    </div>
+                    <label style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 6, background: "#FBF4E4", border: "1px solid " + COLORS.wheat, borderRadius: 7, padding: "4px 6px", cursor: "pointer", fontSize: 10 }}>
+                      <input type="checkbox" checked={!!img.bgRemoved} onChange={() => toggleRemoveBg(idx)} disabled={bgBusy === idx} style={{ margin: 0 }} />
+                      <span style={{ color: COLORS.textMuted, flex: 1 }}>{bgBusy === idx ? "Removing…" : "Remove bg"}</span>
+                    </label>
+                    <select value={img.bg} onChange={(e) => updateImageBg(idx, e.target.value)} style={{ ...inputStyle(false), marginTop: 5, fontSize: 10.5, padding: "4px 6px", cursor: "pointer" }}>
+                      {BG_STYLES.map((b) => <option key={b.id} value={b.id}>{b.label} bg</option>)}
+                    </select>
+                  </div>
+                ))}
+                {form.images.length < 5 && (
+                  <div onClick={() => fileRef.current && fileRef.current.click()} style={{ width: 92, height: 92, borderRadius: 9, border: "1.5px dashed " + COLORS.wheat, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: COLORS.saffronDark, cursor: "pointer" }}>
+                    <span style={{ fontSize: 20 }}>+</span>
+                    <span style={{ fontSize: 10.5, marginTop: 3 }}>Add photo</span>
+                  </div>
+                )}
+              </div>
+              <button onClick={handleGenerate} disabled={generating || !(form.images && form.images[0] && form.images[0].url)} style={{ width: "100%", marginTop: 12, background: "#FBEFD8", color: COLORS.saffronDark, border: "1px solid #E6C886", borderRadius: 8, padding: "9px 0", fontWeight: 600, fontSize: 12.5, fontFamily: FONTS.body, cursor: (form.images && form.images[0] && form.images[0].url) ? "pointer" : "not-allowed", opacity: (form.images && form.images[0] && form.images[0].url) ? 1 : 0.55 }}>{generating ? "⏳ Generating from photo…" : "📷 Generate listing from this photo"}</button>
+              <button disabled style={{ width: "100%", marginTop: 8, background: "#F3ECDB", color: "#9A8B73", border: "1px dashed " + COLORS.wheat, borderRadius: 8, padding: "8px 0", fontWeight: 600, fontSize: 12, fontFamily: FONTS.body, cursor: "not-allowed" }}>✨ Generate product image (AI) — coming soon</button>
+              <div style={{ fontSize: 10.5, color: COLORS.textMuted, marginTop: 8, lineHeight: 1.45 }}>The AI reads your photo to write the whole listing. Background removal is off by default — toggle it per image for a clean cut-out.</div>
+            </div>
+            <div style={{ background: "#fff", border: "1px solid " + COLORS.wheat, borderRadius: 12, padding: "14px 15px" }}>
+              <div style={{ fontSize: 11, letterSpacing: 0.5, textTransform: "uppercase", color: COLORS.saffronDark, fontWeight: 600, marginBottom: 11 }}>Description</div>
+              <label style={labelStyle}>ENGLISH</label>
+              <textarea value={form.desc} onChange={(e) => set("desc", e.target.value)} placeholder="Product description shown on the storefront…" rows={3} style={{ ...inputStyle(false), resize: "vertical", marginBottom: 10 }} />
+              <label style={{ ...labelStyle, textAlign: "right" }}>العربية</label>
+              <textarea dir="rtl" value={form.desc_ar} onChange={(e) => set("desc_ar", e.target.value)} placeholder="وصف المنتج" rows={3} style={{ ...inputStyle(true), resize: "vertical" }} />
+            </div>
           </div>
-          <button style={{ padding: "6px 12px", background: "none", border: `1px dashed ${COLORS.wheat}`, borderRadius: 6, cursor: "not-allowed", fontFamily: FONTS.body, fontSize: 11, color: COLORS.textMuted }}>
-            ✨ Generate with AI — coming soon
-          </button>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "72px 1fr", gap: 10 }}>
-          <div style={{ marginBottom: 14 }}>
-            <label style={{ ...labelStyle, fontSize: 9 }}>ICON</label>
-            <input type="text" value={form.emoji} onChange={e => set("emoji", e.target.value)}
-              placeholder="🏺" style={{ ...inputStyle(false), textAlign: "center", fontSize: 18, padding: "6px 8px" }} />
+          <div>
+            <div style={{ background: "#fff", border: "1px solid " + COLORS.wheat, borderRadius: 12, padding: "14px 15px", marginBottom: 14 }}>
+              <div style={{ fontSize: 11, letterSpacing: 0.5, textTransform: "uppercase", color: COLORS.saffronDark, fontWeight: 600, marginBottom: 11 }}>Status</div>
+              <select value={form.status} onChange={(e) => set("status", e.target.value)} style={{ ...inputStyle(false), cursor: "pointer", marginBottom: 11 }}>
+                <option value="active">Active</option>
+                <option value="draft">Draft</option>
+                <option value="out_of_stock">Out of stock</option>
+              </select>
+              <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 9, fontSize: 12, cursor: "pointer" }}>Featured on homepage<input type="checkbox" checked={!!form.featured} onChange={(e) => set("featured", e.target.checked)} /></label>
+              <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 12, cursor: "pointer" }}>Accepts custom text<input type="checkbox" checked={!!form.customizable} onChange={(e) => set("customizable", e.target.checked)} /></label>
+            </div>
+            <div style={{ background: "#fff", border: "1px solid " + COLORS.wheat, borderRadius: 12, padding: "14px 15px", marginBottom: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <div style={{ fontSize: 11, letterSpacing: 0.5, textTransform: "uppercase", color: COLORS.saffronDark, fontWeight: 600 }}>Pricing</div>
+                {form.price && form.cost ? <span style={{ fontSize: 10, background: "#EAF3DE", color: "#3B6D11", borderRadius: 6, padding: "2px 7px", fontWeight: 600 }}>Margin {Math.max(0, Math.round((1 - parseFloat(form.cost) / parseFloat(form.price)) * 100))}%</span> : null}
+              </div>
+              <label style={labelStyle}>PRICE</label>
+              <input type="number" value={form.price} onChange={(e) => set("price", e.target.value)} placeholder="0.00" style={{ ...inputStyle(false), marginBottom: 10 }} />
+              <div style={{ display: "flex", gap: 8 }}>
+                <div style={{ flex: 1 }}><label style={labelStyle}>COMPARE-AT</label><input type="number" value={form.compareAt} onChange={(e) => set("compareAt", e.target.value)} placeholder="0.00" style={inputStyle(false)} /></div>
+                <div style={{ flex: 1 }}><label style={labelStyle}>COST</label><input type="number" value={form.cost} onChange={(e) => set("cost", e.target.value)} placeholder="0.00" style={inputStyle(false)} /></div>
+              </div>
+            </div>
+            <div style={{ background: "#fff", border: "1px solid " + COLORS.wheat, borderRadius: 12, padding: "14px 15px", marginBottom: 14 }}>
+              <div style={{ fontSize: 11, letterSpacing: 0.5, textTransform: "uppercase", color: COLORS.saffronDark, fontWeight: 600, marginBottom: 11 }}>Inventory</div>
+              <label style={labelStyle}>STOCK</label>
+              <input type="number" value={form.stock} onChange={(e) => set("stock", e.target.value)} placeholder="0" style={inputStyle(false)} />
+            </div>
+            <div style={{ background: "#fff", border: "1px solid " + COLORS.wheat, borderRadius: 12, padding: "14px 15px" }}>
+              <div style={{ fontSize: 11, letterSpacing: 0.5, textTransform: "uppercase", color: COLORS.saffronDark, fontWeight: 600, marginBottom: 11 }}>Organization</div>
+              <label style={labelStyle}>CATEGORY</label>
+              <select value={form.category} onChange={(e) => set("category", e.target.value)} style={{ ...inputStyle(false), cursor: "pointer", marginBottom: 10 }}>
+                {["Home Decor", "Art", "Seasonal", "Kitchen", "Accessories", "Other"].map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+              <label style={labelStyle}>COUNTRY / HERITAGE</label>
+              <select value={form.country} onChange={(e) => set("country", e.target.value)} style={{ ...inputStyle(false), cursor: "pointer", marginBottom: 10 }}>
+                <option value="">None</option>
+                {Object.keys(COUNTRY_FLAGS).map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+              <div style={{ display: "flex", gap: 8 }}>
+                <div style={{ flex: 1 }}><label style={labelStyle}>BADGE</label><select value={form.badge} onChange={(e) => set("badge", e.target.value)} style={{ ...inputStyle(false), cursor: "pointer" }}><option value="">None</option><option>Best Seller</option><option>New</option><option>Sale</option><option>Limited</option></select></div>
+                <div style={{ width: 64 }}><label style={labelStyle}>ICON</label><input type="text" value={form.emoji} onChange={(e) => set("emoji", e.target.value)} style={{ ...inputStyle(false), textAlign: "center", fontSize: 16, padding: "6px 4px" }} /></div>
+              </div>
+            </div>
           </div>
-          {selectField("BADGE", "badge", [
-            { value: "", label: "None" },
-            { value: "Best Seller", label: "Best Seller" },
-            { value: "New", label: "New" },
-            { value: "Sale", label: "Sale" },
-            { value: "Limited", label: "Limited" },
-          ])}
         </div>
-
-        <div style={{ display: "flex", gap: 24, marginBottom: 20 }}>
-          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontFamily: FONTS.body, cursor: "pointer" }}>
-            <input type="checkbox" checked={!!form.featured} onChange={e => set("featured", e.target.checked)} />
-            Featured on homepage
-          </label>
-          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontFamily: FONTS.body, cursor: "pointer" }}>
-            <input type="checkbox" checked={!!form.customizable} onChange={e => set("customizable", e.target.checked)} />
-            Accepts custom text
-          </label>
-        </div>
-
-        <div style={{ display: "flex", gap: 8 }}>
-          <PrimaryBtn onClick={handleSave} style={{ flex: 1 }}>{product ? "Save Changes" : "Add Product"}</PrimaryBtn>
-          <GhostBtn onClick={onClose} style={{ flex: 1 }}>Cancel</GhostBtn>
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, padding: "14px 20px", borderTop: "1px solid " + COLORS.wheat, background: "#fff" }}>
+          <button onClick={onClose} style={{ background: "#fff", border: "1px solid " + COLORS.wheat, color: COLORS.textMuted, borderRadius: 8, padding: "9px 20px", fontSize: 13, fontWeight: 500, fontFamily: FONTS.body, cursor: "pointer" }}>Cancel</button>
+          <button onClick={handleSave} style={{ background: COLORS.saffron, border: "none", color: "#fff", borderRadius: 8, padding: "9px 24px", fontSize: 13, fontWeight: 600, fontFamily: FONTS.body, cursor: "pointer" }}>{product ? "Save changes" : "Add product"}</button>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
