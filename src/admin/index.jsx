@@ -351,10 +351,10 @@ function generateListing(name, category, country) {
   return { desc, name_ar: nameAr, price: String(priceTiers[category] || 44.99), badge };
 }
 const BG_STYLES = [
-  { id: "cream", label: "Cream", colors: ["#FAF3E7","#E8D5A8"] },
-  { id: "charcoal", label: "Charcoal", colors: ["#2A1F18","#3D2817"] },
-  { id: "saffron", label: "Saffron", colors: ["#FAF3E7","#E8B864"] },
-  { id: "white", label: "White", colors: ["#FFFFFF","#F5F5F5"] },
+  { id: "cream", label: "Cream", solid: "#E8D5A8", colors: ["#E8D5A8","#D4B896"] },
+  { id: "charcoal", label: "Charcoal", solid: "#2A1F18", colors: ["#2A1F18","#3D2817"] },
+  { id: "saffron", label: "Saffron", solid: "#D4881F", colors: ["#FAEBD0","#E8B864"] },
+  { id: "white", label: "White", solid: "#F8F8F8", colors: ["#FFFFFF","#F0F0F0"] },
 ];
 
 function ProductFormModal({ product, onSave, onClose }) {
@@ -491,12 +491,12 @@ function ProductFormModal({ product, onSave, onClose }) {
             onChange={e => handleImageUpload(e.target.files)} />
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
             {form.images.map((img, idx) => (
-              <div key={idx} style={{ position: "relative" }}>
-                <div style={{ width: 90, height: 90, borderRadius: 10, background: getBgGrad(img.bg), display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", border: `1.5px solid ${COLORS.wheat}` }}>
-                  <img src={img.url} alt="" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
+              <div key={idx} style={{ position: "relative", display: "inline-block" }}>
+                <div style={{ width: 90, height: 90, borderRadius: 10, background: getBgGrad(img.bg), display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", border: `2px solid ${COLORS.wheat}`, position: "relative" }}>
+                  <img src={img.url} alt="" style={{ maxWidth: "88%", maxHeight: "88%", objectFit: "contain" }} />
+                  {idx === 0 && <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, textAlign: "center", fontSize: 8, fontWeight: 700, color: "#fff", background: COLORS.saffron, padding: "2px 0" }}>COVER</div>}
                 </div>
-                {idx === 0 && <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, textAlign: "center", fontSize: 8, fontWeight: 700, color: COLORS.saffron, background: "rgba(255,255,255,0.85)", padding: "1px 0", borderRadius: "0 0 10px 10px" }}>COVER</div>}
-                <button onClick={() => removeImage(idx)} style={{ position: "absolute", top: -6, right: -6, width: 18, height: 18, borderRadius: "50%", background: "#ef4444", color: "#fff", border: "none", cursor: "pointer", fontSize: 12, lineHeight: "18px", padding: 0 }}>×</button>
+                <button onClick={() => removeImage(idx)} style={{ position: "absolute", top: -6, right: -6, width: 18, height: 18, borderRadius: "50%", background: "#ef4444", color: "#fff", border: "none", cursor: "pointer", fontSize: 12, lineHeight: "18px", padding: 0, zIndex: 10 }}>×</button>
                 <div style={{ display: "flex", gap: 3, marginTop: 5, flexWrap: "wrap", justifyContent: "center" }}>
                   {BG_STYLES.map(bg => (
                     <button key={bg.id} onClick={() => updateImageBg(idx, bg.id)}
