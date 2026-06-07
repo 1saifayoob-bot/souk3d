@@ -434,11 +434,44 @@ function ProductFormModal({ product, onSave, onClose }) {
   const updateImageBg = (idx, bg) => setForm(f => ({ ...f, images: f.images.map((img,i) => i===idx ? {...img,bg} : img) }));
   const getBgGrad = (bgId) => { const b=BG_STYLES.find(x=>x.id===bgId)||BG_STYLES[0]; return `linear-gradient(135deg,${b.colors[0]},${b.colors[1]})`; };
   const [genPreview, setGenPreview] = useState(null);
-  const handleGenerate = () => {
+  const [generating, setGenerating] = useState(false);
+  const handleGenerate = async () => {
     if (!form.name.trim()) { alert("Enter a product name first."); return; }
-    setGenPreview(generateListing(form.name, form.category, form.country, form.hint||""));
+    setGenerating(true);
+    try {
+      const res = await fetch("/api/generate-listing", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: form.name, category: form.category, country: form.country, hints: form.hint || "" }),
+      });
+      if (!res.ok) throw new Error("API error " + res.status);
+      const data = await res.json();
+      setGenPreview({
+        name_ar: data.title_ar || "",
+        desc: data.desc_en || "",
+        desc_ar: data.desc_ar || "",
+        price: String(data.price_suggestion || form.price || "44.99"),
+        badge: data.badge || "",
+        keywords: data.keywords || [],
+        title_en: data.title_en || form.name,
+      });
+    } catch(e) {
+      alert("Generation failed: " + e.message);
+    }
+    setGenerating(false);
   };
-  const acceptGenerate = () => { setForm(f => ({ ...f, name_ar:genPreview.name_ar, desc:genPreview.desc, desc_ar:genPreview.desc_ar||"", price:genPreview.price, badge:genPreview.badge||f.badge })); setGenPreview(null); };
+  const acceptGenerate = () => {
+    setForm(f => ({
+      ...f,
+      name: genPreview.title_en || f.name,
+      name_ar: genPreview.name_ar,
+      desc: genPreview.desc,
+      desc_ar: genPreview.desc_ar || "",
+      price: genPreview.price,
+      badge: genPreview.badge || f.badge,
+    }));
+    setGenPreview(null);
+  };
 
   const handleSave = () => {
     if (!form.name.trim() || !form.price) return alert("Name and price are required.");
@@ -506,7 +539,7 @@ function ProductFormModal({ product, onSave, onClose }) {
           <div style={{ display: "flex", gap: 8 }}>
             <input type="text" value={form.name} onChange={e => set("name", e.target.value)}
               placeholder="e.g. Damascus Name Plaque" style={{ ...inputStyle(false), flex: 1 }} />
-            <button onClick={handleGenerate} style={{ padding: "8px 14px", background: COLORS.saffron, color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontFamily: FONTS.body, fontSize: 12, fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0 }}>✨ Generate</button>
+            <button onClick={handleGenerate} disabled={generating} style={{ padding: "8px 14px", background: generating ? COLORS.textMuted : COLORS.saffron, color: "#fff", border: "none", borderRadius: 8, cursor: generating ? "not-allowed" : "pointer", fontFamily: FONTS.body, fontSize: 12, fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0 }}>{generating ? "⏳ Generating..." : "✨ Generate"}</button>
           </div>
           <input type="text" value={form.hint||""} onChange={e => set("hint", e.target.value)}
             placeholder="Add hints for better SEO: e.g. 3D printed, Eid gift, metallic, Islamic art..."
@@ -537,6 +570,14 @@ function ProductFormModal({ product, onSave, onClose }) {
               <span><strong>Price:</strong> {genPreview.price}</span>
               {genPreview.badge && <span><strong>Badge:</strong> {genPreview.badge}</span>}
             </div>
+            {genPreview.keywords && genPreview.keywords.length > 0 && (
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ fontSize: 10, fontWeight: 600, color: COLORS.textMuted, marginBottom: 4 }}>SEO KEYWORDS</div>
+                <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                  {genPreview.keywords.map((k,i) => <span key={i} style={{ background: COLORS.cream2, color: COLORS.charcoal, fontSize: 10, padding: "2px 8px", borderRadius: 12, fontFamily: FONTS.body }}>{k}</span>)}
+                </div>
+              </div>
+            )}
             <div style={{ display: "flex", gap: 8 }}>
               <button onClick={acceptGenerate} style={{ flex: 1, padding: "8px 0", background: COLORS.saffron, color: "#fff", border: "none", borderRadius: 7, cursor: "pointer", fontFamily: FONTS.body, fontSize: 13, fontWeight: 600 }}>✓ Accept</button>
               <button onClick={() => setGenPreview(null)} style={{ flex: 1, padding: "8px 0", background: "#fff", color: COLORS.textMuted, border: `1px solid ${COLORS.wheat}`, borderRadius: 7, cursor: "pointer", fontFamily: FONTS.body, fontSize: 13 }}>✕ Dismiss</button>
