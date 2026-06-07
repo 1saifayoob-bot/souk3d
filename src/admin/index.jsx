@@ -510,14 +510,7 @@ function ProductFormModal({ product, onSave, onClose }) {
           </div>
           <input type="text" value={form.hint||""} onChange={e => set("hint", e.target.value)}
             placeholder="Add hints for better SEO: e.g. 3D printed, Eid gift, metallic, Islamic art..."
-            style={{ ...inputStyle(false), marginTop: 6, fontSize: 11, color: COLORS.textMuted }} />
-          </div>
-        </div>
-        <div style={{ marginBottom: 14 }}>
-          <label style={labelStyle}>DESCRIPTION (Arabic) — اختياري</label>
-          <textarea value={form.desc_ar||""} onChange={e => set("desc_ar", e.target.value)}
-            placeholder="وصف المنتج بالعربية..." rows={2}
-            style={{ ...inputStyle(false), resize: "vertical", fontFamily: FONTS.arabic, direction: "rtl", fontSize: 14 }} />
+            style={{ ...inputStyle(false), marginTop: 6, fontSize: 11 }} />
         </div>
         {genPreview && (
           <div style={{ background: "#fff", border: `1.5px solid ${COLORS.saffron}`, borderRadius: 12, padding: 16, marginBottom: 14 }}>
@@ -532,7 +525,7 @@ function ProductFormModal({ product, onSave, onClose }) {
                 <div style={{ fontSize: 14, color: COLORS.charcoal, fontFamily: FONTS.arabic, direction: "rtl", textAlign: "right" }}>{genPreview.name_ar}</div>
               </div>
             </div>
-            <div style={{ marginBottom: 10 }}>
+            <div style={{ marginBottom: 8 }}>
               <div style={{ fontSize: 10, fontWeight: 600, color: COLORS.textMuted, marginBottom: 3 }}>DESCRIPTION (EN)</div>
               <div style={{ fontSize: 12, color: COLORS.charcoal, fontFamily: FONTS.body, lineHeight: 1.5 }}>{genPreview.desc}</div>
             </div>
