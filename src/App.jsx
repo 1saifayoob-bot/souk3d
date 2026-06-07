@@ -42,6 +42,7 @@ const STORE_PRODUCTS = (() => {
           reviews: parseInt(p.reviews) || 0,
           emoji: p.emoji || "🏺",
           desc: p.desc || "",
+          desc_ar: p.desc_ar || "",
           customizable: !!p.customizable,
         }));
     }
@@ -239,6 +240,7 @@ function ProductDetail({ product, onBack, onAddToCart }) {
             {product.compareAt && <span style={{ fontSize: 16, color: C.textMuted, textDecoration: "line-through" }}>${product.compareAt}</span>}
           </div>
           <p style={{ fontSize: 14, color: C.textMuted, fontFamily: F.body, lineHeight: 1.7, marginBottom: 20 }}>{product.desc}</p>
+          {product.desc_ar && <p dir="rtl" style={{ fontSize: 14, color: C.textMuted, fontFamily: F.arabic, lineHeight: 1.9, marginBottom: 20, textAlign: "right" }}>{product.desc_ar}</p>}
 
           {/* Customization card */}
           {product.customizable && (
