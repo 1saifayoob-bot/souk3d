@@ -332,24 +332,45 @@ const COUNTRY_FLAGS = {
 // ─── PRODUCT FORM MODAL ────────────────────────────────────────────────────────
 // ─── AI LISTING GENERATOR ──────────────────────────────────────────────────────
 const LISTING_TEMPLATES = {
-  "Home Decor": { intros: ["Handcrafted with meticulous care,","A timeless piece of craftsmanship,","Rooted in centuries of tradition,"], mids: ["this stunning piece brings the warmth of Arab heritage into your home.","this piece is the perfect centrepiece for any space.","this handmade creation tells a story of culture and artistry."], ctas: ["Perfect as a gift or a personal keepsake.","A conversation-starting addition to any home.","Cherished for generations."] },
-  "Art": { intros: ["A masterpiece of Arab artistry,","Born from skilled hands and a rich tradition,","Inspired by the beauty of the Arab world,"], mids: ["this original piece captures the soul of its heritage.","this artwork brings colour and culture to any wall.","this creation is a window into a vibrant cultural legacy."], ctas: ["Own a piece of living history.","Elevate your space with authentic art.","A unique statement piece."] },
-  "Seasonal": { intros: ["Celebrate in style with","Mark the occasion beautifully with","A special edition piece —"], mids: ["this festive creation crafted to honour your most cherished celebrations.","this seasonal piece designed to make every moment memorable.","this limited creation made to bring joy to the whole family."], ctas: ["Order early — these sell fast.","The perfect seasonal gift.","Limited availability."] },
-  "default": { intros: ["Crafted with passion and precision,","A beautiful example of Arab craftsmanship,","Made with love and tradition,"], mids: ["this unique piece reflects the rich cultural heritage of the Arab world.","this handmade item brings authenticity and warmth to its owner.","this carefully crafted item is a tribute to traditional artistry."], ctas: ["A meaningful gift for any occasion.","Ships worldwide.","Personalisation available on request."] },
+  "Home Decor": { intros: ["Handcrafted with meticulous care,","A timeless piece of Arab craftsmanship,","Rooted in centuries of tradition,"], mids: ["this stunning piece brings the warmth of heritage into your home.","this heirloom-quality piece elevates any living space.","this handmade creation tells a story of culture and artistry."], ctas: ["Perfect as a gift or a cherished personal keepsake.","A conversation-starting statement piece for any home.","Ships worldwide — loved by the Arab diaspora globally."] },
+  "Art": { intros: ["A masterpiece of Arab artistry,","Born from skilled hands and a rich cultural tradition,","Inspired by the beauty of the Arab world,"], mids: ["this original piece captures the soul of its heritage.","this artwork brings colour, culture, and meaning to any wall.","this creation is a window into a vibrant cultural legacy."], ctas: ["Own a piece of living history.","Elevate your space with authentic Arab art.","A truly unique collector's piece."] },
+  "Seasonal": { intros: ["Celebrate in style with","Mark the occasion beautifully with","A special limited-edition piece —"], mids: ["this festive creation crafted to honour your most cherished celebrations.","this seasonal piece designed to make every moment unforgettable.","this limited creation made to bring joy to the whole family."], ctas: ["Order early — quantities are limited.","The most thoughtful seasonal gift you can give.","Ships fast for the occasion."] },
+  "default": { intros: ["Crafted with passion and precision,","A beautiful expression of Arab craftsmanship,","Made with love and tradition,"], mids: ["this unique piece reflects the rich cultural heritage of the Arab world.","this handmade item brings authenticity and warmth to its owner.","this carefully crafted piece is a tribute to generations of artistry."], ctas: ["A meaningful gift for any occasion.","Ships worldwide — free gift wrapping available.","Personalisation available on request."] },
 };
-const ARABIC_PATTERNS = { "Plaque":"لوحة","Lantern":"فانوس","Frame":"إطار","Box":"صندوق","Stand":"حامل","Arch":"قوس","Tree":"شجرة","Map":"خريطة","Name":"اسم","Star":"نجمة","Moon":"هلال","Gift":"هدية","Wall":"جداري","Art":"فن","Decor":"ديكور","Custom":"مخصص","Set":"طقم","Holder":"حامل","Sign":"لافتة" };
-const COUNTRY_AR = { "Syria":"سوري","Palestine":"فلسطيني","Lebanon":"لبناني","Jordan":"أردني","Egypt":"مصري","Iraq":"عراقي","Morocco":"مغربي" };
-function generateListing(name, category, country) {
-  const tmpl = LISTING_TEMPLATES[category] || LISTING_TEMPLATES.default;
-  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
-  const desc = pick(tmpl.intros) + " " + pick(tmpl.mids) + " " + pick(tmpl.ctas);
-  const words = name.split(" ");
-  let nameAr = words.map(w => ARABIC_PATTERNS[w] || "").filter(Boolean).join(" ");
-  if (!nameAr) nameAr = (COUNTRY_AR[country] ? "قطعة " + COUNTRY_AR[country] + " مميزة" : "قطعة حرفية مميزة");
-  const priceTiers = { "Home Decor":44.99,"Art":89.99,"Seasonal":34.99,"Jewelry":59.99,"Accessories":29.99,"Other":39.99 };
-  const badge = category === "Seasonal" ? "Limited" : Math.random() > 0.6 ? "Best Seller" : "";
-  return { desc, name_ar: nameAr, price: String(priceTiers[category] || 44.99), badge };
+const AR_TEMPLATES = {
+  "Home Decor": ["مصنوع بعناية يدوية فائقة، هذه القطعة الفريدة تجلب دفء التراث العربي إلى منزلك. هدية مثالية تُحفظ للأجيال.","روعة الحرفية العربية في قطعة ديكور أصيلة تضيف لمسة من الأناقة والتميز لأي مكان.","قطعة حرفية أصيلة تحكي قصة حضارة وفن عريق. مثالية كهدية أو كإضافة راقية لديكور منزلك."],
+  "Art": ["تحفة فنية عربية أصيلة تعكس عمق الحضارة وجمال الإبداع التشكيلي. قطعة فريدة من نوعها تستحق الاقتناء.","إبداع فني يجمع بين الأصالة والمعاصرة — اقتنِ قطعة من روح التراث العربي الحي."],
+  "Seasonal": ["احتفل بمناسباتك الخاصة بأبهى الصور مع هذه القطعة الموسمية المميزة. محدود الكمية — اطلب الآن!","هدية موسمية أصيلة تعكس روح المناسبة وتُسعد كل من يحظى بها."],
+  "default": ["قطعة حرفية يدوية من أجود الخامات تجمع بين الجمال والجودة لتكون هدية لا تُنسى في كل مناسبة.","صُنعت بحب وإتقان لتعكس روح التراث العربي الأصيل. هدية مثالية تناسب جميع المناسبات.","حرفية عربية أصيلة في كل تفصيلة — قطعة فريدة تستحق الاقتناء والإهداء."],
+};
+const ARABIC_WORD_MAP = {
+  Green:"الأخضر",Blue:"الأزرق",Red:"الأحمر",Golden:"الذهبي",Silver:"الفضي",Black:"الأسود",White:"الأبيض",Dark:"الداكن",
+  Dome:"قبة",Plaque:"لوحة",Lantern:"فانوس",Frame:"إطار",Box:"صندوق",Stand:"حامل",Arch:"قوس",Tree:"شجرة",Map:"خريطة",
+  Star:"نجمة",Moon:"هلال",Gift:"هدية",Wall:"لوحة جدارية",Sign:"لافتة",Mosque:"مسجد",Palace:"قصر",Name:"اسم",
+  Damascus:"دمشقية",Palestinian:"فلسطينية",Lebanese:"لبنانية",Syrian:"سورية",Jordanian:"أردنية",Egyptian:"مصرية",
+  Eid:"العيد",Ramadan:"رمضان",Wedding:"زفاف",Olive:"زيتون",Cedar:"أرز",Custom:"مخصصة",
+};
+const COUNTRY_AR = { "Syria":"سوري","Palestine":"فلسطيني","Lebanon":"لبناني","Jordan":"أردني","Egypt":"مصري","Iraq":"عراقي","Morocco":"مغربي","Saudi Arabia":"سعودي","UAE":"إماراتي" };
+function generateListing(name, category, country, hints) {
+  hints = hints || "";
+  const tmpl=LISTING_TEMPLATES[category]||LISTING_TEMPLATES.default;
+  const arTmpl=AR_TEMPLATES[category]||AR_TEMPLATES.default;
+  const pick=function(a){return a[Math.floor(Math.random()*a.length)];};
+  const hintSuffix=hints.trim()?" — "+hints.trim():"";
+  const desc=pick(tmpl.intros)+" "+pick(tmpl.mids)+" "+pick(tmpl.ctas)+hintSuffix;
+  const hintAr=hints.trim()?(" | "+hints.split(",").slice(0,2).map(function(h){return h.trim();}).join("، ")):""; 
+  const desc_ar=pick(arTmpl)+hintAr;
+  const words=name.split(/[\s,\-]+/);
+  const arParts=words.map(function(w){return ARABIC_WORD_MAP[w]||ARABIC_WORD_MAP[w.charAt(0).toUpperCase()+w.slice(1)];}).filter(Boolean);
+  var name_ar;
+  if(arParts.length>=2){name_ar=arParts[0]+" "+arParts.slice(1).join(" ");}
+  else if(arParts.length===1){name_ar=arParts[0]+(COUNTRY_AR[country]?" - "+COUNTRY_AR[country]:"");}
+  else{name_ar=COUNTRY_AR[country]?"قطعة "+COUNTRY_AR[country]+" مميزة":"قطعة حرفية مميزة";}
+  const prices={"Home Decor":44.99,"Art":89.99,"Seasonal":34.99,"Jewelry":59.99,"Accessories":29.99,"Other":39.99};
+  const badge=category==="Seasonal"?"Limited":Math.random()>0.6?"Best Seller":"";
+  return {desc,desc_ar,name_ar,price:String(prices[category]||44.99),badge};
 }
+
 const BG_STYLES = [
   { id: "cream", label: "Cream", solid: "#E8D5A8", colors: ["#E8D5A8","#D4B896"] },
   { id: "charcoal", label: "Charcoal", solid: "#2A1F18", colors: ["#2A1F18","#3D2817"] },
@@ -363,6 +384,8 @@ function ProductFormModal({ product, onSave, onClose }) {
     price: "", compareAt: "", cost: "", stock: "", status: "active",
     featured: false, emoji: "🏺", desc: "", customizable: false, badge: "",
     images: [],
+    desc_ar: "",
+    hint: "",
   };
   const [form, setForm] = useState(product ? {
     ...product,
@@ -413,9 +436,9 @@ function ProductFormModal({ product, onSave, onClose }) {
   const [genPreview, setGenPreview] = useState(null);
   const handleGenerate = () => {
     if (!form.name.trim()) { alert("Enter a product name first."); return; }
-    setGenPreview(generateListing(form.name, form.category, form.country));
+    setGenPreview(generateListing(form.name, form.category, form.country, form.hint||""));
   };
-  const acceptGenerate = () => { setForm(f => ({ ...f, ...genPreview })); setGenPreview(null); };
+  const acceptGenerate = () => { setForm(f => ({ ...f, name_ar:genPreview.name_ar, desc:genPreview.desc, desc_ar:genPreview.desc_ar||"", price:genPreview.price, badge:genPreview.badge||f.badge })); setGenPreview(null); };
 
   const handleSave = () => {
     if (!form.name.trim() || !form.price) return alert("Name and price are required.");
@@ -485,6 +508,16 @@ function ProductFormModal({ product, onSave, onClose }) {
               placeholder="e.g. Damascus Name Plaque" style={{ ...inputStyle(false), flex: 1 }} />
             <button onClick={handleGenerate} style={{ padding: "8px 14px", background: COLORS.saffron, color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontFamily: FONTS.body, fontSize: 12, fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0 }}>✨ Generate</button>
           </div>
+          <input type="text" value={form.hint||""} onChange={e => set("hint", e.target.value)}
+            placeholder="Add hints for better SEO: e.g. 3D printed, Eid gift, metallic, Islamic art..."
+            style={{ ...inputStyle(false), marginTop: 6, fontSize: 11, color: COLORS.textMuted }} />
+          </div>
+        </div>
+        <div style={{ marginBottom: 14 }}>
+          <label style={labelStyle}>DESCRIPTION (Arabic) — اختياري</label>
+          <textarea value={form.desc_ar||""} onChange={e => set("desc_ar", e.target.value)}
+            placeholder="وصف المنتج بالعربية..." rows={2}
+            style={{ ...inputStyle(false), resize: "vertical", fontFamily: FONTS.arabic, direction: "rtl", fontSize: 14 }} />
         </div>
         {genPreview && (
           <div style={{ background: "#fff", border: `1.5px solid ${COLORS.saffron}`, borderRadius: 12, padding: 16, marginBottom: 14 }}>
@@ -500,8 +533,12 @@ function ProductFormModal({ product, onSave, onClose }) {
               </div>
             </div>
             <div style={{ marginBottom: 10 }}>
-              <div style={{ fontSize: 10, fontWeight: 600, color: COLORS.textMuted, marginBottom: 3 }}>DESCRIPTION</div>
+              <div style={{ fontSize: 10, fontWeight: 600, color: COLORS.textMuted, marginBottom: 3 }}>DESCRIPTION (EN)</div>
               <div style={{ fontSize: 12, color: COLORS.charcoal, fontFamily: FONTS.body, lineHeight: 1.5 }}>{genPreview.desc}</div>
+            </div>
+            <div style={{ marginBottom: 10 }}>
+              <div style={{ fontSize: 10, fontWeight: 600, color: COLORS.textMuted, marginBottom: 3 }}>DESCRIPTION (AR)</div>
+              <div style={{ fontSize: 13, color: COLORS.charcoal, fontFamily: FONTS.arabic, direction: "rtl", textAlign: "right", lineHeight: 1.6 }}>{genPreview.desc_ar}</div>
             </div>
             <div style={{ display: "flex", gap: 16, marginBottom: 12, fontSize: 12, fontFamily: FONTS.body }}>
               <span><strong>Price:</strong> {genPreview.price}</span>
