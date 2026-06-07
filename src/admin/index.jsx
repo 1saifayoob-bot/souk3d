@@ -380,7 +380,7 @@ const BG_STYLES = [
 
 function ProductFormModal({ product, onSave, onClose }) {
   const empty = {
-    name: "", name_ar: "", category: "Home Decor", country: "Syria",
+    name: "", name_ar: "", category: "Home Decor", country: "",
     price: "", compareAt: "", cost: "", stock: "", status: "active",
     featured: false, emoji: "🏺", desc: "", customizable: false, badge: "",
     images: [],
@@ -399,34 +399,45 @@ function ProductFormModal({ product, onSave, onClose }) {
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
   const fileRef = useRef(null);
-  const compressImg = (file) => new Promise(res => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const MAX=500, scale=Math.min(1,MAX/Math.max(img.width,img.height));
-        const c=document.createElement("canvas");
-        c.width=Math.round(img.width*scale); c.height=Math.round(img.height*scale);
-        const ctx=c.getContext("2d");
-        ctx.drawImage(img,0,0,c.width,c.height);
-        // Remove white/near-white background pixels → transparent
-        const id=ctx.getImageData(0,0,c.width,c.height);
-        const d=id.data;
-        for(let i=0;i<d.length;i+=4){
-          if(d[i]>235&&d[i+1]>235&&d[i+2]>235){ d[i+3]=0; }
-        }
-        ctx.putImageData(id,0,0);
-        res(c.toDataURL("image/png")); // PNG preserves transparency
+  const compressImg = (file) =>
+    new Promise(async (res) => {
+      let src = file;
+      try {
+        const { removeBackground } = await import("@imgly/background-removal");
+        src = await removeBackground(file);
+      } catch (err) {
+        console.warn("Background removal failed; using original image", err);
+        src = file;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const MAX = 800;
+          const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+          const c = document.createElement("canvas");
+          c.width = Math.round(img.width * scale);
+          c.height = Math.round(img.height * scale);
+          const ctx = c.getContext("2d");
+          ctx.drawImage(img, 0, 0, c.width, c.height);
+          res(c.toDataURL("image/png"));
+        };
+        img.src = e.target.result;
       };
-      img.src=e.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
+      reader.readAsDataURL(src);
+    });
   const handleImageUpload = async (files) => {
     const remaining = 5 - form.images.length;
-    for (const file of Array.from(files).slice(0, remaining)) {
-      const url = await compressImg(file);
-      setForm(f => ({ ...f, images: [...f.images, { url, bg: "cream" }] }));
+    const picked = Array.from(files).slice(0, remaining);
+    if (picked.length === 0) return;
+    setImgBusy(true);
+    try {
+      for (const file of picked) {
+        const url = await compressImg(file);
+        setForm((f) => ({ ...f, images: [...f.images, { url, bg: "cream" }] }));
+      }
+    } finally {
+      setImgBusy(false);
     }
   };
   const removeImage = (idx) => setForm(f => ({ ...f, images: f.images.filter((_,i) => i!==idx) }));
@@ -435,6 +446,7 @@ function ProductFormModal({ product, onSave, onClose }) {
   const getBgGrad = (bgId) => { const b=BG_STYLES.find(x=>x.id===bgId)||BG_STYLES[0]; return `linear-gradient(135deg,${b.colors[0]},${b.colors[1]})`; };
   const [genPreview, setGenPreview] = useState(null);
   const [generating, setGenerating] = useState(false);
+  const [imgBusy, setImgBusy] = useState(false);
   const handleGenerate = async () => {
     if (!form.name.trim() && !(form.images && form.images[0] && form.images[0].url)) { alert("Add a product name or image first."); return; }
     setGenerating(true);
@@ -605,6 +617,9 @@ function ProductFormModal({ product, onSave, onClose }) {
           <label style={labelStyle}>PRODUCT IMAGES <span style={{ color: COLORS.textMuted, fontWeight: 400 }}>(up to 5)</span></label>
           <input ref={fileRef} type="file" accept="image/*" multiple style={{ display: "none" }}
             onChange={e => handleImageUpload(e.target.files)} />
+          {imgBusy && (
+            <div style={{ fontSize: 11, color: COLORS.saffron, fontFamily: FONTS.body, marginBottom: 8 }}>⏳ Removing background… (first time may take a few seconds)</div>
+          )}
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
             {form.images.map((img, idx) => (
               <div key={idx} style={{ position: "relative", display: "inline-block" }}>
