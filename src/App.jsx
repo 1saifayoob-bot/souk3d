@@ -27,6 +27,9 @@ const STORE_PRODUCTS = (() => {
         .filter(p => p.status === "active")
         .map(p => ({
           id: p.id,
+          imageUrl: p.imageUrl || (p.images && p.images[0] && p.images[0].url) || "",
+          images: p.images || [],
+          imageBg: p.imageBg || (p.images && p.images[0] && p.images[0].bg) || "cream",
           name: p.name || "",
           name_ar: p.name_ar || "",
           category: p.category || "Other",
