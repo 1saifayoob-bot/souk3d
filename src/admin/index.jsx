@@ -362,7 +362,7 @@ function ProductFormModal({ product, onSave, onClose }) {
     name: "", name_ar: "", category: "Home Decor", country: "Syria",
     price: "", compareAt: "", cost: "", stock: "", status: "active",
     featured: false, emoji: "🏺", desc: "", customizable: false, badge: "",
-    imageUrl: "", imageBg: "cream",
+    images: [],
   };
   const [form, setForm] = useState(product ? {
     ...product,
@@ -371,28 +371,37 @@ function ProductFormModal({ product, onSave, onClose }) {
     cost: String(product.cost || ""),
     stock: String(product.stock || ""),
     badge: product.badge || "",
+    images: product.images || (product.imageUrl ? [{url:product.imageUrl,bg:product.imageBg||"cream"}] : []),
   } : empty);
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
   const fileRef = useRef(null);
-  const handleImageUpload = (file) => {
-    if (!file) return;
+  const compressImg = (file) => new Promise(res => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const img = new Image();
       img.onload = () => {
-        const MAX = 500;
-        const scale = Math.min(1, MAX / Math.max(img.width, img.height));
-        const canvas = document.createElement("canvas");
-        canvas.width = Math.round(img.width * scale);
-        canvas.height = Math.round(img.height * scale);
-        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
-        set("imageUrl", canvas.toDataURL("image/jpeg", 0.82));
+        const MAX=500, scale=Math.min(1,MAX/Math.max(img.width,img.height));
+        const c=document.createElement("canvas");
+        c.width=Math.round(img.width*scale); c.height=Math.round(img.height*scale);
+        c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+        res(c.toDataURL("image/jpeg",0.82));
       };
-      img.src = e.target.result;
+      img.src=e.target.result;
     };
     reader.readAsDataURL(file);
+  });
+  const handleImageUpload = async (files) => {
+    const remaining = 5 - form.images.length;
+    for (const file of Array.from(files).slice(0, remaining)) {
+      const url = await compressImg(file);
+      setForm(f => ({ ...f, images: [...f.images, { url, bg: "cream" }] }));
+    }
   };
+  const removeImage = (idx) => setForm(f => ({ ...f, images: f.images.filter((_,i) => i!==idx) }));
+  const moveImage = (idx, dir) => setForm(f => { const a=[...f.images]; [a[idx],a[idx+dir]]=[a[idx+dir],a[idx]]; return {...f,images:a}; });
+  const updateImageBg = (idx, bg) => setForm(f => ({ ...f, images: f.images.map((img,i) => i===idx ? {...img,bg} : img) }));
+  const getBgGrad = (bgId) => { const b=BG_STYLES.find(x=>x.id===bgId)||BG_STYLES[0]; return `linear-gradient(135deg,${b.colors[0]},${b.colors[1]})`; };
   const handleGenerate = () => {
     if (!form.name.trim()) { alert("Enter a product name first."); return; }
     const r = generateListing(form.name, form.category, form.country);
@@ -416,6 +425,7 @@ function ProductFormModal({ product, onSave, onClose }) {
       revenue: product?.revenue || 0,
       stars: product?.stars || 0,
       reviews: product?.reviews || 0,
+      images: form.images || [],
     };
     onSave(saved, isEdit);
   };
@@ -474,55 +484,42 @@ function ProductFormModal({ product, onSave, onClose }) {
             placeholder="Product description shown on the storefront…" rows={3}
             style={{ ...inputStyle(false), resize: "vertical" }} />
         </div>
-        {/* Image Upload + AI Background */}
+        {/* Multi-Image Upload */}
         <div style={{ marginBottom: 14 }}>
-          <label style={labelStyle}>PRODUCT IMAGE</label>
-          <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={e => e.target.files[0] && handleImageUpload(e.target.files[0])} />
-          <div onClick={() => fileRef.current.click()} style={{ border: `2px dashed ${COLORS.wheat}`, borderRadius: 10, padding: 16, textAlign: "center", cursor: "pointer", minHeight: 110, display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", position: "relative", overflow: "hidden" }}>
-
-            {form.imageUrl ? (
-              <div style={{ display: "flex", alignItems: "center", gap: 14, width: "100%" }} onClick={e => e.stopPropagation()}>
-                <div style={{ width: 88, height: 88, borderRadius: 8, flexShrink: 0, overflow: "hidden", background: (BG_STYLES.find(b=>b.id===form.imageBg)||BG_STYLES[0]).colors ? `linear-gradient(135deg, ${(BG_STYLES.find(b=>b.id===form.imageBg)||BG_STYLES[0]).colors[0]}, ${(BG_STYLES.find(b=>b.id===form.imageBg)||BG_STYLES[0]).colors[1]})` : "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <img src={form.imageUrl} alt="" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
+          <label style={labelStyle}>PRODUCT IMAGES <span style={{ color: COLORS.textMuted, fontWeight: 400 }}>(up to 5)</span></label>
+          <input ref={fileRef} type="file" accept="image/*" multiple style={{ display: "none" }}
+            onChange={e => handleImageUpload(e.target.files)} />
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+            {form.images.map((img, idx) => (
+              <div key={idx} style={{ position: "relative" }}>
+                <div style={{ width: 90, height: 90, borderRadius: 10, background: getBgGrad(img.bg), display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", border: `1.5px solid ${COLORS.wheat}` }}>
+                  <img src={img.url} alt="" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
                 </div>
-                <div style={{ flex: 1, textAlign: "left" }}>
-                  <div style={{ fontFamily: FONTS.body, fontSize: 11, fontWeight: 600, color: COLORS.textMuted, marginBottom: 6, letterSpacing: 0.5 }}>BRAND BACKGROUND</div>
-                  <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 6 }}>
-                    {BG_STYLES.map(bg => (<button key={bg.id} onClick={() => set("imageBg", bg.id)} style={{ padding: "3px 9px", borderRadius: 5, border: form.imageBg===bg.id ? `2px solid ${COLORS.saffron}` : `1px solid ${COLORS.wheat}`, background: form.imageBg===bg.id ? COLORS.saffronLight : "#fff", fontSize: 11, fontFamily: FONTS.body, cursor: "pointer", fontWeight: form.imageBg===bg.id ? 600 : 400 }}>{bg.label}</button>))}
-                  </div>
-                  <button onClick={() => fileRef.current.click()} style={{ fontSize: 11, fontFamily: FONTS.body, color: COLORS.saffron, background: "none", border: "none", cursor: "pointer", padding: 0, textDecoration: "underline" }}>Change image</button>
+                {idx === 0 && <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, textAlign: "center", fontSize: 8, fontWeight: 700, color: COLORS.saffron, background: "rgba(255,255,255,0.85)", padding: "1px 0", borderRadius: "0 0 10px 10px" }}>COVER</div>}
+                <button onClick={() => removeImage(idx)} style={{ position: "absolute", top: -6, right: -6, width: 18, height: 18, borderRadius: "50%", background: "#ef4444", color: "#fff", border: "none", cursor: "pointer", fontSize: 12, lineHeight: "18px", padding: 0 }}>×</button>
+                <div style={{ display: "flex", gap: 2, marginTop: 4, justifyContent: "center" }}>
+                  {BG_STYLES.map(bg => (
+                    <div key={bg.id} onClick={() => updateImageBg(idx, bg.id)}
+                      style={{ width: 11, height: 11, borderRadius: "50%", background: bg.colors[0], border: `2px solid ${img.bg===bg.id ? COLORS.saffron : "transparent"}`, cursor: "pointer" }} />
+                  ))}
+                </div>
+                <div style={{ display: "flex", gap: 2, marginTop: 3, justifyContent: "center" }}>
+                  {idx>0 && <button onClick={() => moveImage(idx,-1)} style={{ fontSize: 10, padding: "1px 5px", border: `1px solid ${COLORS.wheat}`, borderRadius: 4, background: "#fff", cursor: "pointer" }}>←</button>}
+                  {idx<form.images.length-1 && <button onClick={() => moveImage(idx,1)} style={{ fontSize: 10, padding: "1px 5px", border: `1px solid ${COLORS.wheat}`, borderRadius: 4, background: "#fff", cursor: "pointer" }}>→</button>}
                 </div>
               </div>
-            ) : (
-              <div>
-                <div style={{ fontSize: 26, marginBottom: 4 }}>📷</div>
-                <div style={{ fontFamily: FONTS.body, fontSize: 12, color: COLORS.textMuted }}>Click to upload product image</div>
-                <div style={{ fontFamily: FONTS.body, fontSize: 11, color: COLORS.wheat, marginTop: 2 }}>AI removes background & applies brand colours</div>
+            ))}
+            {form.images.length < 5 && (
+              <div onClick={() => fileRef.current.click()} style={{ width: 90, height: 90, borderRadius: 10, border: `2px dashed ${COLORS.wheat}`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", background: "#fff", color: COLORS.textMuted }}>
+                <div style={{ fontSize: 22 }}>+</div>
+                <div style={{ fontSize: 10, fontFamily: FONTS.body }}>Add photo</div>
               </div>
             )}
           </div>
+          <button style={{ padding: "6px 12px", background: "none", border: `1px dashed ${COLORS.wheat}`, borderRadius: 6, cursor: "not-allowed", fontFamily: FONTS.body, fontSize: 11, color: COLORS.textMuted }}>
+            ✨ Generate with AI — coming soon
+          </button>
         </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          {selectField("CATEGORY", "category", ["Home Decor", "Art", "Seasonal", "Jewelry", "Accessories", "Other"])}
-          {selectField("HERITAGE / COUNTRY", "country", Object.keys(COUNTRY_FLAGS))}
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-          {field("PRICE ($)", "price", "number", "44.99")}
-          {field("COMPARE AT ($)", "compareAt", "number", "59.99")}
-          {field("COST ($)", "cost", "number", "12.00")}
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          {field("STOCK (units)", "stock", "number", "10")}
-          {selectField("STATUS", "status", [
-            { value: "active", label: "Active" },
-            { value: "draft", label: "Draft" },
-            { value: "out_of_stock", label: "Out of Stock" },
-          ])}
-        </div>
-
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           {field("EMOJI / ICON", "emoji", "text", "🏺")}
           {selectField("BADGE (optional)", "badge", [
@@ -630,7 +627,7 @@ function ProductsPage() {
                 <td style={{ padding: "12px 8px", fontSize: 11, color: COLORS.textMuted }}>{p.sku || "—"}</td>
                 <td style={{ padding: "12px 8px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    {p.imageUrl ? <img src={p.imageUrl} alt={p.name} style={{ width: 38, height: 38, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} /> : <span style={{ fontSize: 18 }}>{p.emoji || "🏺"}</span>}
+                    (()=>{ const cover=p.images&&p.images[0]||(p.imageUrl?{url:p.imageUrl,bg:p.imageBg||"cream"}:null); const bgS=cover?(BG_STYLES.find(b=>b.id===cover.bg)||BG_STYLES[0]).colors:null; return cover?<div style={{width:38,height:38,borderRadius:8,background:bgS?`linear-gradient(135deg,${bgS[0]},${bgS[1]})`:"#fff",display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",flexShrink:0}}><img src={cover.url} alt={p.name} style={{maxWidth:"100%",maxHeight:"100%",objectFit:"contain"}} /></div>:<span style={{fontSize:18}}>{p.emoji||"🏺"}</span>; })()
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 500, color: COLORS.charcoal }}>{p.name}</div>
                       <div style={{ fontSize: 11, fontFamily: FONTS.arabic, color: COLORS.textMuted }}>{p.name_ar}</div>
@@ -660,7 +657,7 @@ function ProductsPage() {
           <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: "min(580px, 92vw)", background: COLORS.cream, zIndex: 101, boxShadow: "-20px 0 60px rgba(0,0,0,0.3)", animation: "slideIn 0.3s ease", overflowY: "auto", padding: 28 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
               <div>
-                {selected.imageUrl ? <img src={selected.imageUrl} alt={selected.name} style={{ width: 80, height: 80, borderRadius: 12, objectFit: "cover", marginBottom: 10, display: "block" }} /> : <div style={{ fontSize: 28, marginBottom: 4 }}>{selected.emoji || "🏺"}</div>}
+                (()=>{ const cover=selected.images&&selected.images[0]||(selected.imageUrl?{url:selected.imageUrl,bg:selected.imageBg||"cream"}:null); const bgS=cover?(BG_STYLES.find(b=>b.id===cover.bg)||BG_STYLES[0]).colors:null; return cover?<div style={{width:84,height:84,borderRadius:12,background:bgS?`linear-gradient(135deg,${bgS[0]},${bgS[1]})`:"#fff",display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",marginBottom:10}}><img src={cover.url} alt={selected.name} style={{maxWidth:"100%",maxHeight:"100%",objectFit:"contain"}} /></div>:<div style={{fontSize:28,marginBottom:4}}>{selected.emoji||"🏺"}</div>; })()
                 <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal }}>{selected.name}</div>
                 <div style={{ fontFamily: FONTS.arabic, fontSize: 16, color: COLORS.saffron }}>{selected.name_ar}</div>
               </div>
