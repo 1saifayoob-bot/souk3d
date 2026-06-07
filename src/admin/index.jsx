@@ -384,8 +384,16 @@ function ProductFormModal({ product, onSave, onClose }) {
         const MAX=500, scale=Math.min(1,MAX/Math.max(img.width,img.height));
         const c=document.createElement("canvas");
         c.width=Math.round(img.width*scale); c.height=Math.round(img.height*scale);
-        c.getContext("2d").drawImage(img,0,0,c.width,c.height);
-        res(c.toDataURL("image/jpeg",0.82));
+        const ctx=c.getContext("2d");
+        ctx.drawImage(img,0,0,c.width,c.height);
+        // Remove white/near-white background pixels → transparent
+        const id=ctx.getImageData(0,0,c.width,c.height);
+        const d=id.data;
+        for(let i=0;i<d.length;i+=4){
+          if(d[i]>235&&d[i+1]>235&&d[i+2]>235){ d[i+3]=0; }
+        }
+        ctx.putImageData(id,0,0);
+        res(c.toDataURL("image/png")); // PNG preserves transparency
       };
       img.src=e.target.result;
     };
