@@ -504,7 +504,7 @@ function ProductFormModal({ product, onSave, onClose }) {
               <div style={{ fontSize: 12, color: COLORS.charcoal, fontFamily: FONTS.body, lineHeight: 1.5 }}>{genPreview.desc}</div>
             </div>
             <div style={{ display: "flex", gap: 16, marginBottom: 12, fontSize: 12, fontFamily: FONTS.body }}>
-              <span><strong>Price:</strong> {genPreview.price{"}"}</span>
+              <span><strong>Price:</strong> {genPreview.price}</span>
               {genPreview.badge && <span><strong>Badge:</strong> {genPreview.badge}</span>}
             </div>
             <div style={{ display: "flex", gap: 8 }}>
