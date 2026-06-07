@@ -436,13 +436,13 @@ function ProductFormModal({ product, onSave, onClose }) {
   const [genPreview, setGenPreview] = useState(null);
   const [generating, setGenerating] = useState(false);
   const handleGenerate = async () => {
-    if (!form.name.trim()) { alert("Enter a product name first."); return; }
+    if (!form.name.trim() && !(form.images && form.images[0] && form.images[0].url)) { alert("Add a product name or image first."); return; }
     setGenerating(true);
     try {
       const res = await fetch("/api/generate-listing", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: form.name, category: form.category, country: form.country, hints: form.hint || "" }),
+        body: JSON.stringify({ name: form.name, category: form.category, country: form.country, hints: form.hint || "", image: (form.images && form.images[0] && form.images[0].url) || "" }),
       });
       if (!res.ok) throw new Error("API error " + res.status);
       const data = await res.json();
