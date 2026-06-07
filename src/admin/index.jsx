@@ -438,11 +438,13 @@ function ProductFormModal({ product, onSave, onClose }) {
   const handleGenerate = async () => {
     if (!form.name.trim() && !(form.images && form.images[0] && form.images[0].url)) { alert("Add a product name or image first."); return; }
     setGenerating(true);
+    const __gp = genPreview;
+    const __refineHints = __gp ? ((form.hint || "") + " || Refine this existing draft based on my edits: keep my wording where I changed it, fix grammar, polish, and return all fields consistent. EN title: " + (__gp.title_en||"") + " | AR title: " + (__gp.name_ar||"") + " | EN desc: " + (__gp.desc||"") + " | AR desc: " + (__gp.desc_ar||"") + " | Keywords: " + ((__gp.keywords||[]).join(", ")) + " | Badge: " + (__gp.badge||"")).trim() : (form.hint || "");
     try {
       const res = await fetch("/api/generate-listing", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: form.name, category: form.category, country: form.country, hints: form.hint || "", image: (form.images && form.images[0] && form.images[0].url) || "" }),
+        body: JSON.stringify({ name: form.name, category: form.category, country: form.country, hints: __refineHints, image: (form.images && form.images[0] && form.images[0].url) || "" }),
       });
       if (!res.ok) throw new Error("API error " + res.status);
       const data = await res.json();
@@ -539,51 +541,58 @@ function ProductFormModal({ product, onSave, onClose }) {
           <div style={{ display: "flex", gap: 8 }}>
             <input type="text" value={form.name} onChange={e => set("name", e.target.value)}
               placeholder="e.g. Damascus Name Plaque" style={{ ...inputStyle(false), flex: 1 }} />
-            <button onClick={handleGenerate} disabled={generating} style={{ padding: "8px 14px", background: generating ? COLORS.textMuted : COLORS.saffron, color: "#fff", border: "none", borderRadius: 8, cursor: generating ? "not-allowed" : "pointer", fontFamily: FONTS.body, fontSize: 12, fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0 }}>{generating ? "⏳ Generating..." : "✨ Generate"}</button>
+            <button onClick={handleGenerate} disabled={generating} style={{ padding: "8px 14px", background: generating ? COLORS.textMuted : COLORS.saffron, color: "#fff", border: "none", borderRadius: 8, cursor: generating ? "not-allowed" : "pointer", fontFamily: FONTS.body, fontSize: 12, fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0 }}>{generating ? ((form.images && form.images[0] && form.images[0].url) ? "⏳ Generating from your photo…" : "⏳ Generating…") : "✨ Generate"}</button>
           </div>
           <input type="text" value={form.hint||""} onChange={e => set("hint", e.target.value)}
             placeholder="Add hints for better SEO: e.g. 3D printed, Eid gift, metallic, Islamic art..."
             style={{ ...inputStyle(false), marginTop: 6, fontSize: 11 }} />
         </div>
         {genPreview && (
-          <div style={{ background: "#fff", border: `1.5px solid ${COLORS.saffron}`, borderRadius: 12, padding: 16, marginBottom: 14 }}>
-            <div style={{ fontFamily: FONTS.body, fontSize: 11, fontWeight: 700, color: COLORS.saffron, letterSpacing: 0.5, marginBottom: 10 }}>✨ GENERATED PREVIEW — REVIEW BEFORE ACCEPTING</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
-              <div>
-                <div style={{ fontSize: 10, fontWeight: 600, color: COLORS.textMuted, marginBottom: 3 }}>ENGLISH NAME</div>
-                <div style={{ fontSize: 13, color: COLORS.charcoal, fontFamily: FONTS.body }}>{form.name}</div>
-              </div>
-              <div>
-                <div style={{ fontSize: 10, fontWeight: 600, color: COLORS.textMuted, marginBottom: 3 }}>اسم عربي</div>
-                <div style={{ fontSize: 14, color: COLORS.charcoal, fontFamily: FONTS.arabic, direction: "rtl", textAlign: "right" }}>{genPreview.name_ar}</div>
-              </div>
-            </div>
-            <div style={{ marginBottom: 8 }}>
-              <div style={{ fontSize: 10, fontWeight: 600, color: COLORS.textMuted, marginBottom: 3 }}>DESCRIPTION (EN)</div>
-              <div style={{ fontSize: 12, color: COLORS.charcoal, fontFamily: FONTS.body, lineHeight: 1.5 }}>{genPreview.desc}</div>
-            </div>
-            <div style={{ marginBottom: 10 }}>
-              <div style={{ fontSize: 10, fontWeight: 600, color: COLORS.textMuted, marginBottom: 3 }}>DESCRIPTION (AR)</div>
-              <div style={{ fontSize: 13, color: COLORS.charcoal, fontFamily: FONTS.arabic, direction: "rtl", textAlign: "right", lineHeight: 1.6 }}>{genPreview.desc_ar}</div>
-            </div>
-            <div style={{ display: "flex", gap: 16, marginBottom: 12, fontSize: 12, fontFamily: FONTS.body }}>
-              <span><strong>Price:</strong> {genPreview.price}</span>
-              {genPreview.badge && <span><strong>Badge:</strong> {genPreview.badge}</span>}
-            </div>
-            {genPreview.keywords && genPreview.keywords.length > 0 && (
-              <div style={{ marginBottom: 10 }}>
-                <div style={{ fontSize: 10, fontWeight: 600, color: COLORS.textMuted, marginBottom: 4 }}>SEO KEYWORDS</div>
-                <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-                  {genPreview.keywords.map((k,i) => <span key={i} style={{ background: COLORS.cream2, color: COLORS.charcoal, fontSize: 10, padding: "2px 8px", borderRadius: 12, fontFamily: FONTS.body }}>{k}</span>)}
+            <div style={{ background: "#fff", border: "1.5px solid " + COLORS.saffron, borderRadius: 12, padding: 16, marginBottom: 14 }}>
+              <div style={{ fontFamily: FONTS.body, fontSize: 11, fontWeight: 700, color: COLORS.saffron, letterSpacing: 0.5, marginBottom: 10 }}>✨ GENERATED PREVIEW · EDIT, THEN ACCEPT OR REGENERATE</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+                <div>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: COLORS.textMuted, marginBottom: 3 }}>ENGLISH NAME</div>
+                  <input value={genPreview.title_en || ""} onChange={(e) => setGenPreview((p) => ({ ...p, title_en: e.target.value }))} style={{ ...inputStyle(false), fontSize: 13 }} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: COLORS.textMuted, marginBottom: 3 }}>ARABIC NAME</div>
+                  <input value={genPreview.name_ar || ""} onChange={(e) => setGenPreview((p) => ({ ...p, name_ar: e.target.value }))} dir="rtl" style={{ ...inputStyle(false), fontSize: 14, fontFamily: FONTS.arabic, textAlign: "right" }} />
                 </div>
               </div>
-            )}
-            <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={acceptGenerate} style={{ flex: 1, padding: "8px 0", background: COLORS.saffron, color: "#fff", border: "none", borderRadius: 7, cursor: "pointer", fontFamily: FONTS.body, fontSize: 13, fontWeight: 600 }}>✓ Accept</button>
-              <button onClick={() => setGenPreview(null)} style={{ flex: 1, padding: "8px 0", background: "#fff", color: COLORS.textMuted, border: `1px solid ${COLORS.wheat}`, borderRadius: 7, cursor: "pointer", fontFamily: FONTS.body, fontSize: 13 }}>✕ Dismiss</button>
+              <div style={{ marginBottom: 8 }}>
+                <div style={{ fontSize: 10, fontWeight: 600, color: COLORS.textMuted, marginBottom: 3 }}>DESCRIPTION (EN)</div>
+                <textarea value={genPreview.desc || ""} onChange={(e) => setGenPreview((p) => ({ ...p, desc: e.target.value }))} rows={3} style={{ ...inputStyle(false), fontSize: 12, lineHeight: 1.5, resize: "vertical" }} />
+              </div>
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ fontSize: 10, fontWeight: 600, color: COLORS.textMuted, marginBottom: 3 }}>DESCRIPTION (AR)</div>
+                <textarea value={genPreview.desc_ar || ""} onChange={(e) => setGenPreview((p) => ({ ...p, desc_ar: e.target.value }))} dir="rtl" rows={3} style={{ ...inputStyle(false), fontSize: 13, fontFamily: FONTS.arabic, textAlign: "right", lineHeight: 1.6, resize: "vertical" }} />
+              </div>
+              <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
+                <div style={{ flex: "0 0 96px" }}>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: COLORS.textMuted, marginBottom: 3 }}>PRICE</div>
+                  <input value={genPreview.price || ""} onChange={(e) => setGenPreview((p) => ({ ...p, price: e.target.value }))} style={{ ...inputStyle(false), fontSize: 12 }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: COLORS.textMuted, marginBottom: 3 }}>BADGE</div>
+                  <input value={genPreview.badge || ""} onChange={(e) => setGenPreview((p) => ({ ...p, badge: e.target.value }))} placeholder="Best Seller / New / Sale / Limited" style={{ ...inputStyle(false), fontSize: 12 }} />
+                </div>
+              </div>
+              {genPreview.keywords && genPreview.keywords.length > 0 && (
+                <div style={{ marginBottom: 10 }}>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: COLORS.textMuted, marginBottom: 4 }}>SEO KEYWORDS</div>
+                  <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                    {genPreview.keywords.map((k, i) => (<span key={i} style={{ background: COLORS.cream2, color: COLORS.charcoal, fontSize: 10, padding: "2px 8px", borderRadius: 12, fontFamily: FONTS.body }}>{k}</span>))}
+                  </div>
+                </div>
+              )}
+              <div style={{ display: "flex", gap: 8 }}>
+                <button onClick={acceptGenerate} style={{ flex: 1, padding: "8px 0", background: COLORS.saffron, color: "#fff", border: "none", borderRadius: 7, cursor: "pointer", fontFamily: FONTS.body, fontSize: 13, fontWeight: 600 }}>✓ Accept</button>
+                <button onClick={handleGenerate} disabled={generating} style={{ flex: 1, padding: "8px 0", background: "#fff", color: COLORS.saffron, border: "1px solid " + COLORS.saffron, borderRadius: 7, cursor: generating ? "not-allowed" : "pointer", fontFamily: FONTS.body, fontSize: 13, fontWeight: 600 }}>{generating ? "⏳ Regenerating…" : "🔄 Regenerate"}</button>
+                <button onClick={() => setGenPreview(null)} style={{ flex: "0 0 84px", padding: "8px 0", background: "#fff", color: COLORS.textMuted, border: "1px solid " + COLORS.wheat, borderRadius: 7, cursor: "pointer", fontFamily: FONTS.body, fontSize: 13 }}>Dismiss</button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
         {field("اسم المنتج (Arabic)", "name_ar", "text", "e.g. لوحة الاسم الدمشقية", true)}
         <div style={{ marginBottom: 14 }}>
           <label style={labelStyle}>DESCRIPTION</label>
