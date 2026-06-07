@@ -410,11 +410,12 @@ function ProductFormModal({ product, onSave, onClose }) {
   const moveImage = (idx, dir) => setForm(f => { const a=[...f.images]; [a[idx],a[idx+dir]]=[a[idx+dir],a[idx]]; return {...f,images:a}; });
   const updateImageBg = (idx, bg) => setForm(f => ({ ...f, images: f.images.map((img,i) => i===idx ? {...img,bg} : img) }));
   const getBgGrad = (bgId) => { const b=BG_STYLES.find(x=>x.id===bgId)||BG_STYLES[0]; return `linear-gradient(135deg,${b.colors[0]},${b.colors[1]})`; };
+  const [genPreview, setGenPreview] = useState(null);
   const handleGenerate = () => {
     if (!form.name.trim()) { alert("Enter a product name first."); return; }
-    const r = generateListing(form.name, form.category, form.country);
-    setForm(f => ({ ...f, ...r }));
+    setGenPreview(generateListing(form.name, form.category, form.country));
   };
+  const acceptGenerate = () => { setForm(f => ({ ...f, ...genPreview })); setGenPreview(null); };
 
   const handleSave = () => {
     if (!form.name.trim() || !form.price) return alert("Name and price are required.");
@@ -485,6 +486,36 @@ function ProductFormModal({ product, onSave, onClose }) {
             <button onClick={handleGenerate} style={{ padding: "8px 14px", background: COLORS.saffron, color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontFamily: FONTS.body, fontSize: 12, fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0 }}>✨ Generate</button>
           </div>
         </div>
+        {genPreview && (
+          <div style={{ background: "#fff", border: `1.5px solid ${COLORS.saffron}`, borderRadius: 12, padding: 16, marginBottom: 14 }}>
+            <div style={{ fontFamily: FONTS.body, fontSize: 11, fontWeight: 700, color: COLORS.saffron, letterSpacing: 0.5, marginBottom: 10 }}>✨ GENERATED PREVIEW — REVIEW BEFORE ACCEPTING</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 600, color: COLORS.textMuted, marginBottom: 3 }}>ENGLISH NAME</div>
+                <div style={{ fontSize: 13, color: COLORS.charcoal, fontFamily: FONTS.body }}>{form.name}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 600, color: COLORS.textMuted, marginBottom: 3 }}>اسم عربي</div>
+                <div style={{ fontSize: 14, color: COLORS.charcoal, fontFamily: FONTS.arabic, direction: "rtl", textAlign: "right" }}>{genPreview.name_ar}</div>
+              </div>
+            </div>
+            <div style={{ marginBottom: 10 }}>
+              <div style={{ fontSize: 10, fontWeight: 600, color: COLORS.textMuted, marginBottom: 3 }}>DESCRIPTION</div>
+              <div style={{ fontSize: 12, color: COLORS.charcoal, fontFamily: FONTS.body, lineHeight: 1.5 }}>{genPreview.desc}</div>
+            </div>
+            <div style={{ display: "flex", gap: 16, marginBottom: 12, fontSize: 12, fontFamily: FONTS.body }}>
+              <span><strong>Price:</strong> {genPreview.price{"}"}</span>
+              {genPreview.badge && <span><strong>Badge:</strong> {genPreview.badge}</span>}
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={acceptGenerate} style={{ flex: 1, padding: "8px 0", background: COLORS.saffron, color: "#fff", border: "none", borderRadius: 7, cursor: "pointer", fontFamily: FONTS.body, fontSize: 13, fontWeight: 600 }}>✓ Accept</button>
+              <button onClick={() => setGenPreview(null)} style={{ flex: 1, padding: "8px 0", background: "#fff", color: COLORS.textMuted, border: `1px solid ${COLORS.wheat}`, borderRadius: 7, cursor: "pointer", fontFamily: FONTS.body, fontSize: 13 }}>✕ Dismiss</button>
+            </div>
+          </div>
+        )}
+        <div style={{ display: "none" }}>
+          </div>
+        </div>
         {field("اسم المنتج (Arabic)", "name_ar", "text", "e.g. لوحة الاسم الدمشقية", true)}
         <div style={{ marginBottom: 14 }}>
           <label style={labelStyle}>DESCRIPTION</label>
@@ -505,14 +536,10 @@ function ProductFormModal({ product, onSave, onClose }) {
                   {idx === 0 && <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, textAlign: "center", fontSize: 8, fontWeight: 700, color: "#fff", background: COLORS.saffron, padding: "2px 0" }}>COVER</div>}
                 </div>
                 <button onClick={() => removeImage(idx)} style={{ position: "absolute", top: -6, right: -6, width: 18, height: 18, borderRadius: "50%", background: "#ef4444", color: "#fff", border: "none", cursor: "pointer", fontSize: 12, lineHeight: "18px", padding: 0, zIndex: 10 }}>×</button>
-                <div style={{ display: "flex", gap: 3, marginTop: 5, flexWrap: "wrap", justifyContent: "center" }}>
-                  {BG_STYLES.map(bg => (
-                    <button key={bg.id} onClick={() => updateImageBg(idx, bg.id)}
-                      style={{ padding: "2px 6px", fontSize: 9, fontFamily: FONTS.body, fontWeight: img.bg===bg.id ? 700 : 400, borderRadius: 4, border: `1.5px solid ${img.bg===bg.id ? COLORS.saffron : COLORS.wheat}`, background: img.bg===bg.id ? COLORS.saffronLight : "#fff", color: img.bg===bg.id ? COLORS.saffron : COLORS.textMuted, cursor: "pointer", whiteSpace: "nowrap" }}>
-                      {bg.label}
-                    </button>
-                  ))}
-                </div>
+                <select value={img.bg} onChange={e => updateImageBg(idx, e.target.value)}
+                  style={{ width: 90, marginTop: 5, padding: "2px 4px", fontSize: 10, borderRadius: 5, border: `1px solid ${COLORS.wheat}`, fontFamily: FONTS.body, background: "#fff", color: COLORS.charcoal, cursor: "pointer", outline: "none" }}>
+                  {BG_STYLES.map(bg => <option key={bg.id} value={bg.id}>{bg.label}</option>)}
+                </select>
                 <div style={{ display: "flex", gap: 2, marginTop: 3, justifyContent: "center" }}>
                   {idx>0 && <button onClick={() => moveImage(idx,-1)} style={{ fontSize: 10, padding: "1px 5px", border: `1px solid ${COLORS.wheat}`, borderRadius: 4, background: "#fff", cursor: "pointer" }}>←</button>}
                   {idx<form.images.length-1 && <button onClick={() => moveImage(idx,1)} style={{ fontSize: 10, padding: "1px 5px", border: `1px solid ${COLORS.wheat}`, borderRadius: 4, background: "#fff", cursor: "pointer" }}>→</button>}
@@ -530,9 +557,13 @@ function ProductFormModal({ product, onSave, onClose }) {
             ✨ Generate with AI — coming soon
           </button>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          {field("EMOJI / ICON", "emoji", "text", "🏺")}
-          {selectField("BADGE (optional)", "badge", [
+        <div style={{ display: "grid", gridTemplateColumns: "72px 1fr", gap: 10 }}>
+          <div style={{ marginBottom: 14 }}>
+            <label style={{ ...labelStyle, fontSize: 9 }}>ICON</label>
+            <input type="text" value={form.emoji} onChange={e => set("emoji", e.target.value)}
+              placeholder="🏺" style={{ ...inputStyle(false), textAlign: "center", fontSize: 18, padding: "6px 8px" }} />
+          </div>
+          {selectField("BADGE", "badge", [
             { value: "", label: "None" },
             { value: "Best Seller", label: "Best Seller" },
             { value: "New", label: "New" },
