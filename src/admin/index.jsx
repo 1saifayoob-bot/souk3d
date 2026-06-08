@@ -1762,7 +1762,7 @@ function SettingsPage() {
 
         <div style={{ background: "#fff", borderRadius: 14, padding: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
           <div style={{ fontFamily: FONTS.display, fontSize: 16, fontWeight: 600, color: COLORS.charcoal, marginBottom: 16, paddingBottom: 12, borderBottom: "1px solid #E8D5A8" }}>Regional</div>
-          {[["Currency", currency, setCurrency, ["USD", "SAR", "AED", "EUR", "GBP"]], ["Timezone", timezone, setTimezone, ["UTC+3 (Riyadh)", "UTC+4 (Dubai)", "UTC+2 (Cairo)", "UTC+0 (London)", "UTC-5 (New York)"]]].map(([label, val, setter, opts]) => (
+          {[["Currency", currency, setCurrency, ["USD", "SAR", "AED", "EUR", "GBP"]], ["Timezone", timezone, setTimezone, ["UTC+3 (Riyadh)", "UTC+4 (Dubai)", "UTC+2 (Cairo)", "UTC+0 (London)", "UTC-5 (New York)", "UTC-8 (Los Angeles)"]]].map(([label, val, setter, opts]) => (
             <div key={label} style={{ marginBottom: 16 }}>
               <div style={{ fontFamily: FONTS.body, fontSize: 13, fontWeight: 500, color: COLORS.charcoal, marginBottom: 6 }}>{label}</div>
               <select value={val} onChange={e => setter(e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: 8, border: "1px solid #E8D5A8", fontFamily: FONTS.body, fontSize: 14, color: COLORS.charcoal, outline: "none", background: "#fff", boxSizing: "border-box" }}>
