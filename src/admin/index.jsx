@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
+import { supabase } from "../lib/supabase";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart, PieChart, Pie, Cell, BarChart, Bar } from "recharts";
 
 // ─── BRAND CONSTANTS ───────────────────────────────────────────────────────────
@@ -1847,8 +1848,46 @@ const ADMIN_PAGES = [
   { id: "settings", label: "Settings", icon: "GG" },
 ];
 
+function AdminLogin() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const submit = async (e) => {
+    e.preventDefault();
+    setBusy(true); setError("");
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) setError(error.message);
+    setBusy(false);
+  };
+  return (
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: COLORS.charcoal, fontFamily: FONTS.body, padding: 20 }}>
+      <form onSubmit={submit} style={{ width: "100%", maxWidth: 360, background: "#fff", borderRadius: 14, padding: 28 }}>
+        <div style={{ fontFamily: FONTS.display, fontSize: 26, fontWeight: 700, color: COLORS.saffron, textAlign: "center", marginBottom: 4 }}>Souk3D</div>
+        <div style={{ fontSize: 12, color: COLORS.textMuted, textAlign: "center", marginBottom: 20 }}>Admin sign in</div>
+        <label style={{ fontSize: 11, fontWeight: 600, color: COLORS.textMuted, textTransform: "uppercase" }}>Email</label>
+        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", border: "1px solid " + COLORS.wheat, borderRadius: 8, margin: "4px 0 14px", fontFamily: FONTS.body, fontSize: 14 }} />
+        <label style={{ fontSize: 11, fontWeight: 600, color: COLORS.textMuted, textTransform: "uppercase" }}>Password</label>
+        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", border: "1px solid " + COLORS.wheat, borderRadius: 8, margin: "4px 0 14px", fontFamily: FONTS.body, fontSize: 14 }} />
+        {error && <div style={{ color: COLORS.terracotta, fontSize: 12, marginBottom: 12 }}>{error}</div>}
+        <button type="submit" disabled={busy} style={{ width: "100%", padding: "11px 0", background: COLORS.saffron, color: "#fff", border: "none", borderRadius: 8, fontWeight: 600, fontSize: 14, fontFamily: FONTS.body, cursor: busy ? "not-allowed" : "pointer" }}>{busy ? "Signing in…" : "Sign in"}</button>
+      </form>
+    </div>
+  );
+}
+
 export default function AdminApp() {
   const [page, setPage] = useState("dashboard");
+  const [session, setSession] = useState(undefined);
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSession(data.session || null));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
+    return () => sub.subscription.unsubscribe();
+  }, []);
+  if (session === undefined) {
+    return <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: COLORS.cream, fontFamily: FONTS.body, color: COLORS.textMuted }}>Loading…</div>;
+  }
+  if (!session) return <AdminLogin />;
 
   const PAGE_MAP = {
     dashboard: <Dashboard onNavigate={setPage} />,
@@ -1890,7 +1929,8 @@ export default function AdminApp() {
         <div style={{ padding: "14px 20px", borderTop: "1px solid rgba(255,255,255,0.07)" }}>
           <div style={{ fontFamily: FONTS.body, fontSize: 11, color: "rgba(255,255,255,0.25)" }}>Souk3D v1.0</div>
         </div>
-      </aside>
+      <button onClick={() => supabase.auth.signOut()} style={{ margin: "0 10px 14px", padding: "10px 0", background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.7)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, cursor: "pointer", fontFamily: FONTS.body, fontSize: 13 }}>↩ Log out</button>
+        </aside>
 
       <main style={{ flex: 1, padding: "24px 32px", overflowY: "auto" }}>
         {PAGE_MAP[page] ?? <Dashboard onNavigate={setPage} />}
