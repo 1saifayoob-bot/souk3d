@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { supabase } from "../lib/supabase";
+import { supabase, fetchProducts, saveProduct, deleteProductById, migrateLocalProducts } from "../lib/supabase";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart, PieChart, Pie, Cell, BarChart, Bar } from "recharts";
 
 // ─── BRAND CONSTANTS ───────────────────────────────────────────────────────────
@@ -698,38 +698,47 @@ function ProductFormModal({ product, onSave, onClose }) {
 
 // ─── PRODUCTS PAGE ─────────────────────────────────────────────────────────────
 function ProductsPage() {
-  const [products, setProducts] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("souk3d_products")) || DEFAULT_PRODUCTS; }
-    catch { return DEFAULT_PRODUCTS; }
-  });
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selected, setSelected] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editProduct, setEditProduct] = useState(null);
 
-  const saveProducts = (updated) => {
-    localStorage.setItem("souk3d_products", JSON.stringify(updated));
-    setProducts(updated);
+  const loadProducts = async () => {
+    try {
+      let list = await fetchProducts();
+      if (list.length === 0) {
+        let local = [];
+        try { local = JSON.parse(localStorage.getItem("souk3d_products")) || []; } catch (e) {}
+        if (local.length) { await migrateLocalProducts(local); list = await fetchProducts(); }
+      }
+      setProducts(list);
+    } catch (e) {
+      console.error("Load products failed", e);
+      try { setProducts(JSON.parse(localStorage.getItem("souk3d_products")) || DEFAULT_PRODUCTS); } catch (er) { setProducts(DEFAULT_PRODUCTS); }
+    }
+    setLoading(false);
   };
+  useEffect(() => { loadProducts(); }, []);
 
-  const handleSave = (product, isEdit) => {
-    const updated = isEdit
-      ? products.map(p => p.id === product.id ? product : p)
-      : [...products, product];
-    saveProducts(updated);
+  const handleSave = async (product, isEdit) => {
+    try { await saveProduct(product); await loadProducts(); }
+    catch (e) { alert("Save failed: " + e.message); }
     setShowForm(false);
     setEditProduct(null);
     setSelected(null);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (!window.confirm("Delete this product? This cannot be undone.")) return;
-    saveProducts(products.filter(p => p.id !== id));
+    try { await deleteProductById(id); setProducts((prev) => prev.filter((p) => p.id !== id)); }
+    catch (e) { alert("Delete failed: " + e.message); }
     setSelected(null);
   };
 
-  const openEdit = (p) => {
+    const openEdit = (p) => {
     setEditProduct(p);
     setShowForm(true);
     setSelected(null);
