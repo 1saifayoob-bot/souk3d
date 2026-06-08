@@ -609,11 +609,11 @@ function CustomOrderForm({ onBack }) {
 
 // ─── HOMEPAGE ─────────────────────────────────────────────────────────────────
 function useProducts() {
-  const [products, setProducts] = useState(STORE_PRODUCTS);
+  const [products, setProducts] = useState([]);
   useEffect(() => {
     let active = true;
     fetchProducts({ activeOnly: true })
-      .then((list) => { if (active && list && list.length) setProducts(list); })
+      .then((list) => { if (active) setProducts(list || []); })
       .catch((e) => { console.error("Storefront product load failed", e); });
     return () => { active = false; };
   }, []);
