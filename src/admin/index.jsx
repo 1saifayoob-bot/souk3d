@@ -16,62 +16,19 @@ const FONTS = {
 };
 
 // ─── MOCK DATA ─────────────────────────────────────────────────────────────────
-const DEFAULT_PRODUCTS = [
-  { id: 1, sku: "S3D-001", name: "Damascus Name Plaque", name_ar: "لوحة الاسم الدمشقية", category: "Home Decor", country: "Syria", price: 44.99, cost: 12, stock: 23, status: "active", featured: true, orders: 47, revenue: 2114.53 },
-  { id: 2, sku: "S3D-002", name: "Eid Mubarak Lantern", name_ar: "فانوس عيد مبارك", category: "Seasonal", country: "Pan-Arab", price: 34.99, cost: 9, stock: 41, status: "active", featured: true, orders: 38, revenue: 1329.62 },
-  { id: 3, sku: "S3D-003", name: "Palestinian Olive Tree", name_ar: "شجرة الزيتون الفلسطينية", category: "Art", country: "Palestine", price: 54.99, cost: 15, stock: 12, status: "active", featured: false, orders: 29, revenue: 1594.71 },
-  { id: 4, sku: "S3D-004", name: "Lebanese Cedar Stand", name_ar: "حامل الأرز اللبناني", category: "Home Decor", country: "Lebanon", price: 39.99, cost: 11, stock: 0, status: "out_of_stock", featured: false, orders: 22, revenue: 879.78 },
-  { id: 5, sku: "S3D-005", name: "Kufic Calligraphy Frame", name_ar: "إطار الخط الكوفي", category: "Art", country: "Pan-Arab", price: 64.99, cost: 18, stock: 7, status: "active", featured: true, orders: 18, revenue: 1169.82 },
-];
+const DEFAULT_PRODUCTS = [];
 
-const ORDERS_DATA = [
-  { id: 1, orderNumber: "#3041", customer: "Layla Hadi", email: "layla.h@example.com", location: "Detroit, MI 🇺🇸", items: [{ name: "Damascus Name Plaque", qty: 1, price: 44.99 }], total: 52.98, status: "new", date: "5 min ago", customText: "عائلة حداد", isCustom: false },
-  { id: 2, orderNumber: "#3040", customer: "Omar Khouri", email: "omar.k@example.com", location: "Toronto, ON 🇨🇦", items: [{ name: "Eid Mubarak Lantern", qty: 2, price: 34.99 }], total: 77.97, status: "in_production", date: "1 hour ago", isCustom: false },
-  { id: 3, orderNumber: "#3039", customer: "Sarah Jaber", email: "sarah.j@example.com", location: "Dearborn, MI 🇺🇸", items: [{ name: "Custom Wedding Arch", qty: 1, price: 120.00 }], total: 128.99, status: "awaiting_approval", date: "3 hours ago", isCustom: true },
-  { id: 4, orderNumber: "#3038", customer: "Yara Mansour", email: "yara.m@example.com", location: "London, UK 🇬🇧", items: [{ name: "Palestinian Olive Tree", qty: 1, price: 54.99 }], total: 67.98, status: "shipped", date: "Yesterday", trackingNumber: "1Z999AA1012345678", isCustom: false },
-  { id: 5, orderNumber: "#3037", customer: "Maya Saadeh", email: "maya.s@example.com", location: "Sydney, AU 🇦🇺", items: [{ name: "Kufic Calligraphy Frame", qty: 1, price: 64.99 }], total: 79.98, status: "delivered", date: "2 days ago", isCustom: false },
-];
+const ORDERS_DATA = [];
 
-const CUSTOMERS_DATA = [
-  { id: 1, name: "Layla Hadi", email: "layla.h@example.com", phone: "+1 313 555-0142", heritage: "Syria", location: { city: "Detroit", state: "MI", country: "USA", flag: "🇺🇸" }, orders: 5, customOrders: 3, ltv: 184.95, lastOrder: "5 min ago", tags: ["VIP", "Repeat buyer", "Custom orders"] },
-  { id: 2, name: "Omar Khouri", email: "omar.k@example.com", phone: "+1 416 555-0198", heritage: "Lebanon", location: { city: "Toronto", state: "ON", country: "Canada", flag: "🇨🇦" }, orders: 3, customOrders: 0, ltv: 94.94, lastOrder: "1 hour ago", tags: ["Repeat buyer"] },
-  { id: 3, name: "Yara Mansour", email: "yara.m@example.com", phone: "+44 20 7946 0958", heritage: "Palestine", location: { city: "London", state: "", country: "UK", flag: "🇬🇧" }, orders: 2, customOrders: 0, ltv: 65.98, lastOrder: "3 hours ago", tags: ["Gift buyer"] },
-  { id: 4, name: "Sarah Jaber", email: "sarah.j@example.com", phone: "+1 313 555-0167", heritage: "Syria", location: { city: "Dearborn", state: "MI", country: "USA", flag: "🇺🇸" }, orders: 7, customOrders: 5, ltv: 312.50, lastOrder: "Yesterday", tags: ["VIP", "Custom orders"] },
-  { id: 5, name: "Maya Saadeh", email: "maya.s@example.com", phone: "+61 2 9999 0000", heritage: "Lebanon", location: { city: "Sydney", state: "NSW", country: "Australia", flag: "🇦🇺" }, orders: 1, customOrders: 0, ltv: 44.97, lastOrder: "2 days ago", tags: [] },
-  { id: 6, name: "Karim Daher", email: "karim.d@example.com", phone: "+49 30 12345678", heritage: "Pan-Arab", location: { city: "Berlin", state: "", country: "Germany", flag: "🇩🇪" }, orders: 1, customOrders: 0, ltv: 59.96, lastOrder: "3 days ago", tags: [] },
-  { id: 7, name: "Nour Salem", email: "nour.s@example.com", phone: "+1 718 555-0123", heritage: "Palestine", location: { city: "Brooklyn", state: "NY", country: "USA", flag: "🇺🇸" }, orders: 2, customOrders: 0, ltv: 38.98, lastOrder: "4 days ago", tags: ["Repeat buyer"] },
-  { id: 8, name: "Rana Haddad", email: "rana.h@example.com", phone: "+1 514 555-0177", heritage: "Syria", location: { city: "Montreal", state: "QC", country: "Canada", flag: "🇨🇦" }, orders: 1, customOrders: 1, ltv: 39.99, lastOrder: "5 days ago", tags: ["Custom orders"] },
-];
+const CUSTOMERS_DATA = [];
 
-const CUSTOM_ORDERS_DATA = [
-  { id: 1, customerId: 4, customerName: "Sarah Jaber", heritage: "Syria", flag: "🇺🇸", arabicText: "عائلة جابر", occasion: "Wedding", style: "Diwani", color: "Gold", deadline: "May 15", urgency: "urgent", stage: "mockup", messages: 4, snippet: "I need a custom wedding arch piece for my daughter..." },
-  { id: 2, customerId: 1, customerName: "Layla Hadi", heritage: "Syria", flag: "🇺🇸", arabicText: "ةائلة حداد", occasion: "Graduation", style: "Modern", color: "White", deadline: "May 20", urgency: "soon", stage: "quote", messages: 2, snippet: "Congratulations plaque for my son graduating..." },
-  { id: 3, customerId: 3, customerName: "Yara Mansour", heritage: "Palestine", flag: "🇬🇧", arabicText: "مبروك يا دكتور", occasion: "Graduation", style: "Classic", color: "Gold", deadline: "Jun 1", urgency: "ok", stage: "new", messages: 1, snippet: "Doctor graduation gift for my husband..." },
-  { id: 4, customerId: 7, customerName: "Nour Salem", heritage: "Palestine", flag: "🇺🇸", arabicText: "يا صبي يا حلو", occasion: "Baby", style: "Diwani", color: "Blue", deadline: "Jun 15", urgency: "ok", stage: "approved", messages: 6, snippet: "New baby boy wall piece for nursery..." },
-  { id: 5, customerId: 8, customerName: "Rana Haddad", heritage: "Syria", flag: "🇨🇦", arabicText: "عيد ميلاد سعيد", occasion: "Birthday", style: "Modern", color: "Mixed", deadline: "May 30", urgency: "ok", stage: "quote", messages: 3, snippet: "Birthday cake topper with arabic name..." },
-];
+const CUSTOM_ORDERS_DATA = [];
 
-const REVENUE_DATA = [
-  { day: "Mon", revenue: 420 }, { day: "Tue", revenue: 380 }, { day: "Wed", revenue: 510 },
-  { day: "Thu", revenue: 690 }, { day: "Fri", revenue: 820 }, { day: "Sat", revenue: 940 },
-  { day: "Sun", revenue: 760 },
-];
+const REVENUE_DATA = [];
 
-const HERITAGE_DATA = [
-  { name: "Syria", value: 38, color: "#D4881F" },
-  { name: "Lebanon", value: 24, color: "#B85C3C" },
-  { name: "Palestine", value: 19, color: "#1E5C8C" },
-  { name: "Pan-Arab", value: 12, color: "#5C6B3F" },
-  { name: "Egypt", value: 7, color: "#E8B864" },
-];
+const HERITAGE_DATA = [];
 
-const DISCOUNTS_DATA = [
-  { id: 1, code: "WELCOME10", name: "New Customer Welcome", type: "percent", value: 10, status: "active", usageCount: 47, usageLimit: 200, revenue: 2840, startsAt: "Jan 1", endsAt: "Dec 31", conditions: "First order only" },
-  { id: 2, code: "EID2025", name: "Eid al-Adha Special", type: "percent", value: 20, status: "active", usageCount: 23, usageLimit: 100, revenue: 1920, startsAt: "Jun 5", endsAt: "Jun 12", conditions: "Min. $50 order" },
-  { id: 3, code: "FREESHIP50", name: "Free Shipping Over $50", type: "free_shipping", value: 0, status: "active", usageCount: 89, usageLimit: null, revenue: 4210, startsAt: "Mar 1", endsAt: null, conditions: "$50+ subtotal" },
-  { id: 4, code: "VIP25", name: "VIP Loyalty Reward", type: "percent", value: 25, status: "paused", usageCount: 12, usageLimit: 50, revenue: 890, startsAt: "Feb 14", endsAt: "Feb 28", conditions: "VIP customers only" },
-  { id: 5, code: "RAMADAN15", name: "Ramadan Kareem", type: "percent", value: 15, status: "expired", usageCount: 61, usageLimit: 150, revenue: 3180, startsAt: "Mar 1", endsAt: "Mar 31", conditions: "All orders" },
-];
+const DISCOUNTS_DATA = [];
 
 const NAV_ITEMS = [
   { section: "SALES", items: [
@@ -266,10 +223,10 @@ function Dashboard({ onNavigate }) {
         <div style={{ fontSize: 13, color: COLORS.textMuted, fontFamily: FONTS.body, marginTop: 4 }}>Here's what's happening in your store today.</div>
       </div>
       <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
-        <StatCard label="TODAY'S REVENUE" value="$520" sub="↑ 18% vs yesterday" dark />
-        <StatCard label="ORDERS" value="8" sub="3 need attention" />
-        <StatCard label="AVG ORDER VALUE" value="$65" sub="↑ $4 this week" />
-        <StatCard label="NEW CUSTOMERS" value="3" sub="2 from Instagram" />
+        <StatCard label="TODAY'S REVENUE" value="$0" sub="" dark />
+        <StatCard label="ORDERS" value="0" sub="" />
+        <StatCard label="AVG ORDER VALUE" value="$0" sub="" />
+        <StatCard label="NEW CUSTOMERS" value="0" sub="" />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 16, marginBottom: 16 }}>
         <SectionCard>
@@ -708,16 +665,11 @@ function ProductsPage() {
 
   const loadProducts = async () => {
     try {
-      let list = await fetchProducts();
-      if (list.length === 0) {
-        let local = [];
-        try { local = JSON.parse(localStorage.getItem("souk3d_products")) || []; } catch (e) {}
-        if (local.length) { await migrateLocalProducts(local); list = await fetchProducts(); }
-      }
+      const list = await fetchProducts();
       setProducts(list);
     } catch (e) {
       console.error("Load products failed", e);
-      try { setProducts(JSON.parse(localStorage.getItem("souk3d_products")) || DEFAULT_PRODUCTS); } catch (er) { setProducts(DEFAULT_PRODUCTS); }
+      setProducts([]);
     }
     setLoading(false);
   };
@@ -1208,7 +1160,7 @@ const MOCK_MESSAGES = {
 
 function CustomOrdersPage() {
   const [stageFilter, setStageFilter] = useState("all");
-  const [selectedOrder, setSelectedOrder] = useState(CUSTOM_ORDERS_DATA[0]);
+  const [selectedOrder, setSelectedOrder] = useState(CUSTOM_ORDERS_DATA[0] || null);
   const [replyText, setReplyText] = useState("");
 
   const filtered = CUSTOM_ORDERS_DATA.filter(o =>
