@@ -1837,9 +1837,95 @@ function AdminLogin() {
   );
 }
 
+function UsersPage() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [newRole, setNewRole] = useState("lister");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const inp = { width: "100%", boxSizing: "border-box", padding: "9px 11px", border: "1px solid " + COLORS.wheat, borderRadius: 8, fontSize: 13, fontFamily: FONTS.body, outline: "none", background: "#FFFDF8", color: COLORS.charcoal };
+  const call = async (body) => {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session ? data.session.access_token : null;
+    const res = await fetch("/api/admin-users", {
+      method: body ? "POST" : "GET",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || "Request failed");
+    return json;
+  };
+  const load = async () => {
+    setLoading(true);
+    try { const j = await call(null); setUsers(j.users || []); setError(""); }
+    catch (e) { setError(e.message); }
+    setLoading(false);
+  };
+  useEffect(() => { load(); }, []);
+  const addUser = async (e) => {
+    e.preventDefault();
+    setBusy(true); setError("");
+    try { await call({ action: "create", email: email.trim(), password, role: newRole }); setEmail(""); setPassword(""); setNewRole("lister"); await load(); }
+    catch (e) { setError(e.message); }
+    setBusy(false);
+  };
+  const changeRole = async (id, r) => { try { await call({ action: "setrole", id, role: r }); await load(); } catch (e) { alert(e.message); } };
+  const removeUser = async (id) => { if (!window.confirm("Remove this user permanently?")) return; try { await call({ action: "delete", id }); await load(); } catch (e) { alert(e.message); } };
+  return (
+    <div style={{ padding: "32px 40px", flex: 1, fontFamily: FONTS.body, color: COLORS.charcoal, overflowY: "auto" }}>
+      <div style={{ fontFamily: FONTS.display, fontSize: 30, fontWeight: 600, marginBottom: 4 }}>Users & Roles</div>
+      <div style={{ fontSize: 13, color: COLORS.textMuted, marginBottom: 24 }}>Add team members and control what they can access.</div>
+      <div style={{ background: "#fff", border: "1px solid " + COLORS.wheat, borderRadius: 12, padding: 20, marginBottom: 24, maxWidth: 660 }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.saffronDark, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 14 }}>Add a user</div>
+        <form onSubmit={addUser} style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
+          <div style={{ flex: "1 1 180px" }}><label style={{ fontSize: 11, color: COLORS.textMuted, fontWeight: 600 }}>EMAIL</label><input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} style={{ ...inp, marginTop: 4 }} /></div>
+          <div style={{ flex: "1 1 140px" }}><label style={{ fontSize: 11, color: COLORS.textMuted, fontWeight: 600 }}>PASSWORD</label><input type="text" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="min 6 chars" style={{ ...inp, marginTop: 4 }} /></div>
+          <div style={{ flex: "0 0 150px" }}><label style={{ fontSize: 11, color: COLORS.textMuted, fontWeight: 600 }}>ROLE</label><select value={newRole} onChange={(e) => setNewRole(e.target.value)} style={{ ...inp, marginTop: 4, cursor: "pointer" }}><option value="lister">Lister</option><option value="admin">Admin</option><option value="super_admin">Super Admin</option></select></div>
+          <button type="submit" disabled={busy} style={{ background: COLORS.saffron, color: "#fff", border: "none", borderRadius: 8, padding: "10px 18px", fontWeight: 600, fontSize: 13, fontFamily: FONTS.body, cursor: busy ? "not-allowed" : "pointer" }}>{busy ? "Adding…" : "Add user"}</button>
+        </form>
+        {error && <div style={{ color: COLORS.terracotta, fontSize: 12, marginTop: 12 }}>{error}</div>}
+        <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 12 }}>Lister: products only · Admin: all except users · Super Admin: full access</div>
+      </div>
+      <div style={{ background: "#fff", border: "1px solid " + COLORS.wheat, borderRadius: 12, overflow: "hidden", maxWidth: 760 }}>
+        {loading ? (
+          <div style={{ padding: 24, color: COLORS.textMuted, fontSize: 13 }}>Loading…</div>
+        ) : (
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+            <thead><tr style={{ background: COLORS.cream2, textAlign: "left" }}><th style={{ padding: "10px 16px", fontWeight: 600 }}>Email</th><th style={{ padding: "10px 16px", fontWeight: 600 }}>Role</th><th style={{ padding: "10px 16px" }}></th></tr></thead>
+            <tbody>
+              {users.map(u => (
+                <tr key={u.id} style={{ borderTop: "1px solid " + COLORS.wheat }}>
+                  <td style={{ padding: "10px 16px" }}>{u.email}</td>
+                  <td style={{ padding: "10px 16px" }}><select value={u.role} onChange={(e) => changeRole(u.id, e.target.value)} style={{ ...inp, padding: "5px 8px", cursor: "pointer", width: "auto" }}><option value="lister">Lister</option><option value="admin">Admin</option><option value="super_admin">Super Admin</option></select></td>
+                  <td style={{ padding: "10px 16px", textAlign: "right" }}><button onClick={() => removeUser(u.id)} style={{ background: "none", border: "1px solid " + COLORS.wheat, color: COLORS.terracotta, borderRadius: 7, padding: "5px 12px", cursor: "pointer", fontSize: 12, fontFamily: FONTS.body }}>Remove</button></td>
+                </tr>
+              ))}
+              {users.length === 0 && <tr><td colSpan={3} style={{ padding: 20, color: COLORS.textMuted }}>No users yet.</td></tr>}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function AdminApp() {
   const [page, setPage] = useState("dashboard");
   const [session, setSession] = useState(undefined);
+  const [role, setRole] = useState(null);
+  useEffect(() => {
+    if (session && session.user) {
+      supabase.from("profiles").select("role").eq("id", session.user.id).single()
+        .then(({ data }) => {
+          const r = (data && data.role) || "lister";
+          setRole(r);
+          if (r === "lister") setPage("products");
+        });
+    } else { setRole(null); }
+  }, [session]);
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session || null));
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
@@ -1860,6 +1946,7 @@ export default function AdminApp() {
     discounts: <DiscountsPage />,
     email: <EmailMarketingPage />,
     settings: <SettingsPage />,
+    users: <UsersPage />,
   };
 
   return (
@@ -1880,7 +1967,7 @@ export default function AdminApp() {
           <div style={{ fontFamily: FONTS.body, fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 2, letterSpacing: "0.05em" }}>ADMIN PANEL</div>
         </div>
         <nav style={{ flex: 1, padding: "14px 10px", overflowY: "auto" }}>
-          {ADMIN_PAGES.map(n => (
+          {ADMIN_PAGES.concat(role === "super_admin" ? [{ id: "users", label: "Users & Roles", icon: "👥" }] : []).filter(n => (role === "super_admin" ? true : role === "admin" ? n.id !== "users" : role === "lister" ? n.id === "products" : false)).map(n => (
             <button key={n.id} onClick={() => setPage(n.id)}
               style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 12px", borderRadius: 8, border: "none", cursor: "pointer", marginBottom: 2, textAlign: "left", transition: "all 0.15s", background: page === n.id ? "rgba(212,165,69,0.15)" : "transparent", color: page === n.id ? COLORS.saffron : "rgba(255,255,255,0.55)", fontFamily: FONTS.body, fontSize: 13, fontWeight: page === n.id ? 600 : 400 }}>
               {n.label}
