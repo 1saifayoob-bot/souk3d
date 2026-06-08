@@ -1,5 +1,6 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { fetchProducts } from "./lib/supabase";
 
 // ─── BRAND CONSTANTS ───────────────────────────────────────────────────────────
 const C = {
@@ -607,7 +608,20 @@ function CustomOrderForm({ onBack }) {
 }
 
 // ─── HOMEPAGE ─────────────────────────────────────────────────────────────────
+function useProducts() {
+  const [products, setProducts] = useState(STORE_PRODUCTS);
+  useEffect(() => {
+    let active = true;
+    fetchProducts({ activeOnly: true })
+      .then((list) => { if (active && list && list.length) setProducts(list); })
+      .catch((e) => { console.error("Storefront product load failed", e); });
+    return () => { active = false; };
+  }, []);
+  return products;
+}
+
 function Homepage({ onViewProduct, onAddToCart, onCustomOrder }) {
+  const STORE_PRODUCTS = useProducts();
   return (
     <div>
       {/* Hero */}
