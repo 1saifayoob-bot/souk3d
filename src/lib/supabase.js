@@ -5,6 +5,39 @@ const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "placeholder-key";
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
+const BUCKET = "product-images";
+
+// Upload any data: URL images to Storage and replace them with public URLs.
+async function uploadImagesToStorage(images) {
+  const list = Array.isArray(images) ? images : [];
+  const out = [];
+  for (const img of list) {
+    if (img && typeof img.url === "string" && img.url.startsWith("data:")) {
+      try {
+        const blob = await (await fetch(img.url)).blob();
+        const ext = ((blob.type.split("/")[1] || "png").split("+")[0]).replace("jpeg", "jpg");
+        const path = "products/" + Date.now() + "-" + Math.random().toString(36).slice(2, 8) + "." + ext;
+        const up = await supabase.storage.from(BUCKET).upload(path, blob, { contentType: blob.type, upsert: false });
+        if (up.error) throw up.error;
+        const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
+        out.push({ ...img, url: data.publicUrl });
+      } catch (e) {
+        console.error("Image upload failed, keeping inline image", e);
+        out.push(img);
+      }
+    } else if (img) {
+      out.push(img);
+    }
+  }
+  return out;
+}
+
+function baseImagesOf(p) {
+  if (Array.isArray(p.images) && p.images.length) return p.images;
+  if (p.imageUrl) return [{ url: p.imageUrl, bg: p.imageBg || "cream" }];
+  return [];
+}
+
 // Map a database row to the app product shape
 export function rowToProduct(r) {
   const images = Array.isArray(r.images) ? r.images : [];
@@ -35,9 +68,7 @@ export function rowToProduct(r) {
 
 // Map an app product to a database row (sku is the upsert key; id is never sent)
 export function productToRow(p) {
-  const images = Array.isArray(p.images) && p.images.length
-    ? p.images
-    : (p.imageUrl ? [{ url: p.imageUrl, bg: p.imageBg || "cream" }] : []);
+  const images = baseImagesOf(p);
   const num = (v) => (v === "" || v == null ? null : Number(v));
   return {
     sku: p.sku || ("S3D-" + String(Date.now()).slice(-5) + Math.floor(Math.random() * 90 + 10)),
@@ -71,7 +102,8 @@ export async function fetchProducts({ activeOnly = false } = {}) {
 }
 
 export async function saveProduct(p) {
-  const row = productToRow(p);
+  const images = await uploadImagesToStorage(baseImagesOf(p));
+  const row = productToRow({ ...p, images });
   const { data, error } = await supabase
     .from("products")
     .upsert(row, { onConflict: "sku" })
@@ -88,7 +120,11 @@ export async function deleteProductById(id) {
 
 export async function migrateLocalProducts(localProducts) {
   if (!localProducts || !localProducts.length) return 0;
-  const rows = localProducts.map(productToRow);
+  const rows = [];
+  for (const p of localProducts) {
+    const images = await uploadImagesToStorage(baseImagesOf(p));
+    rows.push(productToRow({ ...p, images }));
+  }
   const { error } = await supabase.from("products").upsert(rows, { onConflict: "sku" });
   if (error) throw error;
   return rows.length;
