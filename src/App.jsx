@@ -315,12 +315,55 @@ function ProductDetail({ product, onBack, onAddToCart }) {
 }
 
 // ─── CHECKOUT PAGE ────────────────────────────────────────────────────────────
+function OrderConfirmed({ onContinue }) {
+  return (
+    <div style={{ maxWidth: 520, margin: "80px auto", textAlign: "center", padding: "0 20px" }}>
+      <div style={{ fontSize: 64, marginBottom: 20 }}>🎉</div>
+      <div style={{ fontFamily: F.display, fontSize: 36, fontWeight: 600, color: C.charcoal, marginBottom: 8 }}>Order Confirmed</div>
+      <div style={{ fontFamily: F.arabic, fontSize: 22, color: C.saffron, marginBottom: 16 }}>شكراً لطلبك</div>
+      <p style={{ fontSize: 14, color: C.textMuted, fontFamily: F.body, lineHeight: 1.7, marginBottom: 24 }}>Thank you! Your payment went through and your order is confirmed. A receipt has been emailed to you, and we will be in touch as your order is prepared.</p>
+      <button onClick={onContinue} style={{ padding: "13px 32px", background: C.saffron, color: "#fff", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 600, fontFamily: F.body, cursor: "pointer" }}>Continue Shopping</button>
+    </div>
+  );
+}
+
 function CheckoutPage({ cart, onBack }) {
   const [contact, setContact] = useState({ email: "", phone: "" });
   const [address, setAddress] = useState({ name: "", line1: "", line2: "", city: "", state: "", zip: "", country: "US" });
   const [shippingMethod, setShippingMethod] = useState("standard");
   const [giftMessage, setGiftMessage] = useState("");
   const [step, setStep] = useState("details");
+  const [paying, setPaying] = useState(false);
+  async function placeOrder() {
+    if (!contact.email || !address.name || !address.line1 || !address.city || !address.zip) {
+      alert("Please fill in your email and full shipping address first.");
+      return;
+    }
+    setPaying(true);
+    try {
+      const res = await fetch("/api/create-checkout-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: cart.map((i) => ({ id: i.id, qty: i.qty })),
+          contact,
+          address,
+          shippingMethod,
+          giftMessage,
+        }),
+      });
+      const data = await res.json();
+      if (data && data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data && data.error ? data.error : "Could not start checkout. Please try again.");
+        setPaying(false);
+      }
+    } catch (e) {
+      alert("Checkout failed. Please check your connection and try again.");
+      setPaying(false);
+    }
+  }
 
   const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
   const shipping = shippingMethod === "express" ? 12.99 : subtotal >= 75 ? 0 : 5.99;
@@ -410,7 +453,7 @@ function CheckoutPage({ cart, onBack }) {
                 <input placeholder="CVC" style={{ flex: 1, border: "none", background: "transparent", fontSize: 13, fontFamily: "monospace", outline: "none" }} />
               </div>
             </div>
-            <button onClick={() => setStep("success")} style={{ width: "100%", padding: "14px", background: C.saffron, color: "#FFF", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, fontFamily: F.body, cursor: "pointer" }}>Place Order · ${total.toFixed(2)}</button>
+            <button onClick={() => placeOrder()} style={{ width: "100%", padding: "14px", background: C.saffron, color: "#FFF", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, fontFamily: F.body, cursor: "pointer" }}>Place Order · ${total.toFixed(2)}</button>
         </div>
         </div>
 
@@ -802,6 +845,18 @@ export default function App() {
   const [viewingProduct, setViewingProduct] = useState(null);
   const [cart, setCart] = useState([]);
   const [cartOpen, setCartOpen] = useState(false);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const co = params.get("checkout");
+    if (co === "success") {
+      setCart([]);
+      setPage("order-confirmed");
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (co === "cancel") {
+      setCartOpen(true);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
 
   const addToCart = (product) => {
     setCart(prev => {
@@ -872,7 +927,10 @@ export default function App() {
       {page === "checkout" && (
         <CheckoutPage cart={cart} onBack={() => setPage("home")} />
       )}
-      {page === "custom-order" && (
+      {page === "order-confirmed" && (
+          <OrderConfirmed onContinue={() => setPage("home")} />
+        )}
+        {page === "custom-order" && (
         <CustomOrderForm onBack={() => setPage("home")} />
       )}
 
