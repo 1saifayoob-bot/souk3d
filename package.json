@@ -14,7 +14,8 @@
     "react-dom": "^18.2.0",
     "@anthropic-ai/sdk": "^0.36.0",
     "@imgly/background-removal": "^1.4.5",
-    "recharts": "^2.10.3"
+    "recharts": "^2.10.3",
+    "stripe": "^17.0.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.1",
