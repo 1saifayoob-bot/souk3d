@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { supabase, fetchProducts, saveProduct, deleteProductById, migrateLocalProducts } from "../lib/supabase";
+import { supabase, fetchProducts, saveProduct, deleteProductById, migrateLocalProducts, fetchOrders } from "../lib/supabase";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart, PieChart, Pie, Cell, BarChart, Bar } from "recharts";
 
 // ─── BRAND CONSTANTS ───────────────────────────────────────────────────────────
@@ -830,8 +830,13 @@ function OrdersPage() {
   const [orders, setOrders] = useState(() => { try { return JSON.parse(localStorage.getItem("souk3d_orders")) || ORDERS_DATA; } catch { return ORDERS_DATA; } });
 
   const moveOrder = (orderId, newStatus) => {
+    supabase.from("orders").update({ status: newStatus }).eq("id", orderId);
     setOrders(prev => { const next = prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o); localStorage.setItem("souk3d_orders", JSON.stringify(next)); return next; });
   };
+
+  useEffect(() => {
+    fetchOrders().then((list) => setOrders(list));
+  }, []);
 
   const getByStatus = (status) => orders.filter(o => o.status === status);
 
