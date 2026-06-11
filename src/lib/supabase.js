@@ -129,3 +129,36 @@ export async function migrateLocalProducts(localProducts) {
   if (error) throw error;
   return rows.length;
 }
+
+export function rowToOrder(r) {
+  const a = r.shipping_address || {};
+  const loc = [a.city, a.state].filter(Boolean).join(", ");
+  return {
+    id: r.id,
+    orderNumber: r.order_number,
+    status: r.status || "new",
+    customer: a.name || a.email || "Guest",
+    email: a.email || "",
+    location: loc,
+    items: r.items || [],
+    total: Number(r.total || 0),
+    paymentStatus: r.payment_status || "pending",
+    date: r.created_at
+      ? new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+      : "",
+    trackingNumber: r.tracking_number || "",
+    isCustom: false,
+  };
+}
+
+export async function fetchOrders() {
+  const { data, error } = await supabase
+    .from("orders")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) {
+    console.error("fetchOrders error:", error);
+    return [];
+  }
+  return (data || []).map(rowToOrder);
+}
