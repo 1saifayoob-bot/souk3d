@@ -463,6 +463,30 @@ function ProductFormModal({ product, onSave, onClose }) {
     setGenPreview(null);
   };
 
+  const hasDraftContent = () => Boolean(form.name && String(form.name).trim()) || (form.images && form.images.length > 0) || Boolean(form.description) || Boolean(form.price);
+  const saveAsDraft = () => {
+    const saved = {
+      ...form,
+      id: product?.id || Date.now(),
+      sku: product?.sku || ("S3D-" + String(Date.now()).slice(-4)),
+      flag: COUNTRY_FLAGS[form.country] || "",
+      price: parseFloat(form.price) || 0,
+      cost: parseFloat(form.cost) || 0,
+      stock: parseInt(form.stock) || 0,
+      compareAt: form.compareAt ? parseFloat(form.compareAt) : null,
+      badge: form.badge || null,
+      status: "draft",
+      name: form.name && String(form.name).trim() ? form.name : "Untitled draft",
+      orders: product?.orders || 0,
+      revenue: product?.revenue || 0,
+      stars: product?.stars || 0,
+      reviews: product?.reviews || 0,
+    };
+    onSave(saved, !!product);
+  };
+  const handleCancel = () => {
+    if (!product && hasDraftContent()) { saveAsDraft(); } else { onClose(); }
+  };
   const handleSave = () => {
     if (!form.name.trim() || !form.price) return alert("Name and price are required.");
     const isEdit = !!product;
@@ -515,14 +539,14 @@ function ProductFormModal({ product, onSave, onClose }) {
   );
 
   return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(40,31,24,0.5)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "24px 12px", overflowY: "auto", zIndex: 1000 }}>
+    <div style={{ position: "fixed", inset: 0, background: "rgba(40,31,24,0.5)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "24px 12px", overflowY: "auto", zIndex: 1000 }}>
       <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 720, background: COLORS.cream, borderRadius: 14, border: "1px solid " + COLORS.wheat, overflow: "hidden", fontFamily: FONTS.body, color: COLORS.charcoal }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", borderBottom: "1px solid " + COLORS.wheat, background: "#fff" }}>
           <div>
             <div style={{ fontFamily: FONTS.display, fontSize: 23, fontWeight: 600, lineHeight: 1 }}>{product ? "Edit product" : "New product"}</div>
             <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 3 }}>Create a professional storefront listing</div>
           </div>
-          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 22, color: COLORS.textMuted, cursor: "pointer", lineHeight: 1 }}>×</button>
+          <button onClick={handleCancel} style={{ background: "none", border: "none", fontSize: 22, color: COLORS.textMuted, cursor: "pointer", lineHeight: 1 }}>×</button>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: 14, padding: 16 }}>
           <div>
@@ -645,7 +669,8 @@ function ProductFormModal({ product, onSave, onClose }) {
           </div>
         </div>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, padding: "14px 20px", borderTop: "1px solid " + COLORS.wheat, background: "#fff" }}>
-          <button onClick={onClose} style={{ background: "#fff", border: "1px solid " + COLORS.wheat, color: COLORS.textMuted, borderRadius: 8, padding: "9px 20px", fontSize: 13, fontWeight: 500, fontFamily: FONTS.body, cursor: "pointer" }}>Cancel</button>
+          <button onClick={onClose} style={{ background: "none", border: "none", color: COLORS.textMuted, fontSize: 12, cursor: "pointer", marginRight: "auto", fontFamily: FONTS.body }}>Discard</button>
+          <button onClick={handleCancel} style={{ background: "#fff", border: "1px solid " + COLORS.wheat, color: COLORS.textMuted, borderRadius: 8, padding: "9px 20px", fontSize: 13, fontWeight: 500, fontFamily: FONTS.body, cursor: "pointer" }}>Cancel</button>
           <button onClick={handleSave} style={{ background: COLORS.saffron, border: "none", color: "#fff", borderRadius: 8, padding: "9px 24px", fontSize: 13, fontWeight: 600, fontFamily: FONTS.body, cursor: "pointer" }}>{product ? "Save changes" : "Add product"}</button>
         </div>
       </div>
