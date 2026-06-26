@@ -25,35 +25,12 @@ async function sendEmail(to, subject, html) {
 
 function confirmationHtml(orderNo, addr, items, total) {
   const rows = (items || [])
-    .map(function (it) {
-      return (
-        '<tr><td style="padding:6px 0;">' +
-        (it.name || "Item") + " x " + (it.qty || 1) +
-        '</td><td style="padding:6px 0;text-align:right;">$' +
-        Number((it.price || 0) * (it.qty || 1)).toFixed(2) +
-        "</td></tr>"
-      );
-    })
+    .map((it) => `<tr><td style="padding:8px 0;border-bottom:1px solid #F0E8D8;">${it.name || "Item"} <span style="color:#999;">x ${it.qty || 1}</span></td><td style="padding:8px 0;border-bottom:1px solid #F0E8D8;text-align:right;">$${Number((it.price || 0) * (it.qty || 1)).toFixed(2)}</td></tr>`)
     .join("");
-  return (
-    '<div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#2A1F18;">' +
-    '<h1 style="font-size:24px;color:#D4881F;margin:0 0 4px;">Souk3D</h1>' +
-    '<p style="font-size:18px;margin:20px 0 8px;">Thank you for your order, ' +
-    (addr.name || "friend") + "!</p>" +
-    '<p style="font-size:15px;color:#555;">Order ' + orderNo +
-    " is confirmed. Here is what you ordered:</p>" +
-    '<table style="width:100%;border-collapse:collapse;font-size:14px;margin:12px 0;">' +
-    rows +
-    '<tr><td style="padding:10px 0;border-top:1px solid #eee;font-weight:700;">Total</td><td style="padding:10px 0;border-top:1px solid #eee;text-align:right;font-weight:700;">$' +
-    Number(total || 0).toFixed(2) +
-    "</td></tr></table>" +
-    '<p style="font-size:13px;color:#888;margin-top:28px;">We will email you again when it ships.</p>' +
-    "</div>"
-  );
+  const name = addr && addr.name ? String(addr.name).split(" ")[0] : "friend";
+  return `<div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto;background:#FAF3E7;border-radius:16px;overflow:hidden;"><div style="background:#2A1F18;padding:28px 24px;text-align:center;"><div style="font-size:30px;font-weight:700;color:#D4881F;letter-spacing:1px;">Souk3D</div><div style="font-size:13px;color:#E8D5A8;margin-top:4px;">Handmade 3D-printed gifts</div></div><div style="padding:28px 28px 8px;"><div style="font-size:26px;font-weight:700;color:#2A1F18;">Your order is confirmed! 🎉</div><p style="font-size:16px;color:#5a4a3a;line-height:1.7;">Hooray, ${name}! Thank you so much for your order — we are genuinely thrilled. 💛 Every Souk3D piece is printed, finished, and packed by hand with a whole lot of love, and yours is officially on the workbench.</p><p style="font-size:16px;color:#5a4a3a;line-height:1.7;">We cannot wait for you to hold a little piece of home in your hands. Here is what is coming your way:</p><table style="width:100%;border-collapse:collapse;font-size:15px;color:#2A1F18;margin:14px 0;">${rows}<tr><td style="padding:12px 0 0;font-weight:700;font-size:16px;">Total</td><td style="padding:12px 0 0;text-align:right;font-weight:700;font-size:16px;color:#D4881F;">$${Number(total || 0).toFixed(2)}</td></tr></table><p style="font-size:14px;color:#5a4a3a;line-height:1.7;">Order <strong>${orderNo}</strong>. We will send another note with tracking the moment it ships. Need anything? Just reply to this email — we would love to hear from you.</p><p style="font-size:16px;color:#2A1F18;margin-top:24px;">With gratitude,<br><strong style="color:#D4881F;">Nala and the Souk3D family</strong></p></div><div style="padding:18px;text-align:center;font-size:12px;color:#a89a86;">شكراً لك · Thank you for supporting handmade</div></div>`;
 }
 
-// Service-role client - used ONLY on the server to write orders/customers and
-// adjust stock. This key bypasses RLS and must never reach the browser.
 const admin = createClient(
   process.env.VITE_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -196,7 +173,7 @@ async function fulfillOrder(session) {
   if (shipping_address.email) {
     await sendEmail(
       shipping_address.email,
-      "Your Souk3D order is confirmed",
+      "🎉 Your Souk3D order is confirmed!",
       confirmationHtml(orderNumber, shipping_address, items, total)
     );
   }
