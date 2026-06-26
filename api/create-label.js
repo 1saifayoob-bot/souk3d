@@ -7,6 +7,28 @@ const admin = createClient(
 
 const SHIPPO_TOKEN = process.env.SHIPPO_API_TOKEN;
 
+const RESEND_KEY = process.env.RESEND_API_KEY;
+const FROM_EMAIL = "Souk3D <order@souk3d.com>";
+const REPLY_TO = "1saif.ayoob@gmail.com";
+
+async function sendEmail(to, subject, html) {
+  if (!RESEND_KEY || !to) return;
+  try {
+    await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: "Bearer " + RESEND_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify({ from: FROM_EMAIL, to: to, reply_to: REPLY_TO, subject: subject, html: html }),
+    });
+  } catch (e) { console.error("Email failed:", e.message); }
+}
+
+function shippedHtml(order, addr, tracking, trackingUrl) {
+  const name = addr.name || "there";
+  const orderNo = order.order_number || "";
+  const track = tracking ? `<p style="margin:16px 0;">Tracking number: <strong>${tracking}</strong></p>${trackingUrl ? `<p><a href="${trackingUrl}" style="background:#D4881F;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600;">Track your package</a></p>` : ""}` : "";
+  return `<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#2A1F18;"><h1 style="color:#D4881F;">Souk3D</h1><p style="font-size:18px;">Good news, ${name} - your order is on its way!</p><p style="color:#555;">Order ${orderNo} has shipped.</p>${track}<p style="font-size:13px;color:#888;margin-top:24px;">Thank you for supporting handmade. - Souk3D</p></div>`;
+}
+
 // Store ship-from address (the return address printed on every label).
 const SHIP_FROM = {
   name: "Saif Ayoob",
@@ -89,8 +111,13 @@ export default async function handler(req, res) {
           tracking_number: tx.tracking_number || null,
           tracking_url: tx.tracking_url_provider || null,
           label_url: tx.label_url || null,
+          status: "shipped",
         })
         .eq("id", order_id);
+      const buyer = order.shipping_address || {};
+      if (buyer.email) {
+        await sendEmail(buyer.email, "Your Souk3D order has shipped", shippedHtml(order, buyer, tx.tracking_number, tx.tracking_url_provider));
+      }
       return res.status(200).json({
         label_url: tx.label_url,
         tracking_number: tx.tracking_number,
