@@ -70,7 +70,7 @@ export default async function handler(req, res) {
     if (rate_id) {
       const tx = await shippo("/transactions", {
         rate: rate_id,
-        label_file_type: "PDF",
+        label_file_type: "PDF_4x6",
         async: false,
       });
       if (!tx || tx.status !== "SUCCESS") {
