@@ -824,6 +824,91 @@ const ORDER_STAGES = [
   { id: "delivered", label: "Delivered", color: COLORS.olive },
 ];
 
+function AddOrderModal({ onClose, onCreated }) {
+  const [products, setProducts] = useState([]);
+  const [form, setForm] = useState({ name: "", email: "", phone: "", line1: "", city: "", state: "", zip: "" });
+  const [lines, setLines] = useState([]);
+  const [pick, setPick] = useState("");
+  const [pay, setPay] = useState("paid");
+  const [busy, setBusy] = useState(false);
+  const [linkUrl, setLinkUrl] = useState("");
+  useEffect(() => { fetchProducts({ activeOnly: false }).then((list) => setProducts(list || [])); }, []);
+  const inp = { width: "100%", padding: "9px 11px", border: "0.5px solid " + COLORS.wheat, borderRadius: 8, fontSize: 13, fontFamily: FONTS.body, boxSizing: "border-box", marginBottom: 8 };
+  const setF = (k, v) => setForm((p) => ({ ...p, [k]: v }));
+  const addLine = () => { const p = products.find((x) => x.id === pick); if (!p) return; setLines((prev) => [...prev, { id: p.id, name: p.name, price: Number(p.price) || 0, qty: 1 }]); setPick(""); };
+  const total = lines.reduce((s, l) => s + l.price * l.qty, 0);
+  const submit = async () => {
+    if (!form.name || lines.length === 0) { alert("Add a customer name and at least one product."); return; }
+    setBusy(true);
+    try {
+      if (pay === "paid") {
+        const shipping_address = { name: form.name, email: form.email, phone: form.phone, line1: form.line1, city: form.city, state: form.state, zip: form.zip, country: "US" };
+        const items = lines.map((l) => ({ product_id: l.id, name: l.name, qty: l.qty, price: l.price }));
+        const { error } = await supabase.from("orders").insert({ order_number: "SK-M" + Date.now().toString().slice(-8), status: "new", items: items, subtotal: total, shipping: 0, tax: 0, total: total, shipping_address: shipping_address, payment_status: "paid" });
+        if (error) { alert("Could not save: " + error.message); setBusy(false); return; }
+        onCreated(); return;
+      }
+      const res = await fetch("/api/create-checkout-session", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items: lines.map((l) => ({ id: l.id, qty: l.qty })), contact: { email: form.email, phone: form.phone }, address: { name: form.name, line1: form.line1, city: form.city, state: form.state, zip: form.zip, country: "US" }, shippingMethod: "standard" }) });
+      const data = await res.json();
+      if (data && data.url) { setLinkUrl(data.url); } else { alert((data && data.error) || "Could not create payment link."); }
+    } catch (e) { alert("Failed: " + e.message); }
+    setBusy(false);
+  };
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 100, display: "flex", justifyContent: "center", alignItems: "flex-start", overflowY: "auto", padding: "40px 16px" }} onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: "#FFF", borderRadius: 14, padding: 24, width: 440, maxWidth: "100%" }}>
+        <div style={{ fontFamily: FONTS.display, fontSize: 20, fontWeight: 600, color: COLORS.charcoal, marginBottom: 16 }}>New Order</div>
+        {linkUrl ? (
+          <div>
+            <div style={{ fontSize: 13, color: COLORS.charcoal, marginBottom: 8 }}>Payment link created. Send this to your customer:</div>
+            <input readOnly value={linkUrl} style={inp} onFocus={(e) => e.target.select()} />
+            <button onClick={onCreated} style={{ width: "100%", padding: "11px", background: COLORS.saffron, color: "#fff", border: "none", borderRadius: 8, fontWeight: 600, cursor: "pointer" }}>Done</button>
+          </div>
+        ) : (
+          <div>
+            <input placeholder="Customer name" value={form.name} onChange={(e) => setF("name", e.target.value)} style={inp} />
+            <input placeholder="Email" value={form.email} onChange={(e) => setF("email", e.target.value)} style={inp} />
+            <input placeholder="Phone" value={form.phone} onChange={(e) => setF("phone", e.target.value)} style={inp} />
+            <input placeholder="Address line" value={form.line1} onChange={(e) => setF("line1", e.target.value)} style={inp} />
+            <div style={{ display: "flex", gap: 8 }}>
+              <input placeholder="City" value={form.city} onChange={(e) => setF("city", e.target.value)} style={inp} />
+              <input placeholder="State" value={form.state} onChange={(e) => setF("state", e.target.value)} style={{ ...inp, width: 80 }} />
+              <input placeholder="ZIP" value={form.zip} onChange={(e) => setF("zip", e.target.value)} style={{ ...inp, width: 90 }} />
+            </div>
+            <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+              <select value={pick} onChange={(e) => setPick(e.target.value)} style={{ ...inp, flex: 1, marginBottom: 0 }}>
+                <option value="">Add a product...</option>
+                {products.map((p) => (<option key={p.id} value={p.id}>{p.name} (${Number(p.price || 0).toFixed(2)})</option>))}
+              </select>
+              <button onClick={addLine} style={{ padding: "0 14px", background: COLORS.charcoal, color: "#fff", border: "none", borderRadius: 8, cursor: "pointer" }}>Add</button>
+            </div>
+            <div style={{ margin: "10px 0" }}>
+              {lines.map((l, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, marginBottom: 4 }}>
+                  <span style={{ flex: 1 }}>{l.name}</span>
+                  <input type="number" min="1" value={l.qty} onChange={(e) => setLines((prev) => prev.map((x, j) => (j === i ? { ...x, qty: Math.max(1, parseInt(e.target.value, 10) || 1) } : x)))} style={{ width: 52, padding: "5px", border: "0.5px solid " + COLORS.wheat, borderRadius: 6 }} />
+                  <span style={{ width: 64, textAlign: "right" }}>${(l.price * l.qty).toFixed(2)}</span>
+                  <button onClick={() => setLines((prev) => prev.filter((x, j) => j !== i))} style={{ border: "none", background: "none", color: COLORS.textMuted, cursor: "pointer" }}>x</button>
+                </div>
+              ))}
+            </div>
+            <div style={{ textAlign: "right", fontWeight: 700, marginBottom: 12 }}>Total: ${total.toFixed(2)}</div>
+            <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+              {[["paid", "Already paid"], ["link", "Payment link"]].map(([v, l]) => (
+                <button key={v} onClick={() => setPay(v)} style={{ flex: 1, padding: "9px", borderRadius: 8, border: "0.5px solid " + COLORS.wheat, background: pay === v ? COLORS.saffron : "#FFF", color: pay === v ? "#fff" : COLORS.charcoal, cursor: "pointer", fontSize: 12, fontWeight: 600 }}>{l}</button>
+              ))}
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={onClose} style={{ flex: 1, padding: "11px", background: "#FFF", color: COLORS.charcoal, border: "0.5px solid " + COLORS.wheat, borderRadius: 8, cursor: "pointer" }}>Cancel</button>
+              <button onClick={submit} disabled={busy} style={{ flex: 2, padding: "11px", background: COLORS.saffron, color: "#fff", border: "none", borderRadius: 8, fontWeight: 600, cursor: "pointer" }}>{busy ? "Working..." : pay === "paid" ? "Create Order" : "Create Payment Link"}</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function OrdersPage() {
   const [view, setView] = useState("kanban");
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -841,6 +926,7 @@ function OrdersPage() {
   const [busy, setBusy] = useState(false);
   const [rates, setRates] = useState(null);
   const [trackInput, setTrackInput] = useState("");
+  const [showAdd, setShowAdd] = useState(false);
   const buyLabel = async () => {
     if (!selectedOrder) return;
     setBusy(true);
@@ -933,6 +1019,8 @@ function OrdersPage() {
       <div style={{ position: "sticky", top: -24, zIndex: 10, background: COLORS.cream, margin: "-24px -32px 0", padding: "24px 32px 14px", borderBottom: `0.5px solid ${COLORS.wheat}`, boxShadow: "0 4px 12px rgba(0,0,0,0.04)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal, flex: 1 }}>Orders</div>
+            <button onClick={() => setShowAdd(true)} style={{ padding: "8px 14px", background: COLORS.saffron, color: "#fff", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 600, fontFamily: FONTS.body, cursor: "pointer", marginRight: 8 }}>+ Add Order</button>
+            {showAdd && (<AddOrderModal onClose={() => setShowAdd(false)} onCreated={() => { setShowAdd(false); fetchOrders().then((list) => setOrders(list)); }} />)}
           <div style={{ display: "flex", border: `0.5px solid ${COLORS.wheat}`, borderRadius: 8, overflow: "hidden" }}>
             {[["kanban", "Pipeline"], ["list", "List"]].map(([v, l]) => (
               <button key={v} onClick={() => setView(v)} style={{ padding: "7px 14px", fontSize: 11, fontFamily: FONTS.body, border: "none", cursor: "pointer", background: view === v ? COLORS.charcoal : "#FFF", color: view === v ? "#FFF" : COLORS.charcoal }}>{l}</button>
