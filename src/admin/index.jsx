@@ -838,6 +838,57 @@ function OrdersPage() {
     fetchOrders().then((list) => setOrders(list));
   }, []);
 
+  const [busy, setBusy] = useState(false);
+  const buyLabel = async () => {
+    if (!selectedOrder) return;
+    setBusy(true);
+    try {
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess && sess.session ? sess.session.access_token : "";
+      const res = await fetch("/api/create-label", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+        body: JSON.stringify({ order_id: selectedOrder.id }),
+      });
+      const data = await res.json();
+      if (data && data.label_url) {
+        window.open(data.label_url, "_blank");
+        const upd = { ...selectedOrder, trackingNumber: data.tracking_number, labelUrl: data.label_url };
+        setSelectedOrder(upd);
+        setOrders((prev) => prev.map((o) => (o.id === upd.id ? upd : o)));
+      } else {
+        alert((data && data.error) || "Could not create label.");
+      }
+    } catch (e) {
+      alert("Label request failed.");
+    }
+    setBusy(false);
+  };
+  const markShipped = async () => {
+    if (!selectedOrder) return;
+    setBusy(true);
+    try {
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess && sess.session ? sess.session.access_token : "";
+      const res = await fetch("/api/mark-shipped", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+        body: JSON.stringify({ order_id: selectedOrder.id }),
+      });
+      const data = await res.json();
+      if (data && data.ok) {
+        const upd = { ...selectedOrder, status: "shipped" };
+        setSelectedOrder(upd);
+        setOrders((prev) => prev.map((o) => (o.id === upd.id ? upd : o)));
+        alert("Marked shipped" + (data.emailed ? " and emailed the customer." : "."));
+      } else {
+        alert((data && data.error) || "Could not mark shipped.");
+      }
+    } catch (e) {
+      alert("Request failed.");
+    }
+    setBusy(false);
+  };
   const getByStatus = (status) => orders.filter(o => o.status === status);
 
   return (
@@ -962,8 +1013,8 @@ function OrdersPage() {
               </SectionCard>
             )}
             <div style={{ display: "flex", gap: 8 }}>
-              <PrimaryBtn style={{ flex: 1 }}>Print Label</PrimaryBtn>
-              <GhostBtn style={{ flex: 1 }}>Email Customer</GhostBtn>
+              <PrimaryBtn style={{ flex: 1 }} onClick={() => buyLabel()}>{busy ? "Working..." : "Buy & Print Label"}</PrimaryBtn>
+              <GhostBtn style={{ flex: 1 }} onClick={() => markShipped()}>{busy ? "Working..." : "Mark Shipped"}</GhostBtn>
             </div>
           </div>
         </>
