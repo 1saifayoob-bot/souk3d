@@ -841,19 +841,24 @@ function AddOrderModal({ onClose, onCreated }) {
     if (!form.name || lines.length === 0) { alert("Add a customer name and at least one product."); return; }
     setBusy(true);
     try {
-      if (pay === "paid") {
-        const shipping_address = { name: form.name, email: form.email, phone: form.phone, line1: form.line1, city: form.city, state: form.state, zip: form.zip, country: "US" };
-        const items = lines.map((l) => ({ product_id: l.id, name: l.name, qty: l.qty, price: l.price }));
-        const { error } = await supabase.from("orders").insert({ order_number: "SK-M" + Date.now().toString().slice(-8), status: "new", items: items, subtotal: total, shipping: 0, tax: 0, total: total, shipping_address: shipping_address, payment_status: "paid" });
-        if (error) { alert("Could not save: " + error.message); setBusy(false); return; }
-        onCreated(); return;
-      }
-      const res = await fetch("/api/create-checkout-session", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items: lines.map((l) => ({ id: l.id, qty: l.qty })), contact: { email: form.email, phone: form.phone }, address: { name: form.name, line1: form.line1, city: form.city, state: form.state, zip: form.zip, country: "US" }, shippingMethod: "standard" }) });
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess && sess.session ? sess.session.access_token : "";
+      const res = await fetch("/api/create-manual-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+        body: JSON.stringify({ name: form.name, email: form.email, phone: form.phone, address: { line1: form.line1, city: form.city, state: form.state, zip: form.zip }, items: lines.map((l) => ({ id: l.id, qty: l.qty })), pay: pay }),
+      });
       const data = await res.json();
-      if (data && data.url) { setLinkUrl(data.url); } else { alert((data && data.error) || "Could not create payment link."); }
+      if (data && data.ok) {
+        alert(pay === "paid" ? "Order created and confirmation emailed to the customer." : "Payment link emailed to the customer.");
+        onCreated();
+      } else {
+        alert((data && data.error) || "Could not create order.");
+      }
     } catch (e) { alert("Failed: " + e.message); }
     setBusy(false);
   };
+
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 100, display: "flex", justifyContent: "center", alignItems: "flex-start", overflowY: "auto", padding: "40px 16px" }} onClick={onClose}>
       <div onClick={(e) => e.stopPropagation()} style={{ background: "#FFF", borderRadius: 14, padding: 24, width: 440, maxWidth: "100%" }}>
