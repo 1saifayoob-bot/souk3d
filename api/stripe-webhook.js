@@ -3,6 +3,54 @@ import { createClient } from "@supabase/supabase-js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
+const RESEND_KEY = process.env.RESEND_API_KEY;
+const FROM_EMAIL = "Souk3D <onboarding@resend.dev>";
+
+async function sendEmail(to, subject, html) {
+  if (!RESEND_KEY || !to) return;
+  try {
+    await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + RESEND_KEY,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ from: FROM_EMAIL, to: to, subject: subject, html: html }),
+    });
+  } catch (e) {
+    console.error("Confirmation email failed:", e.message);
+  }
+}
+
+function confirmationHtml(orderNo, addr, items, total) {
+  const rows = (items || [])
+    .map(function (it) {
+      return (
+        '<tr><td style="padding:6px 0;">' +
+        (it.name || "Item") + " x " + (it.qty || 1) +
+        '</td><td style="padding:6px 0;text-align:right;">$' +
+        Number((it.price || 0) * (it.qty || 1)).toFixed(2) +
+        "</td></tr>"
+      );
+    })
+    .join("");
+  return (
+    '<div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#2A1F18;">' +
+    '<h1 style="font-size:24px;color:#D4881F;margin:0 0 4px;">Souk3D</h1>' +
+    '<p style="font-size:18px;margin:20px 0 8px;">Thank you for your order, ' +
+    (addr.name || "friend") + "!</p>" +
+    '<p style="font-size:15px;color:#555;">Order ' + orderNo +
+    " is confirmed. Here is what you ordered:</p>" +
+    '<table style="width:100%;border-collapse:collapse;font-size:14px;margin:12px 0;">' +
+    rows +
+    '<tr><td style="padding:10px 0;border-top:1px solid #eee;font-weight:700;">Total</td><td style="padding:10px 0;border-top:1px solid #eee;text-align:right;font-weight:700;">$' +
+    Number(total || 0).toFixed(2) +
+    "</td></tr></table>" +
+    '<p style="font-size:13px;color:#888;margin-top:28px;">We will email you again when it ships.</p>' +
+    "</div>"
+  );
+}
+
 // Service-role client - used ONLY on the server to write orders/customers and
 // adjust stock. This key bypasses RLS and must never reach the browser.
 const admin = createClient(
@@ -143,6 +191,14 @@ async function fulfillOrder(session) {
     payment_status: "paid",
   });
   if (orderErr) throw orderErr;
+
+  if (shipping_address.email) {
+    await sendEmail(
+      shipping_address.email,
+      "Your Souk3D order is confirmed",
+      confirmationHtml(orderNumber, shipping_address, items, total)
+    );
+  }
 
   // Decrement stock for each purchased product.
   for (const it of items) {
