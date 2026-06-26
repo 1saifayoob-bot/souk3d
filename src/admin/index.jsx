@@ -840,6 +840,7 @@ function OrdersPage() {
 
   const [busy, setBusy] = useState(false);
   const [rates, setRates] = useState(null);
+  const [trackInput, setTrackInput] = useState("");
   const buyLabel = async () => {
     if (!selectedOrder) return;
     setBusy(true);
@@ -898,7 +899,7 @@ function OrdersPage() {
       const res = await fetch("/api/mark-shipped", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-        body: JSON.stringify({ order_id: selectedOrder.id }),
+        body: JSON.stringify({ order_id: selectedOrder.id, tracking: trackInput || undefined }),
       });
       const data = await res.json();
       if (data && data.ok) {
@@ -913,6 +914,17 @@ function OrdersPage() {
       alert("Request failed.");
     }
     setBusy(false);
+  };
+  const printPackingSlip = () => {
+    if (!selectedOrder) return;
+    const o = selectedOrder;
+    const a = o.address || {};
+    const rows = (o.items || [])
+      .map((it) => `<tr><td style="padding:6px 0;">${it.name || "Item"} x ${it.qty || 1}</td><td style="text-align:right;padding:6px 0;">$${Number((it.price || 0) * (it.qty || 1)).toFixed(2)}</td></tr>`)
+      .join("");
+    const html = `<html><head><title>Packing Slip ${o.orderNumber}</title></head><body style="font-family:Arial,sans-serif;max-width:640px;margin:24px auto;color:#2A1F18;"><div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #D4881F;padding-bottom:12px;"><div><div style="font-size:28px;font-weight:700;color:#D4881F;">Souk3D</div><div style="font-size:12px;color:#888;">Handmade 3D-printed gifts</div></div><div style="text-align:right;font-size:13px;">Order ${o.orderNumber}<br>${o.date || ""}</div></div><h3 style="margin:20px 0 6px;">Ship To</h3><div style="font-size:14px;line-height:1.5;">${a.name || o.customer || ""}<br>${a.line1 || ""}${a.line2 ? "<br>" + a.line2 : ""}<br>${a.city || ""}, ${a.state || ""} ${a.zip || ""}</div><h3 style="margin:24px 0 6px;">Items</h3><table style="width:100%;border-collapse:collapse;font-size:14px;">${rows}<tr><td style="border-top:1px solid #eee;padding-top:8px;font-weight:700;">Total</td><td style="border-top:1px solid #eee;padding-top:8px;text-align:right;font-weight:700;">$${Number(o.total || 0).toFixed(2)}</td></tr></table><p style="margin-top:28px;font-size:13px;color:#888;">Thank you for supporting handmade. Each piece is printed and packed by hand. - Souk3D</p></body></html>`;
+    const w = window.open("", "_blank");
+    if (w) { w.document.write(html); w.document.close(); w.focus(); setTimeout(() => w.print(), 300); }
   };
   const getByStatus = (status) => orders.filter(o => o.status === status);
 
@@ -1040,7 +1052,11 @@ function OrdersPage() {
             <div style={{ display: "flex", gap: 8 }}>
               <PrimaryBtn style={{ flex: 1 }} onClick={() => buyLabel()}>{busy ? "Working..." : "Buy & Print Label"}</PrimaryBtn>
               <GhostBtn style={{ flex: 1 }} onClick={() => markShipped()}>{busy ? "Working..." : "Mark Shipped"}</GhostBtn>
-            </div>{rates && (
+            </div><div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+              <input value={trackInput} onChange={(e) => setTrackInput(e.target.value)} placeholder="Paste tracking number (optional)" style={{ flex: 2, padding: "10px 12px", border: "0.5px solid " + COLORS.wheat, borderRadius: 8, fontSize: 13, fontFamily: FONTS.body, boxSizing: "border-box" }} />
+              <GhostBtn style={{ flex: 1 }} onClick={() => printPackingSlip()}>Packing Slip</GhostBtn>
+            </div>
+            {rates && (
               <div style={{ marginTop: 12, background: "#FFF", border: "0.5px solid " + COLORS.wheat, borderRadius: 12, padding: 16 }}>
                 <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.textMuted, letterSpacing: 0.5, marginBottom: 8 }}>CHOOSE A RATE</div>
                 {rates.map((rt) => (
