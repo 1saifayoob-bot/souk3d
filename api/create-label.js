@@ -13,7 +13,7 @@ const SHIP_FROM = {
   street1: "201 W Ash Ave",
   city: "Burbank",
   state: "CA",
-  zip: "91205",
+  zip: "91502",
   country: "US",
   phone: "6197518581",
   email: "1saif.ayoob@gmail.com",
