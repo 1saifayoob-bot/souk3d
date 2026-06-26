@@ -343,7 +343,7 @@ function ProductFormModal({ product, onSave, onClose }) {
     featured: false, emoji: "🏺", desc: "", customizable: false, badge: "",
     images: [],
     desc_ar: "",
-    hint: "",
+    hint: "", buyUrl: "",
   };
   const [form, setForm] = useState(product ? {
     ...product,
@@ -487,6 +487,28 @@ function ProductFormModal({ product, onSave, onClose }) {
   const handleCancel = () => {
     if (!product && hasDraftContent()) { saveAsDraft(); } else { onClose(); }
   };
+  const [importUrl, setImportUrl] = useState("");
+  const [importing, setImporting] = useState(false);
+  const importFromLink = async () => {
+    if (!importUrl) { alert("Paste a product link first."); return; }
+    setImporting(true);
+    try {
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess && sess.session ? sess.session.access_token : "";
+      const res = await fetch("/api/import-product", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+        body: JSON.stringify({ url: importUrl }),
+      });
+      const data = await res.json();
+      if (data && data.title) {
+        setForm((f) => ({ ...f, name: data.title || f.name, desc: data.description || f.desc, price: data.price ? String(data.price) : f.price, category: data.category || f.category, images: data.image ? [{ url: data.image }].concat(f.images || []) : (f.images || []) }));
+      } else {
+        alert((data && data.error) || "Could not import from that link.");
+      }
+    } catch (e) { alert("Import failed: " + e.message); }
+    setImporting(false);
+  };
   const handleSave = () => {
     if (!form.name.trim() || !form.price) return alert("Name and price are required.");
     const isEdit = !!product;
@@ -547,6 +569,13 @@ function ProductFormModal({ product, onSave, onClose }) {
             <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 3 }}>Create a professional storefront listing</div>
           </div>
           <button onClick={handleCancel} style={{ background: "none", border: "none", fontSize: 22, color: COLORS.textMuted, cursor: "pointer", lineHeight: 1 }}>×</button>
+        </div>
+        <div style={{ padding: "12px 16px 0" }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
+            <input value={importUrl} onChange={(e) => setImportUrl(e.target.value)} placeholder="Paste a product link (Amazon, Etsy, eBay...) to auto-fill" style={{ flex: 1, padding: "9px 12px", border: "0.5px solid " + COLORS.wheat, borderRadius: 8, fontSize: 13, fontFamily: FONTS.body, boxSizing: "border-box" }} />
+            <button onClick={importFromLink} disabled={importing} style={{ padding: "9px 16px", background: COLORS.charcoal, color: "#fff", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>{importing ? "Reading..." : "Import"}</button>
+          </div>
+          <input value={form.buyUrl || ""} onChange={(e) => setForm((f) => ({ ...f, buyUrl: e.target.value }))} placeholder="Optional: external buy link (adds a Buy on... button on the product page)" style={{ width: "100%", padding: "9px 12px", border: "0.5px solid " + COLORS.wheat, borderRadius: 8, fontSize: 13, fontFamily: FONTS.body, boxSizing: "border-box" }} />
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: 14, padding: 16 }}>
           <div>
