@@ -19,7 +19,6 @@ const SHIP_FROM = {
   email: "1saif.ayoob@gmail.com",
 };
 
-// Only signed-in admins/super-admins may buy labels.
 async function requireAdmin(req) {
   const authHeader = req.headers.authorization || "";
   const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
@@ -37,6 +36,18 @@ async function requireAdmin(req) {
   return data.user;
 }
 
+async function shippo(path, body) {
+  const r = await fetch("https://api.goshippo.com" + path, {
+    method: "POST",
+    headers: {
+      Authorization: "ShippoToken " + SHIPPO_TOKEN,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  return r.json();
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -45,7 +56,7 @@ export default async function handler(req, res) {
   if (!user) return res.status(403).json({ error: "Not authorized" });
 
   try {
-    const { order_id } = req.body || {};
+    const { order_id, rate_id } = req.body || {};
     if (!order_id) return res.status(400).json({ error: "Missing order_id" });
 
     const { data: order, error: oErr } = await admin
@@ -55,6 +66,39 @@ export default async function handler(req, res) {
       .maybeSingle();
     if (oErr || !order) return res.status(404).json({ error: "Order not found" });
 
+    // STEP 2: a rate was chosen -> buy that label.
+    if (rate_id) {
+      const tx = await shippo("/transactions", {
+        rate: rate_id,
+        label_file_type: "PDF",
+        async: false,
+      });
+      if (!tx || tx.status !== "SUCCESS") {
+        console.error(
+          "Shippo buy failed:",
+          JSON.stringify(tx && tx.messages ? tx.messages : tx)
+        );
+        return res.status(400).json({
+          error: "Label purchase failed",
+          details: tx && tx.messages ? tx.messages : tx,
+        });
+      }
+      await admin
+        .from("orders")
+        .update({
+          tracking_number: tx.tracking_number || null,
+          tracking_url: tx.tracking_url_provider || null,
+          label_url: tx.label_url || null,
+        })
+        .eq("id", order_id);
+      return res.status(200).json({
+        label_url: tx.label_url,
+        tracking_number: tx.tracking_number,
+        tracking_url: tx.tracking_url_provider,
+      });
+    }
+
+    // STEP 1: no rate chosen yet -> return the list of rates to pick from.
     const a = order.shipping_address || {};
     const addressTo = {
       name: a.name || "Customer",
@@ -67,8 +111,6 @@ export default async function handler(req, res) {
       phone: a.phone || "",
       email: a.email || "",
     };
-
-    // Default parcel for now (we can wire per-product weights/sizes later).
     const parcel = {
       length: "6",
       width: "4",
@@ -78,85 +120,44 @@ export default async function handler(req, res) {
       mass_unit: "oz",
     };
 
-    // 1) Create the shipment to fetch live USPS/UPS rates.
-    const shipmentRes = await fetch("https://api.goshippo.com/shipments", {
-      method: "POST",
-      headers: {
-        Authorization: "ShippoToken " + SHIPPO_TOKEN,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        address_from: SHIP_FROM,
-        address_to: addressTo,
-        parcels: [parcel],
-        async: false,
-      }),
+    const shipment = await shippo("/shipments", {
+      address_from: SHIP_FROM,
+      address_to: addressTo,
+      parcels: [parcel],
+      async: false,
     });
-    const shipment = await shipmentRes.json();
+
     if (
       !shipment ||
       !Array.isArray(shipment.rates) ||
       shipment.rates.length === 0
     ) {
+      console.error(
+        "Shippo rates failed:",
+        JSON.stringify(shipment && shipment.messages ? shipment.messages : shipment)
+      );
       return res.status(400).json({
-        error: "No shipping rates returned. Check the shipping address.",
+        error: "No shipping rates returned. Check the addresses.",
         details: shipment && shipment.messages ? shipment.messages : null,
       });
     }
 
-    // Pick the cheapest available rate.
-    const rates = shipment.rates.slice().sort(function (x, y) {
-      return parseFloat(x.amount) - parseFloat(y.amount);
-    });
-    const chosen = rates[0];
-
-    // 2) Buy the label.
-    const txRes = await fetch("https://api.goshippo.com/transactions", {
-      method: "POST",
-      headers: {
-        Authorization: "ShippoToken " + SHIPPO_TOKEN,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        rate: chosen.object_id,
-        label_file_type: "PDF",
-        async: false,
-      }),
-    });
-    const tx = await txRes.json();
-    if (!tx || tx.status !== "SUCCESS") {
-      return res.status(400).json({
-        error: "Label purchase failed",
-        details: tx && tx.messages ? tx.messages : tx,
-      });
-    }
-
-    const carrier = chosen.provider || "";
-    const service =
-      chosen.servicelevel && chosen.servicelevel.name
-        ? chosen.servicelevel.name
-        : "";
-
-    // Save label + tracking back onto the order.
-    await admin
-      .from("orders")
-      .update({
-        tracking_number: tx.tracking_number || null,
-        tracking_url: tx.tracking_url_provider || null,
-        label_url: tx.label_url || null,
-        shipping_carrier: (carrier + " " + service).trim(),
+    const rates = shipment.rates
+      .map(function (r) {
+        return {
+          id: r.object_id,
+          carrier: r.provider || "",
+          service: r.servicelevel && r.servicelevel.name ? r.servicelevel.name : "",
+          amount: r.amount,
+          currency: r.currency || "USD",
+          days: r.estimated_days || null,
+        };
       })
-      .eq("id", order_id);
+      .sort(function (x, y) {
+        return parseFloat(x.amount) - parseFloat(y.amount);
+      });
 
-    return res.status(200).json({
-      tracking_number: tx.tracking_number,
-      tracking_url: tx.tracking_url_provider,
-      label_url: tx.label_url,
-      carrier: carrier,
-      service: service,
-      amount: chosen.amount,
-      currency: chosen.currency,
-    });
+    return res.status(200).json({ rates: rates });
   } catch (err) {
     console.error("create-label error:", err);
     return res
