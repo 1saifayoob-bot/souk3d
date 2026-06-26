@@ -4,7 +4,8 @@ import { createClient } from "@supabase/supabase-js";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 const RESEND_KEY = process.env.RESEND_API_KEY;
-const FROM_EMAIL = "Souk3D <onboarding@resend.dev>";
+const FROM_EMAIL = "Souk3D <order@souk3d.com>";
+const REPLY_TO = "1saif.ayoob@gmail.com";
 
 async function sendEmail(to, subject, html) {
   if (!RESEND_KEY || !to) return;
@@ -15,7 +16,7 @@ async function sendEmail(to, subject, html) {
         Authorization: "Bearer " + RESEND_KEY,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ from: FROM_EMAIL, to: to, subject: subject, html: html }),
+      body: JSON.stringify({ from: FROM_EMAIL, to: to, reply_to: REPLY_TO, subject: subject, html: html }),
     });
   } catch (e) {
     console.error("Confirmation email failed:", e.message);
