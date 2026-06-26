@@ -150,6 +150,7 @@ export function rowToOrder(r) {
     labelUrl: r.label_url || "",
     trackingUrl: r.tracking_url || "",
     shippingCarrier: r.shipping_carrier || "",
+    address: r.shipping_address || {},
     isCustom: false,
   };
 }
