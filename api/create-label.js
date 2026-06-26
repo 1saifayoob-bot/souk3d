@@ -23,10 +23,13 @@ async function sendEmail(to, subject, html) {
 }
 
 function shippedHtml(order, addr, tracking, trackingUrl) {
-  const name = addr.name || "there";
+  const name = addr && addr.name ? String(addr.name).split(" ")[0] : "friend";
   const orderNo = order.order_number || "";
-  const track = tracking ? `<p style="margin:16px 0;">Tracking number: <strong>${tracking}</strong></p>${trackingUrl ? `<p><a href="${trackingUrl}" style="background:#D4881F;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600;">Track your package</a></p>` : ""}` : "";
-  return `<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#2A1F18;"><h1 style="color:#D4881F;">Souk3D</h1><p style="font-size:18px;">Good news, ${name} - your order is on its way!</p><p style="color:#555;">Order ${orderNo} has shipped.</p>${track}<p style="font-size:13px;color:#888;margin-top:24px;">Thank you for supporting handmade. - Souk3D</p></div>`;
+  const rows = (order.items || [])
+    .map((it) => `<tr><td style="padding:8px 0;border-bottom:1px solid #F0E8D8;">${it.name || "Item"} <span style="color:#999;">x ${it.qty || 1}</span></td><td style="padding:8px 0;border-bottom:1px solid #F0E8D8;text-align:right;">$${Number((it.price || 0) * (it.qty || 1)).toFixed(2)}</td></tr>`)
+    .join("");
+  const track = tracking ? `<p style="font-size:15px;color:#2A1F18;margin:8px 0;">Tracking number: <strong>${tracking}</strong></p>${trackingUrl ? `<p style="margin:16px 0;"><a href="${trackingUrl}" style="background:#D4881F;color:#fff;text-decoration:none;padding:13px 26px;border-radius:8px;font-weight:600;">Track your package</a></p>` : ""}` : "";
+  return `<div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto;background:#FAF3E7;border-radius:16px;overflow:hidden;"><div style="background:#2A1F18;padding:28px 24px;text-align:center;"><div style="font-size:30px;font-weight:700;color:#D4881F;letter-spacing:1px;">Souk3D</div><div style="font-size:13px;color:#E8D5A8;margin-top:4px;">Handmade 3D-printed gifts</div></div><div style="padding:28px 28px 8px;"><div style="font-size:25px;font-weight:700;color:#2A1F18;">It is on its way! 📦</div><p style="font-size:16px;color:#5a4a3a;line-height:1.7;">Great news, ${name} — your handmade order has shipped and is heading to you now. We packed it with care and a little happy dance.</p>${track}<p style="font-size:14px;color:#5a4a3a;margin-top:18px;">Here is what is in your package:</p><table style="width:100%;border-collapse:collapse;font-size:15px;color:#2A1F18;margin:8px 0 18px;">${rows}</table><div style="background:#F3E8D2;border-radius:12px;padding:16px 18px;font-size:14px;color:#5a4a3a;line-height:1.7;">Thank you for supporting our small business. 💛 Souk3D is a tiny, family-run studio, and every single order genuinely makes our day. We are so grateful you chose handmade.</div><p style="font-size:16px;color:#2A1F18;margin-top:22px;">With love,<br><strong style="color:#D4881F;">Nala and the Souk3D family</strong></p></div><div style="padding:18px;text-align:center;font-size:12px;color:#a89a86;">شكراً لك · Order ${orderNo}</div></div>`;
 }
 
 // Store ship-from address (the return address printed on every label).
