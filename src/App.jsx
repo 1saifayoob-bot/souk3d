@@ -28,7 +28,8 @@ const STORE_PRODUCTS = (() => {
         .filter(p => p.status === "active")
         .map(p => ({
           id: p.id,
-          imageUrl: p.imageUrl || (p.images && p.images[0] && p.images[0].url) || "",
+          buyUrl: p.buyUrl || "",
+        imageUrl: p.imageUrl || (p.images && p.images[0] && p.images[0].url) || "",
           images: p.images || [],
           imageBg: p.imageBg || (p.images && p.images[0] && p.images[0].bg) || "cream",
           name: p.name || "",
@@ -99,6 +100,11 @@ function ProductCard({ product, onView, onAddToCart }) {
           </div>
           <button onClick={() => onAddToCart(product)} style={{ background: C.charcoal, color: "#FFF", border: "none", padding: "8px 14px", fontSize: 11, fontWeight: 600, borderRadius: 8, cursor: "pointer", fontFamily: F.body, letterSpacing: 0.5 }}>Add to Cart</button>
         </div>
+              {product.buyUrl && (
+                <a href={product.buyUrl} target="_blank" rel="noopener noreferrer" style={{ display: "block", marginTop: 10, textAlign: "center", padding: "14px", background: C.saffron, color: "#FFF", borderRadius: 10, fontSize: 14, fontWeight: 700, fontFamily: F.body, textDecoration: "none" }}>
+                  Buy on {product.buyUrl.toLowerCase().includes("amazon") ? "Amazon" : product.buyUrl.toLowerCase().includes("etsy") ? "Etsy" : product.buyUrl.toLowerCase().includes("ebay") ? "eBay" : "their store"}
+                </a>
+              )}
       </div>
     </div>
   );
