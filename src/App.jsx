@@ -198,6 +198,9 @@ function CartDrawer({ cart, onClose, onUpdateQty, onRemove, onCheckout }) {
 // ─── PRODUCT DETAIL PACE �,� 450─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 function ProductDetail({ product, onBack, onAddToCart }) {
   const [tab, setTab] = useState("description");
+  const [activeImg, setActiveImg] = useState(0);
+  const galleryImgs = (product.images && product.images.length ? product.images.map((im) => im && im.url).filter(Boolean) : (product.imageUrl ? [product.imageUrl] : [])).filter((u, i, arr) => arr.indexOf(u) === i);
+  const mainSrc = galleryImgs[activeImg] || galleryImgs[0] || product.imageUrl || "";
   const [qty, setQty] = useState(1);
   const [customText, setCustomText] = useState("");
   const [selectedStyle, setSelectedStyle] = useState("Diwani");
@@ -223,14 +226,18 @@ function ProductDetail({ product, onBack, onAddToCart }) {
         {/* Gallery */}
         <div>
           <div style={{ aspectRatio: "1", background: `linear-gradient(135deg, ${C.cream2} 0%, ${C.wheat}55 100%)`, borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 120, position: "relative", marginBottom: 12 }}>
-            {(product.imageUrl || (product.images && product.images[0] && product.images[0].url)) ? <img src={product.imageUrl || (product.images && product.images[0] && product.images[0].url) || ""} alt={product.name || ""} style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: "inherit" }} /> : product.emoji}
+            {(mainSrc) ? <img src={mainSrc || ""} alt={product.name || ""} style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: "inherit" }} /> : product.emoji}
             {product.badge && <div style={{ position: "absolute", top: 16, left: 16, background: C.saffron, color: "#FFF", fontSize: 11, fontWeight: 700, padding: "4px 12px", borderRadius: 12, fontFamily: F.body }}>{product.badge}</div>}
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            {[1, 2, 3, 4].map(i => (
-              <div key={i} style={{ flex: 1, aspectRatio: "1", background: `linear-gradient(135deg, ${C.cream2} 0%, ${C.wheat}44 100%)`, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, border: i === 1 ? `2px solid ${C.saffron}` : `0.5px solid ${C.wheat}`, cursor: "pointer" }}>{(product.imageUrl || (product.images && product.images[0] && product.images[0].url)) ? <img src={product.imageUrl || (product.images && product.images[0] && product.images[0].url) || ""} alt={product.name || ""} style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: "inherit" }} /> : product.emoji}</div>
+          {galleryImgs.length > 1 && (
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {galleryImgs.map((thumbUrl, i) => (
+              <div key={i} onClick={() => setActiveImg(i)} style={{ width: 64, height: 64, borderRadius: 8, overflow: "hidden", cursor: "pointer", border: i === activeImg ? "2px solid " + C.saffron : "0.5px solid " + C.wheat, background: C.cream2 }}>
+                <img src={thumbUrl} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              </div>
             ))}
           </div>
+        )}
         </div>
 
         {/* Product info */}
