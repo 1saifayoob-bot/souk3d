@@ -147,6 +147,9 @@ export function rowToOrder(r) {
       ? new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })
       : "",
     trackingNumber: r.tracking_number || "",
+    labelUrl: r.label_url || "",
+    trackingUrl: r.tracking_url || "",
+    shippingCarrier: r.shipping_carrier || "",
     isCustom: false,
   };
 }
