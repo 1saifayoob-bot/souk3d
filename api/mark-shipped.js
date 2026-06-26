@@ -79,7 +79,7 @@ export default async function handler(req, res) {
   if (!user) return res.status(403).json({ error: "Not authorized" });
 
   try {
-    const { order_id } = req.body || {};
+    const { order_id, tracking } = req.body || {};
     if (!order_id) return res.status(400).json({ error: "Missing order_id" });
 
     const { data: order } = await admin
@@ -89,7 +89,9 @@ export default async function handler(req, res) {
       .maybeSingle();
     if (!order) return res.status(404).json({ error: "Order not found" });
 
-    await admin.from("orders").update({ status: "shipped" }).eq("id", order_id);
+    const updates = { status: "shipped" };
+    if (tracking) updates.tracking_number = tracking;
+    await admin.from("orders").update(updates).eq("id", order_id);
 
     const a = order.shipping_address || {};
     const email = a.email || "";
@@ -97,7 +99,7 @@ export default async function handler(req, res) {
       const html = shippedHtml(
         order,
         a,
-        order.tracking_number || "",
+        tracking || order.tracking_number || "",
         order.tracking_url || ""
       );
       await sendEmail(email, "Your Souk3D order has shipped", html);
