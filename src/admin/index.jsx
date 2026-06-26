@@ -839,9 +839,11 @@ function OrdersPage() {
   }, []);
 
   const [busy, setBusy] = useState(false);
+  const [rates, setRates] = useState(null);
   const buyLabel = async () => {
     if (!selectedOrder) return;
     setBusy(true);
+    setRates(null);
     try {
       const { data: sess } = await supabase.auth.getSession();
       const token = sess && sess.session ? sess.session.access_token : "";
@@ -851,16 +853,39 @@ function OrdersPage() {
         body: JSON.stringify({ order_id: selectedOrder.id }),
       });
       const data = await res.json();
+      if (data && Array.isArray(data.rates) && data.rates.length) {
+        setRates(data.rates);
+      } else {
+        alert((data && data.error) || "Could not load shipping rates.");
+      }
+    } catch (e) {
+      alert("Rate request failed.");
+    }
+    setBusy(false);
+  };
+  const buyRate = async (rateId) => {
+    if (!selectedOrder) return;
+    setBusy(true);
+    try {
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess && sess.session ? sess.session.access_token : "";
+      const res = await fetch("/api/create-label", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+        body: JSON.stringify({ order_id: selectedOrder.id, rate_id: rateId }),
+      });
+      const data = await res.json();
       if (data && data.label_url) {
         window.open(data.label_url, "_blank");
         const upd = { ...selectedOrder, trackingNumber: data.tracking_number, labelUrl: data.label_url };
         setSelectedOrder(upd);
         setOrders((prev) => prev.map((o) => (o.id === upd.id ? upd : o)));
+        setRates(null);
       } else {
-        alert((data && data.error) || "Could not create label.");
+        alert((data && data.error) || "Label purchase failed.");
       }
     } catch (e) {
-      alert("Label request failed.");
+      alert("Label purchase failed.");
     }
     setBusy(false);
   };
@@ -1015,7 +1040,19 @@ function OrdersPage() {
             <div style={{ display: "flex", gap: 8 }}>
               <PrimaryBtn style={{ flex: 1 }} onClick={() => buyLabel()}>{busy ? "Working..." : "Buy & Print Label"}</PrimaryBtn>
               <GhostBtn style={{ flex: 1 }} onClick={() => markShipped()}>{busy ? "Working..." : "Mark Shipped"}</GhostBtn>
-            </div>
+            </div>{rates && (
+              <div style={{ marginTop: 12, background: "#FFF", border: "0.5px solid " + COLORS.wheat, borderRadius: 12, padding: 16 }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.textMuted, letterSpacing: 0.5, marginBottom: 8 }}>CHOOSE A RATE</div>
+                {rates.map((rt) => (
+                  <button key={rt.id} onClick={() => buyRate(rt.id)} disabled={busy} style={{ display: "flex", justifyContent: "space-between", width: "100%", padding: "10px 12px", marginBottom: 6, border: "0.5px solid " + COLORS.wheat, borderRadius: 8, background: COLORS.cream, cursor: "pointer", fontFamily: FONTS.body, fontSize: 13, color: COLORS.charcoal }}>
+                    <span>{rt.carrier} {rt.service}{rt.days ? " - " + rt.days + "d" : ""}</span>
+                    <strong>${rt.amount}</strong>
+                  </button>
+                ))}
+                <button onClick={() => setRates(null)} style={{ marginTop: 4, background: "none", border: "none", color: COLORS.textMuted, fontSize: 12, cursor: "pointer" }}>Cancel</button>
+              </div>
+            )}
+            
           </div>
         </>
       )}
