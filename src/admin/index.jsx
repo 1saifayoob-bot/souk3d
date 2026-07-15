@@ -336,7 +336,14 @@ const BG_STYLES = [
   { id: "white", label: "White", solid: "#F8F8F8", colors: ["#FFFFFF","#F0F0F0"] },
 ];
 
-function ProductFormModal({ product, onSave, onClose }) {
+function ProductFormModal({ product, onSave, onClose, existingProducts }) {
+  // One sku per form session. This used to be minted inside handleSave, so a
+  // slow save that the user clicked twice produced two different skus and
+  // therefore two rows. Generating it once means a retry upserts the SAME row.
+  const [sessionSku] = useState(function () {
+    return product && product.sku ? product.sku : "S3D-" + String(Date.now()).slice(-4) + Math.floor(Math.random() * 9);
+  });
+  const [saving, setSaving] = useState(false);
   const empty = {
     name: "", name_ar: "", category: "Home Decor", country: "",
     price: "", compareAt: "", cost: "", stock: "", status: "active",
@@ -468,7 +475,7 @@ function ProductFormModal({ product, onSave, onClose }) {
     const saved = {
       ...form,
       id: product?.id || Date.now(),
-      sku: product?.sku || ("S3D-" + String(Date.now()).slice(-4)),
+      sku: sessionSku,
       flag: COUNTRY_FLAGS[form.country] || "",
       price: parseFloat(form.price) || 0,
       cost: parseFloat(form.cost) || 0,
@@ -509,13 +516,29 @@ function ProductFormModal({ product, onSave, onClose }) {
     } catch (e) { alert("Import failed: " + e.message); }
     setImporting(false);
   };
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (saving) return;
     if (!form.name.trim() || !form.price) return alert("Name and price are required.");
     const isEdit = !!product;
+
+    // Refuse to silently create a second product with the same name.
+    const mine = String(form.name).trim().toLowerCase();
+    const clash = (existingProducts || []).find(function (p) {
+      return p && String(p.name || "").trim().toLowerCase() === mine && p.sku !== sessionSku;
+    });
+    if (clash) {
+      const ok = window.confirm(
+        "A product named \"" + String(form.name).trim() + "\" already exists (" + clash.sku + ").\n\n" +
+        "Click Cancel to go back, or OK to save this as a separate product anyway."
+      );
+      if (!ok) return;
+    }
+
+    setSaving(true);
     const saved = {
       ...form,
       id: product?.id || Date.now(),
-      sku: product?.sku || ("S3D-" + String(Date.now()).slice(-4)),
+      sku: sessionSku,
       flag: COUNTRY_FLAGS[form.country] || "🌐",
       price: parseFloat(form.price) || 0,
       cost: parseFloat(form.cost) || 0,
@@ -528,7 +551,11 @@ function ProductFormModal({ product, onSave, onClose }) {
       reviews: product?.reviews || 0,
       images: form.images || [],
     };
-    onSave(saved, isEdit);
+    try {
+      await onSave(saved, isEdit);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const inputStyle = (isArabic) => ({
@@ -699,8 +726,8 @@ function ProductFormModal({ product, onSave, onClose }) {
         </div>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, padding: "14px 20px", borderTop: "1px solid " + COLORS.wheat, background: "#fff" }}>
           <button onClick={onClose} style={{ background: "none", border: "none", color: COLORS.textMuted, fontSize: 12, cursor: "pointer", marginRight: "auto", fontFamily: FONTS.body }}>Discard</button>
-          <button onClick={handleCancel} style={{ background: "#fff", border: "1px solid " + COLORS.wheat, color: COLORS.textMuted, borderRadius: 8, padding: "9px 20px", fontSize: 13, fontWeight: 500, fontFamily: FONTS.body, cursor: "pointer" }}>Cancel</button>
-          <button onClick={handleSave} style={{ background: COLORS.saffron, border: "none", color: "#fff", borderRadius: 8, padding: "9px 24px", fontSize: 13, fontWeight: 600, fontFamily: FONTS.body, cursor: "pointer" }}>{product ? "Save changes" : "Add product"}</button>
+          <button onClick={handleCancel} disabled={saving} style={{ background: "#fff", border: "1px solid " + COLORS.wheat, color: COLORS.textMuted, borderRadius: 8, padding: "9px 20px", fontSize: 13, fontWeight: 500, fontFamily: FONTS.body, cursor: saving ? "not-allowed" : "pointer" }}>Cancel</button>
+          <button onClick={handleSave} disabled={saving} style={{ background: saving ? COLORS.wheat : COLORS.saffron, border: "none", color: "#fff", borderRadius: 8, padding: "9px 24px", fontSize: 13, fontWeight: 600, fontFamily: FONTS.body, cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.8 : 1 }}>{saving ? "Saving..." : (product ? "Save changes" : "Add product")}</button>
         </div>
       </div>
     </div>
@@ -734,8 +761,13 @@ function ProductsPage() {
   useEffect(() => { loadProducts(); }, []);
 
   const handleSave = async (product, isEdit) => {
-    try { await saveProduct(product); await loadProducts(); }
-    catch (e) { alert("Save failed: " + e.message); }
+    try {
+      await saveProduct(product);
+      await loadProducts();
+    } catch (e) {
+      alert("Save failed: " + e.message + "\n\nNothing was duplicated - fix the problem and press save again.");
+      return;
+    }
     setShowForm(false);
     setEditProduct(null);
     setSelected(null);
@@ -927,6 +959,7 @@ function ProductsPage() {
       {showForm && (
         <ProductFormModal
           product={editProduct}
+          existingProducts={products}
           onSave={handleSave}
           onClose={() => { setShowForm(false); setEditProduct(null); }}
         />
