@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { supabase, fetchProducts, saveProduct, deleteProductById, migrateLocalProducts, fetchOrders, setProductStatus, reoptimizeProductImages, fetchProductIds, fetchProductById, productNeedsOptimizing, fetchCustomOrders, setCustomOrderStage } from "../lib/supabase";
+import { supabase, fetchProducts, saveProduct, deleteProductById, migrateLocalProducts, fetchOrders, setProductStatus, reoptimizeProductImages, fetchProductIds, fetchProductById, productNeedsOptimizing, fetchCustomOrders, setCustomOrderStage, fetchCustomers } from "../lib/supabase";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart, PieChart, Pie, Cell, BarChart, Bar } from "recharts";
 
 // ─── BRAND CONSTANTS ───────────────────────────────────────────────────────────
@@ -1340,13 +1340,48 @@ function OrdersPage() {
 
 // ─── CUSTOMERS PAGE ────────────────────────────────────────────────────────────
 function CustomersPage() {
+  const [customers, setCustomers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+
+  const loadCustomers = async () => {
+    try {
+      const list = await fetchCustomers();
+      setCustomers(list);
+      setLoadError("");
+    } catch (e) {
+      console.error("Load customers failed", e);
+      setLoadError(e.message || "Could not load customers.");
+    }
+    setLoading(false);
+  };
+  useEffect(() => { loadCustomers(); }, []);
+
+  const exportCsv = () => {
+    const head = ["Name", "Email", "Phone", "Heritage", "Location", "Orders", "LTV", "Last Order", "Tags"];
+    const esc = (v) => {
+      const s = String(v == null ? "" : v);
+      return s.indexOf(",") !== -1 || s.indexOf(String.fromCharCode(34)) !== -1
+        ? String.fromCharCode(34) + s.split(String.fromCharCode(34)).join(String.fromCharCode(34, 34)) + String.fromCharCode(34)
+        : s;
+    };
+    const rows = filtered.map((c) => [c.name, c.email, c.phone, c.heritage, c.location, c.orders, Number(c.ltv || 0).toFixed(2), c.lastOrder, (c.tags || []).join(" / ")].map(esc).join(","));
+    const csv = [head.join(",")].concat(rows).join(String.fromCharCode(10));
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "souk3d-customers.csv";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
   const [search, setSearch] = useState("");
   const [heritageFilter, setHeritageFilter] = useState("all");
   const [tagFilter, setTagFilter] = useState("all");
   const [selected, setSelected] = useState(null);
   const [noteText, setNoteText] = useState("");
 
-  const filtered = CUSTOMERS_DATA.filter(c => {
+  const filtered = customers.filter(c => {
     const q = search.toLowerCase();
     const matchSearch = c.name.toLowerCase().includes(q) || c.email.toLowerCase().includes(q);
     const matchHeritage = heritageFilter === "all" || c.heritage === heritageFilter;
@@ -1354,11 +1389,11 @@ function CustomersPage() {
     return matchSearch && matchHeritage && matchTag;
   });
 
-  const totalLTV = CUSTOMERS_DATA.reduce((s, c) => s + c.ltv, 0);
-  const avgLTV = totalLTV / CUSTOMERS_DATA.length;
-  const vipCount = CUSTOMERS_DATA.filter(c => c.tags.includes("VIP")).length;
-  const repeatCount = CUSTOMERS_DATA.filter(c => c.tags.includes("Repeat buyer")).length;
-  const topHeritage = Object.entries(CUSTOMERS_DATA.reduce((acc, c) => { acc[c.heritage] = (acc[c.heritage] || 0) + 1; return acc; }, {})).sort((a, b) => b[1] - a[1])[0]?.[0];
+  const totalLTV = customers.reduce((s, c) => s + c.ltv, 0);
+  const avgLTV = customers.length ? totalLTV / customers.length : 0;
+  const vipCount = customers.filter(c => c.tags.includes("VIP")).length;
+  const repeatCount = customers.filter(c => c.tags.includes("Repeat buyer")).length;
+  const topHeritage = Object.entries(customers.reduce((acc, c) => { acc[c.heritage] = (acc[c.heritage] || 0) + 1; return acc; }, {})).sort((a, b) => b[1] - a[1])[0]?.[0];
 
   const TAG_COLORS = { "VIP": COLORS.saffron, "Repeat buyer": COLORS.damascene, "Custom orders": COLORS.olive, "Gift buyer": COLORS.terracotta, "Refunded": "#888", "Inactive": "#aaa" };
 
@@ -1367,7 +1402,7 @@ function CustomersPage() {
       <div style={{ position: "sticky", top: -24, zIndex: 10, background: COLORS.cream, margin: "-24px -32px 0", padding: "24px 32px 14px", borderBottom: `0.5px solid ${COLORS.wheat}`, boxShadow: "0 4px 12px rgba(0,0,0,0.04)" }}>
         <div style={{ display: "flex", alignItems: "center", marginBottom: 12 }}>
           <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal, flex: 1 }}>Customers</div>
-          <PrimaryBtn>Export CSV</PrimaryBtn>
+          <PrimaryBtn onClick={exportCsv}>Export CSV</PrimaryBtn>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search customers…" style={{ flex: 1, minWidth: 180, padding: "7px 12px", border: `0.5px solid ${COLORS.wheat}`, borderRadius: 8, fontSize: 12, fontFamily: FONTS.body, outline: "none" }} />
@@ -1383,8 +1418,8 @@ function CustomersPage() {
       </div>
       <div style={{ height: 14 }} />
       <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
-        <StatCard label="TOTAL CUSTOMERS" value={CUSTOMERS_DATA.length} />
-        <StatCard label="REPEAT BUYERS" value={repeatCount} sub={`${Math.round(repeatCount/CUSTOMERS_DATA.length*100)}% of total`} />
+        <StatCard label="TOTAL CUSTOMERS" value={customers.length} />
+        <StatCard label="REPEAT BUYERS" value={repeatCount} sub={`${(customers.length ? Math.round((repeatCount / customers.length) * 100) : 0)}% of total`} />
         <StatCard label="VIP" value={vipCount} sub="3+ orders" dark />
         <StatCard label="AVG LIFETIME VALUE" value={`$${avgLTV.toFixed(0)}`} />
         <StatCard label="TOP HERITAGE" value={topHeritage} />
