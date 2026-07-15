@@ -509,6 +509,46 @@ function CustomOrderForm({ onBack }) {
   const [deadline, setDeadline] = useState("");
   const [formData, setFormData] = useState({ name: "", email: "", whatsapp: "", notes: "" });
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState("");
+  const [reference, setReference] = useState("");
+
+  // This used to just flip setSubmitted(true), so every request a customer
+  // sent was silently thrown away. It now actually saves and emails.
+  const submitRequest = async () => {
+    if (sending) return;
+    if (!formData.name.trim() || !formData.email.trim()) return;
+    setSending(true);
+    setSendError("");
+    try {
+      const res = await fetch("/api/create-custom-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          whatsapp: formData.whatsapp,
+          notes: formData.notes,
+          occasion: occasion,
+          arabicText: arabicText,
+          style: style,
+          color: color,
+          deadline: deadline,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        setSendError((data && data.error) || "Something went wrong. Please try again, or email us at order@souk3d.com.");
+        setSending(false);
+        return;
+      }
+      setReference(data.reference || "");
+      setSubmitted(true);
+    } catch (e) {
+      setSendError("We could not reach the server. Please check your connection and try again.");
+    }
+    setSending(false);
+  };
 
   const OCCASIONS = [
     { id: "wedding", label: "Wedding", emoji: "💍", arabic: "زفاف" },
@@ -529,6 +569,9 @@ function CustomOrderForm({ onBack }) {
         <div style={{ fontSize: 64, marginBottom: 20 }}>✦</div>
         <div style={{ fontFamily: F.display, fontSize: 32, fontWeight: 600, color: C.charcoal, marginBottom: 8 }}>Request Received!</div>
         <div style={{ fontFamily: F.arabic, fontSize: 24, color: C.saffron, marginBottom: 16 }}>تم استلام طلبك!</div>
+        {reference && (
+          <div style={{ display: "inline-block", background: C.cream2, border: "0.5px solid " + C.wheat, borderRadius: 8, padding: "6px 14px", fontSize: 12, fontFamily: F.body, color: C.textMuted, marginBottom: 16 }}>Reference {reference}</div>
+        )}
         <p style={{ fontSize: 14, color: C.textMuted, fontFamily: F.body, lineHeight: 1.7, marginBottom: 24 }}>Nala will review your request and send you a personalized quote within 24 hours. Check your email and WhatsApp!</p>
         <button onClick={onBack} style={{ padding: "13px 32px", background: C.saffron, color: "#FFF", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 600, fontFamily: F.body, cursor: "pointer" }}>Back to Shop</button>
       </div>
@@ -654,9 +697,12 @@ function CustomOrderForm({ onBack }) {
             ))}
           </div>
 
+          {sendError && (
+            <div style={{ background: "#FDF3EC", border: "0.5px solid " + C.terracotta, color: C.terracotta, borderRadius: 8, padding: "10px 12px", fontSize: 13, fontFamily: F.body, marginBottom: 10 }}>{sendError}</div>
+          )}
           <div style={{ display: "flex", gap: 10 }}>
             <button onClick={() => setStep(2)} style={{ flex: 1, padding: "13px", background: "#FFF", color: C.charcoal, border: `0.5px solid ${C.wheat}`, borderRadius: 10, fontSize: 14, fontWeight: 600, fontFamily: F.body, cursor: "pointer" }}>← Back</button>
-            <button onClick={() => formData.name && formData.email && setSubmitted(true)} style={{ flex: 2, padding: "13px", background: formData.name && formData.email ? C.saffron : C.wheat, color: formData.name && formData.email ? "#FFF" : C.textMuted, border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, fontFamily: F.body, cursor: formData.name && formData.email ? "pointer" : "not-allowed" }}>Submit Request ✦</button>
+            <button onClick={submitRequest} disabled={sending || !formData.name || !formData.email} style={{ flex: 2, padding: "13px", background: formData.name && formData.email && !sending ? C.saffron : C.wheat, color: formData.name && formData.email && !sending ? "#FFF" : C.textMuted, border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, fontFamily: F.body, cursor: formData.name && formData.email && !sending ? "pointer" : "not-allowed" }}>{sending ? "Sending..." : "Submit Request ✦"}</button>
           </div>
         </div>
       )}
