@@ -76,21 +76,72 @@ export async function optimizeAndUpload(src, useCors) {
   return { url: url, thumbUrl: thumbUrl, bytes: full.size + thumb.size };
 }
 
-// Upload any data: URL images to Storage (resized + WebP) and replace them
+// Normalise one image entry so the database row never holds image bytes.
+// An entry looks like { bg, url, original, bgRemoved }. Both "url" and
+// "original" (the pre-background-removal photo) must be Storage URLs - keeping
+// them as base64 data: URLs made every product row about 900 KB, which made
+// select(*) time out. Returns { entry, before, after, changed }.
+async function optimizeImageEntry(img) {
+  const out = Object.assign({}, img);
+  let changed = false;
+  let before = 0;
+  let after = 0;
+
+  const u = out.url;
+  if (typeof u === "string" && u.startsWith("data:")) {
+    before += Math.round(u.length * 0.75);
+    const r = await optimizeAndUpload(u, false);
+    out.url = r.url;
+    out.thumbUrl = r.thumbUrl;
+    after += r.bytes;
+    changed = true;
+  } else if (typeof u === "string" && u.indexOf("http") === 0 && !out.thumbUrl) {
+    try {
+      const b = await (await fetch(u, { cache: "no-store" })).blob();
+      before += b.size;
+    } catch (e) { /* size is only for reporting */ }
+    const r = await optimizeAndUpload(u, true);
+    out.url = r.url;
+    out.thumbUrl = r.thumbUrl;
+    after += r.bytes;
+    changed = true;
+  }
+
+  const o = out.original;
+  if (typeof o === "string" && o.startsWith("data:")) {
+    before += Math.round(o.length * 0.75);
+    const r = await optimizeAndUpload(o, false);
+    out.original = r.url;
+    after += r.bytes;
+    changed = true;
+  }
+
+  return { entry: out, before: before, after: after, changed: changed };
+}
+
+// True when a product still has image bytes or a missing thumbnail.
+export function productNeedsOptimizing(p) {
+  const list = (p && p.images) || [];
+  return list.some(function (im) {
+    if (!im) return false;
+    const u = typeof im.url === "string" ? im.url : "";
+    const o = typeof im.original === "string" ? im.original : "";
+    return u.startsWith("data:") || o.startsWith("data:") || (u.indexOf("http") === 0 && !im.thumbUrl);
+  });
+}
+
+// Upload any inline image bytes to Storage (resized + WebP) and replace them
 // with public URLs. Already-uploaded images are left alone.
 async function uploadImagesToStorage(images) {
   const list = Array.isArray(images) ? images : [];
   const out = [];
   for (const img of list) {
-    if (img && typeof img.url === "string" && img.url.startsWith("data:")) {
-      try {
-        const r = await optimizeAndUpload(img.url, false);
-        out.push(Object.assign({}, img, { url: r.url, thumbUrl: r.thumbUrl }));
-      } catch (e) {
-        console.error("Image upload failed, keeping inline image", e);
-        out.push(img);
-      }
-    } else if (img) {
+    if (!img) continue;
+    try {
+      const r = await optimizeImageEntry(img);
+      out.push(r.entry);
+    } catch (e) {
+      console.error("Image upload failed, keeping inline image", e);
       out.push(img);
     }
   }
@@ -170,6 +221,29 @@ export async function fetchProducts({ activeOnly = false } = {}) {
   return (data || []).map(rowToProduct);
 }
 
+// Light query: ids only. Safe even when rows are huge, because the heavy
+// images column is not selected.
+export async function fetchProductIds() {
+  const { data, error } = await supabase
+    .from("products")
+    .select("id")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data || []).map((r) => r.id);
+}
+
+// Fetch a single product. Used by the optimizer so one huge row at a time is
+// pulled instead of all of them at once (which hits the statement timeout).
+export async function fetchProductById(id) {
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? rowToProduct(data) : null;
+}
+
 export async function saveProduct(p) {
   const images = await uploadImagesToStorage(baseImagesOf(p));
   const row = productToRow({ ...p, images });
@@ -204,24 +278,14 @@ export async function reoptimizeProductImages(product) {
   let before = 0;
   let after = 0;
   for (const img of images) {
-    const u = img && img.url;
-    const isRemote = typeof u === "string" && u.indexOf("http") === 0;
-    if (isRemote && !img.thumbUrl) {
-      try {
-        try {
-          const head = await fetch(u, { cache: "no-store" });
-          const buf = await head.blob();
-          before += buf.size;
-        } catch (e) { /* size is only for reporting */ }
-        const r = await optimizeAndUpload(u, true);
-        after += r.bytes;
-        out.push(Object.assign({}, img, { url: r.url, thumbUrl: r.thumbUrl }));
-        changed = true;
-      } catch (e) {
-        console.error("Re-optimize failed for one image", e);
-        out.push(img);
-      }
-    } else {
+    try {
+      const r = await optimizeImageEntry(img);
+      out.push(r.entry);
+      before += r.before;
+      after += r.after;
+      if (r.changed) changed = true;
+    } catch (e) {
+      console.error("Re-optimize failed for one image", e);
       out.push(img);
     }
   }
