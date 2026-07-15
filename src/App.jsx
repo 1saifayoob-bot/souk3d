@@ -77,7 +77,7 @@ function ProductCard({ product, onView, onAddToCart }) {
   return (
     <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} style={{ background: "#FFF", border: `0.5px solid ${C.wheat}`, borderRadius: 12, overflow: "hidden", cursor: "pointer", transition: "box-shadow 0.2s", boxShadow: hovered ? "0 8px 32px rgba(42,31,24,0.14)" : "none" }}>
       <div onClick={() => onView(product)} style={{ aspectRatio: "1", background: `linear-gradient(135deg, ${C.cream2} 0%, ${C.wheat}44 100%)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 64, position: "relative" }}>
-        {(product.imageUrl || (product.images && product.images[0] && product.images[0].url)) ? <img src={product.imageUrl || (product.images && product.images[0] && product.images[0].url) || ""} alt={product.name || ""} style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: "inherit" }} /> : product.emoji}
+        {(product.thumbUrl || product.imageUrl || (product.images && product.images[0] && product.images[0].url)) ? <img src={product.thumbUrl || product.imageUrl || (product.images && product.images[0] && product.images[0].url) || ""} alt={product.name || ""} loading="lazy" decoding="async" style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: "inherit" }} /> : product.emoji}
         {product.badge && (
           <div style={{ position: "absolute", top: 12, left: 12, background: product.badge === "Sale" ? C.terracotta : product.badge === "New" ? C.damascene : C.saffron, color: "#FFF", fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 10, fontFamily: F.body }}>{product.badge}</div>
         )}
@@ -199,7 +199,8 @@ function CartDrawer({ cart, onClose, onUpdateQty, onRemove, onCheckout }) {
 function ProductDetail({ product, onBack, onAddToCart }) {
   const [tab, setTab] = useState("description");
   const [activeImg, setActiveImg] = useState(0);
-  const galleryImgs = (product.images && product.images.length ? product.images.map((im) => im && im.url).filter(Boolean) : (product.imageUrl ? [product.imageUrl] : [])).filter((u, i, arr) => arr.indexOf(u) === i);
+  const galleryObjs = (product.images && product.images.length ? product.images.filter((im) => im && im.url) : (product.imageUrl ? [{ url: product.imageUrl }] : [])).filter((im, i, arr) => arr.findIndex((x) => x.url === im.url) === i);
+  const galleryImgs = galleryObjs.map((im) => im.url);
   const mainSrc = galleryImgs[activeImg] || galleryImgs[0] || product.imageUrl || "";
   const [qty, setQty] = useState(1);
   const [customText, setCustomText] = useState("");
@@ -233,7 +234,7 @@ function ProductDetail({ product, onBack, onAddToCart }) {
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {galleryImgs.map((thumbUrl, i) => (
               <div key={i} onClick={() => setActiveImg(i)} style={{ width: 64, height: 64, borderRadius: 8, overflow: "hidden", cursor: "pointer", border: i === activeImg ? "2px solid " + C.saffron : "0.5px solid " + C.wheat, background: C.cream2 }}>
-                <img src={thumbUrl} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                <img src={(galleryObjs[i] && galleryObjs[i].thumbUrl) || thumbUrl} alt={product.name} loading="lazy" decoding="async" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               </div>
             ))}
           </div>
