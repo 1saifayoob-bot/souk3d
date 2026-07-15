@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { supabase, fetchProducts, saveProduct, deleteProductById, migrateLocalProducts, fetchOrders, setProductStatus, reoptimizeProductImages } from "../lib/supabase";
+import { supabase, fetchProducts, saveProduct, deleteProductById, migrateLocalProducts, fetchOrders, setProductStatus, reoptimizeProductImages, fetchProductIds, fetchProductById, productNeedsOptimizing } from "../lib/supabase";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart, PieChart, Pie, Cell, BarChart, Bar } from "recharts";
 
 // ─── BRAND CONSTANTS ───────────────────────────────────────────────────────────
@@ -760,23 +760,37 @@ function ProductsPage() {
     setSelected(null);
   };
 
+  // Products are fetched one at a time here on purpose: rows that still carry
+  // inline base64 images are ~900 KB each, so loading them all at once hits the
+  // database statement timeout. Ids first, then one row per pass.
   const optimizeAll = async () => {
-    const todo = products.filter((p) => (p.images || []).some((im) => im && im.url && !im.thumbUrl));
-    if (!todo.length) { alert("All product images are already optimized."); return; }
-    if (!window.confirm("Re-compress images for " + todo.length + " product(s)? This runs in your browser and may take a minute.")) return;
-    let before = 0, after = 0, done = 0;
-    for (const p of todo) {
-      setOptimizing("Optimizing " + (done + 1) + "/" + todo.length);
+    if (!window.confirm("Re-compress every product image? This runs in your browser and may take a few minutes. You can keep working when it finishes.")) return;
+    let ids = [];
+    try {
+      setOptimizing("Checking...");
+      ids = await fetchProductIds();
+    } catch (e) {
+      setOptimizing("");
+      alert("Could not list products: " + e.message);
+      return;
+    }
+    let before = 0, after = 0, fixed = 0, failed = 0;
+    for (let i = 0; i < ids.length; i++) {
+      setOptimizing("Optimizing " + (i + 1) + "/" + ids.length);
       try {
+        const p = await fetchProductById(ids[i]);
+        if (!p || !productNeedsOptimizing(p)) continue;
         const r = await reoptimizeProductImages(p);
-        if (r) { before += r.before; after += r.after; }
-      } catch (e) { console.error("Optimize failed", e); }
-      done++;
+        if (r) { before += r.before; after += r.after; fixed++; }
+      } catch (e) {
+        failed++;
+        console.error("Optimize failed for one product", e);
+      }
     }
     setOptimizing("");
-    await loadProducts();
+    try { await loadProducts(); } catch (e) { /* list refresh is best effort */ }
     const mb = (n) => (n / 1048576).toFixed(2) + " MB";
-    alert("Done. Product images went from " + mb(before) + " to " + mb(after) + ".");
+    alert("Optimized " + fixed + " product(s)" + (failed ? " (" + failed + " failed)" : "") + ".\nImages went from " + mb(before) + " to " + mb(after) + ".");
   };
 
     const openEdit = (p) => {
@@ -856,7 +870,7 @@ function ProductsPage() {
               </tr>
             ))}
             {filtered.length === 0 && (
-              <tr><td colSpan={8} style={{ padding: "32px 8px", textAlign: "center", color: COLORS.textMuted, fontSize: 13, fontFamily: FONTS.body }}>No products found. Click "+ New Product" to add one.</td></tr>
+              <tr><td colSpan={8} style={{ padding: "32px 8px", textAlign: "center", color: COLORS.textMuted, fontSize: 13, fontFamily: FONTS.body }}>{loading ? "Loading products..." : "No products found. Click \"+ New Product\" to add one."}</td></tr>
             )}
           </tbody>
         </table>
