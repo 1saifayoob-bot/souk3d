@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { supabase, fetchProducts, saveProduct, deleteProductById, migrateLocalProducts, fetchOrders } from "../lib/supabase";
+import { supabase, fetchProducts, saveProduct, deleteProductById, migrateLocalProducts, fetchOrders, setProductStatus, reoptimizeProductImages } from "../lib/supabase";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart, PieChart, Pie, Cell, BarChart, Bar } from "recharts";
 
 // ─── BRAND CONSTANTS ───────────────────────────────────────────────────────────
@@ -708,6 +708,8 @@ function ProductFormModal({ product, onSave, onClose }) {
 }
 
 // ─── PRODUCTS PAGE ─────────────────────────────────────────────────────────────
+const MENU_ITEM = { display: "block", width: "100%", textAlign: "left", padding: "8px 10px", border: "none", background: "none", cursor: "pointer", fontFamily: FONTS.body, fontSize: 12, color: COLORS.charcoal, borderRadius: 6 };
+
 function ProductsPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -716,6 +718,8 @@ function ProductsPage() {
   const [selected, setSelected] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editProduct, setEditProduct] = useState(null);
+  const [menuFor, setMenuFor] = useState(null);
+  const [optimizing, setOptimizing] = useState("");
 
   const loadProducts = async () => {
     try {
@@ -744,6 +748,37 @@ function ProductsPage() {
     setSelected(null);
   };
 
+  const handleArchive = async (p, archive) => {
+    const next = archive ? "archived" : "active";
+    try {
+      await setProductStatus(p.id, next);
+      setProducts((prev) => prev.map((x) => (x.id === p.id ? { ...x, status: next } : x)));
+    } catch (e) {
+      alert((archive ? "Archive" : "Unarchive") + " failed: " + e.message);
+    }
+    setMenuFor(null);
+    setSelected(null);
+  };
+
+  const optimizeAll = async () => {
+    const todo = products.filter((p) => (p.images || []).some((im) => im && im.url && !im.thumbUrl));
+    if (!todo.length) { alert("All product images are already optimized."); return; }
+    if (!window.confirm("Re-compress images for " + todo.length + " product(s)? This runs in your browser and may take a minute.")) return;
+    let before = 0, after = 0, done = 0;
+    for (const p of todo) {
+      setOptimizing("Optimizing " + (done + 1) + "/" + todo.length);
+      try {
+        const r = await reoptimizeProductImages(p);
+        if (r) { before += r.before; after += r.after; }
+      } catch (e) { console.error("Optimize failed", e); }
+      done++;
+    }
+    setOptimizing("");
+    await loadProducts();
+    const mb = (n) => (n / 1048576).toFixed(2) + " MB";
+    alert("Done. Product images went from " + mb(before) + " to " + mb(after) + ".");
+  };
+
     const openEdit = (p) => {
     setEditProduct(p);
     setShowForm(true);
@@ -762,11 +797,12 @@ function ProductsPage() {
       <div style={{ position: "sticky", top: -24, zIndex: 10, background: COLORS.cream, margin: "-24px -32px 0", padding: "24px 32px 14px", borderBottom: `0.5px solid ${COLORS.wheat}`, boxShadow: "0 4px 12px rgba(0,0,0,0.04)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
           <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal, marginRight: "auto" }}>Products</div>
+          <GhostBtn onClick={optimizeAll} disabled={!!optimizing} style={{ fontSize: 11 }}>{optimizing || "Optimize images"}</GhostBtn>
           <PrimaryBtn onClick={() => { setEditProduct(null); setShowForm(true); }}>+ New Product</PrimaryBtn>
         </div>
         <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search products…" style={{ flex: 1, minWidth: 180, padding: "7px 12px", border: `0.5px solid ${COLORS.wheat}`, borderRadius: 8, fontSize: 12, fontFamily: FONTS.body, outline: "none" }} />
-          {["all", "active", "out_of_stock", "draft"].map(s => (
+          {["all", "active", "out_of_stock", "draft", "archived"].map(s => (
             <FilterPill key={s} label={s === "all" ? "All" : s === "out_of_stock" ? "Out of Stock" : s.charAt(0).toUpperCase() + s.slice(1)} active={statusFilter === s} onClick={() => setStatusFilter(s)} />
           ))}
         </div>
@@ -787,7 +823,7 @@ function ProductsPage() {
                 <td style={{ padding: "12px 8px", fontSize: 11, color: COLORS.textMuted }}>{p.sku || "—"}</td>
                 <td style={{ padding: "12px 8px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    {(()=>{const cover=p.images&&p.images[0]||(p.imageUrl?{url:p.imageUrl,bg:p.imageBg||"cream"}:null);const bg=(BG_STYLES.find(b=>b.id===(cover&&cover.bg))||BG_STYLES[0]).colors;return cover?(<div style={{width:38,height:38,borderRadius:8,background:`linear-gradient(135deg,${bg[0]},${bg[1]})`,display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",flexShrink:0}}><img src={cover.url} alt={p.name} style={{maxWidth:"100%",maxHeight:"100%",objectFit:"contain"}} /></div>):(<span style={{fontSize:18}}>{p.emoji||"🏺"}</span>);})()}
+                    {(()=>{const cover=p.images&&p.images[0]||(p.imageUrl?{url:p.imageUrl,bg:p.imageBg||"cream"}:null);const bg=(BG_STYLES.find(b=>b.id===(cover&&cover.bg))||BG_STYLES[0]).colors;return cover?(<div style={{width:38,height:38,borderRadius:8,background:`linear-gradient(135deg,${bg[0]},${bg[1]})`,display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",flexShrink:0}}><img src={cover.thumbUrl||cover.url} alt={p.name} loading="lazy" decoding="async" style={{maxWidth:"100%",maxHeight:"100%",objectFit:"contain"}} /></div>):(<span style={{fontSize:18}}>{p.emoji||"🏺"}</span>);})()}
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 500, color: COLORS.charcoal }}>{p.name}</div>
                       <div style={{ fontSize: 11, fontFamily: FONTS.arabic, color: COLORS.textMuted }}>{p.name_ar}</div>
@@ -799,8 +835,23 @@ function ProductsPage() {
                 <td style={{ padding: "12px 8px", fontSize: 12, color: p.stock === 0 ? COLORS.terracotta : COLORS.charcoal, fontWeight: p.stock < 5 ? 600 : 400 }}>{p.stock === 0 ? "Out" : p.stock}</td>
                 <td style={{ padding: "12px 8px", fontSize: 12, color: COLORS.charcoal }}>{p.orders || 0}</td>
                 <td style={{ padding: "12px 8px" }}><Badge status={p.status} /></td>
-                <td style={{ padding: "12px 8px" }}>
+                <td style={{ padding: "12px 8px", position: "relative", whiteSpace: "nowrap" }}>
                   <GhostBtn onClick={(e) => { e.stopPropagation(); openEdit(p); }} style={{ padding: "4px 10px", fontSize: 10 }}>Edit</GhostBtn>
+                  <button onClick={(e) => { e.stopPropagation(); setMenuFor(menuFor === p.id ? null : p.id); }} title="More actions" style={{ marginLeft: 4, padding: "3px 8px", border: "0.5px solid " + COLORS.wheat, borderRadius: 6, background: "transparent", cursor: "pointer", color: COLORS.textMuted, fontSize: 13, lineHeight: 1 }}>⋯</button>
+                  {menuFor === p.id && (
+                    <>
+                      <div onClick={(e) => { e.stopPropagation(); setMenuFor(null); }} style={{ position: "fixed", inset: 0, zIndex: 60 }} />
+                      <div onClick={(e) => e.stopPropagation()} style={{ position: "absolute", right: 8, top: 36, zIndex: 61, background: "#FFF", border: "0.5px solid " + COLORS.wheat, borderRadius: 10, boxShadow: "0 8px 24px rgba(0,0,0,0.12)", padding: 4, minWidth: 150 }}>
+                        <button onClick={() => { setMenuFor(null); openEdit(p); }} style={MENU_ITEM}>Edit</button>
+                        {p.status === "archived" ? (
+                          <button onClick={() => handleArchive(p, false)} style={MENU_ITEM}>Unarchive</button>
+                        ) : (
+                          <button onClick={() => handleArchive(p, true)} style={MENU_ITEM}>Archive</button>
+                        )}
+                        <button onClick={() => { setMenuFor(null); handleDelete(p.id); }} style={{ ...MENU_ITEM, color: COLORS.terracotta }}>Delete</button>
+                      </div>
+                    </>
+                  )}
                 </td>
               </tr>
             ))}
@@ -817,7 +868,7 @@ function ProductsPage() {
           <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: "min(580px, 92vw)", background: COLORS.cream, zIndex: 101, boxShadow: "-20px 0 60px rgba(0,0,0,0.3)", animation: "slideIn 0.3s ease", overflowY: "auto", padding: 28 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
               <div>
-                {(()=>{const cover=selected.images&&selected.images[0]||(selected.imageUrl?{url:selected.imageUrl,bg:selected.imageBg||"cream"}:null);const bg=(BG_STYLES.find(b=>b.id===(cover&&cover.bg))||BG_STYLES[0]).colors;return cover?(<div style={{width:84,height:84,borderRadius:12,background:`linear-gradient(135deg,${bg[0]},${bg[1]})`,display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",marginBottom:10}}><img src={cover.url} alt={selected.name} style={{maxWidth:"100%",maxHeight:"100%",objectFit:"contain"}} /></div>):(<div style={{fontSize:28,marginBottom:4}}>{selected.emoji||"🏺"}</div>);})()}
+                {(()=>{const cover=selected.images&&selected.images[0]||(selected.imageUrl?{url:selected.imageUrl,bg:selected.imageBg||"cream"}:null);const bg=(BG_STYLES.find(b=>b.id===(cover&&cover.bg))||BG_STYLES[0]).colors;return cover?(<div style={{width:84,height:84,borderRadius:12,background:`linear-gradient(135deg,${bg[0]},${bg[1]})`,display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",marginBottom:10}}><img src={cover.thumbUrl||cover.url} alt={selected.name} loading="lazy" decoding="async" style={{maxWidth:"100%",maxHeight:"100%",objectFit:"contain"}} /></div>):(<div style={{fontSize:28,marginBottom:4}}>{selected.emoji||"🏺"}</div>);})()}
                 <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal }}>{selected.name}</div>
                 <div style={{ fontFamily: FONTS.arabic, fontSize: 16, color: COLORS.saffron }}>{selected.name_ar}</div>
               </div>
@@ -852,6 +903,7 @@ function ProductsPage() {
             </SectionCard>
             <div style={{ display: "flex", gap: 8 }}>
               <PrimaryBtn onClick={() => openEdit(selected)} style={{ flex: 1 }}>Edit Product</PrimaryBtn>
+              <GhostBtn onClick={() => handleArchive(selected, selected.status !== "archived")} style={{ flex: 1 }}>{selected.status === "archived" ? "Unarchive" : "Archive"}</GhostBtn>
               <GhostBtn onClick={() => handleDelete(selected.id)} style={{ flex: 1, color: COLORS.terracotta, borderColor: COLORS.terracotta }}>Delete</GhostBtn>
             </div>
           </div>
@@ -984,12 +1036,14 @@ function OrdersPage() {
 
   const [busy, setBusy] = useState(false);
   const [rates, setRates] = useState(null);
+  const [confirmRate, setConfirmRate] = useState(null);
   const [trackInput, setTrackInput] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const buyLabel = async () => {
     if (!selectedOrder) return;
     setBusy(true);
     setRates(null);
+    setConfirmRate(null);
     try {
       const { data: sess } = await supabase.auth.getSession();
       const token = sess && sess.session ? sess.session.access_token : "";
@@ -1027,6 +1081,7 @@ function OrdersPage() {
         setSelectedOrder(upd);
         setOrders((prev) => prev.map((o) => (o.id === upd.id ? upd : o)));
         setRates(null);
+        setConfirmRate(null);
       } else {
         alert((data && data.error) || "Label purchase failed.");
       }
@@ -1203,11 +1258,24 @@ function OrdersPage() {
               <input value={trackInput} onChange={(e) => setTrackInput(e.target.value)} placeholder="Paste tracking number (optional)" style={{ flex: 2, padding: "10px 12px", border: "0.5px solid " + COLORS.wheat, borderRadius: 8, fontSize: 13, fontFamily: FONTS.body, boxSizing: "border-box" }} />
               <GhostBtn style={{ flex: 1 }} onClick={() => printPackingSlip()}>Packing Slip</GhostBtn>
             </div>
-            {rates && (
+            {confirmRate && (
+              <div style={{ marginTop: 12, background: "#FFF", border: "1px solid " + COLORS.saffron, borderRadius: 12, padding: 16 }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.textMuted, letterSpacing: 0.5, marginBottom: 8 }}>CONFIRM LABEL PURCHASE</div>
+                <div style={{ fontSize: 14, fontFamily: FONTS.body, color: COLORS.charcoal }}>{confirmRate.carrier} {confirmRate.service}{confirmRate.days ? " - " + confirmRate.days + " day(s)" : ""}</div>
+                <div style={{ fontFamily: FONTS.display, fontSize: 28, fontWeight: 600, color: COLORS.charcoal, margin: "4px 0 8px" }}>{"$" + confirmRate.amount}</div>
+                <div style={{ fontSize: 12, fontFamily: FONTS.body, color: COLORS.textMuted, marginBottom: 8 }}>{"Ship to: " + ((selectedOrder.address && selectedOrder.address.name) || selectedOrder.customer) + (selectedOrder.location ? " - " + selectedOrder.location : "")}</div>
+                <div style={{ fontSize: 12, fontFamily: FONTS.body, color: COLORS.terracotta, background: COLORS.cream, border: "0.5px solid " + COLORS.wheat, borderRadius: 8, padding: "8px 10px", marginBottom: 12 }}>This buys real postage and charges your Shippo account. The customer is emailed their tracking automatically. Refunds take about 14 days.</div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <PrimaryBtn style={{ flex: 1 }} onClick={() => buyRate(confirmRate.id)}>{busy ? "Buying..." : "Confirm & Buy " + "$" + confirmRate.amount}</PrimaryBtn>
+                  <GhostBtn style={{ flex: 1 }} onClick={() => setConfirmRate(null)}>Back</GhostBtn>
+                </div>
+              </div>
+            )}
+            {rates && !confirmRate && (
               <div style={{ marginTop: 12, background: "#FFF", border: "0.5px solid " + COLORS.wheat, borderRadius: 12, padding: 16 }}>
                 <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.textMuted, letterSpacing: 0.5, marginBottom: 8 }}>CHOOSE A RATE</div>
                 {rates.map((rt) => (
-                  <button key={rt.id} onClick={() => buyRate(rt.id)} disabled={busy} style={{ display: "flex", justifyContent: "space-between", width: "100%", padding: "10px 12px", marginBottom: 6, border: "0.5px solid " + COLORS.wheat, borderRadius: 8, background: COLORS.cream, cursor: "pointer", fontFamily: FONTS.body, fontSize: 13, color: COLORS.charcoal }}>
+                  <button key={rt.id} onClick={() => setConfirmRate(rt)} disabled={busy} style={{ display: "flex", justifyContent: "space-between", width: "100%", padding: "10px 12px", marginBottom: 6, border: "0.5px solid " + COLORS.wheat, borderRadius: 8, background: COLORS.cream, cursor: "pointer", fontFamily: FONTS.body, fontSize: 13, color: COLORS.charcoal }}>
                     <span>{rt.carrier} {rt.service}{rt.days ? " - " + rt.days + "d" : ""}</span>
                     <strong>${rt.amount}</strong>
                   </button>
