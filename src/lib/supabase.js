@@ -308,6 +308,72 @@ export async function migrateLocalProducts(localProducts) {
 }
 
 // ---------------------------------------------------------------------------
+// Customers (CRM)
+// The customers table is filled automatically by the Stripe webhook and the
+// custom order endpoint. Orders and lifetime value are computed here rather
+// than stored, so the numbers can never drift out of date.
+// ---------------------------------------------------------------------------
+export async function fetchCustomers() {
+  const custRes = await supabase
+    .from("customers")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (custRes.error) throw custRes.error;
+
+  const ordRes = await supabase
+    .from("orders")
+    .select("id, customer_id, total, created_at, shipping_address, payment_status");
+  const coRes = await supabase.from("custom_orders").select("id, customer_id");
+
+  const orders = ordRes.data || [];
+  const customOrders = coRes.data || [];
+
+  return (custRes.data || []).map(function (c) {
+    const mail = String(c.email || "").toLowerCase();
+    const mine = orders.filter(function (o) {
+      if (o.customer_id && c.id && o.customer_id === c.id) return true;
+      const oe = String((o.shipping_address || {}).email || "").toLowerCase();
+      return mail && oe === mail;
+    });
+    const paid = mine.filter(function (o) { return o.payment_status === "paid"; });
+    const ltv = paid.reduce(function (s, o) { return s + (Number(o.total) || 0); }, 0);
+    const dates = mine.map(function (o) { return o.created_at; }).filter(Boolean).sort();
+    const last = dates.length ? dates[dates.length - 1] : "";
+    const addr = c.address || {};
+    const nCustom = customOrders.filter(function (x) { return x.customer_id && x.customer_id === c.id; }).length;
+
+    const auto = [];
+    if (paid.length >= 3) auto.push("VIP");
+    if (paid.length >= 2) auto.push("Repeat buyer");
+    if (nCustom > 0) auto.push("Custom orders");
+    const removed = Array.isArray(c.removed_auto_tags) ? c.removed_auto_tags : [];
+    const manual = Array.isArray(c.manual_tags) ? c.manual_tags : [];
+    const tags = auto
+      .filter(function (t) { return removed.indexOf(t) === -1; })
+      .concat(manual)
+      .filter(function (t, i, arr) { return arr.indexOf(t) === i; });
+
+    return {
+      id: c.id,
+      name: c.name || c.email || "Guest",
+      email: c.email || "",
+      phone: c.phone || "",
+      heritage: c.heritage || "",
+      location: [addr.city, addr.state].filter(Boolean).join(", "),
+      orders: paid.length,
+      ltv: ltv,
+      lastOrder: last
+        ? new Date(last).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+        : "",
+      tags: tags,
+      customOrders: nCustom,
+      notes: Array.isArray(c.notes) ? c.notes : [],
+      createdAt: c.created_at || "",
+    };
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Custom order requests
 // ---------------------------------------------------------------------------
 export function rowToCustomOrder(r) {
