@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { supabase, fetchProducts, saveProduct, deleteProductById, migrateLocalProducts, fetchOrders, setProductStatus, reoptimizeProductImages, fetchProductIds, fetchProductById, productNeedsOptimizing } from "../lib/supabase";
+import { supabase, fetchProducts, saveProduct, deleteProductById, migrateLocalProducts, fetchOrders, setProductStatus, reoptimizeProductImages, fetchProductIds, fetchProductById, productNeedsOptimizing, fetchCustomOrders, setCustomOrderStage } from "../lib/supabase";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart, PieChart, Pie, Cell, BarChart, Bar } from "recharts";
 
 // ─── BRAND CONSTANTS ───────────────────────────────────────────────────────────
@@ -1530,159 +1530,275 @@ const MOCK_MESSAGES = {
 };
 
 function CustomOrdersPage() {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [stageFilter, setStageFilter] = useState("all");
-  const [selectedOrder, setSelectedOrder] = useState(CUSTOM_ORDERS_DATA[0] || null);
+  const [occasionFilter, setOccasionFilter] = useState("all");
+  const [selectedId, setSelectedId] = useState(null);
   const [replyText, setReplyText] = useState("");
+  const [quoteAmount, setQuoteAmount] = useState("");
+  const [sendingQuote, setSendingQuote] = useState(false);
 
-  const filtered = CUSTOM_ORDERS_DATA.filter(o =>
-    stageFilter === "all" || o.stage === stageFilter
-  );
+  const load = async () => {
+    try {
+      const list = await fetchCustomOrders();
+      setOrders(list);
+      setLoadError("");
+    } catch (e) {
+      console.error("Load custom orders failed", e);
+      setLoadError(e.message || "Could not load requests.");
+    }
+    setLoading(false);
+  };
+  useEffect(() => { load(); }, []);
 
-  const messages = MOCK_MESSAGES[selectedOrder?.id] || [];
+  const STAGES_ORDERED = [
+    { id: "new", label: "New" },
+    { id: "quote", label: "Quote Sent" },
+    { id: "mockup", label: "Mockup" },
+    { id: "approved", label: "Approved" },
+    { id: "production", label: "Production" },
+  ];
 
-  const STAGES_ORDERED = ["new", "quote", "mockup", "approved", "production"];
+  const daysUntil = (v) => {
+    if (!v) return null;
+    const t = new Date(v).getTime();
+    if (isNaN(t)) return null;
+    return Math.ceil((t - Date.now()) / 86400000);
+  };
+  const ageDays = (o) => {
+    const t = new Date(o.createdAt).getTime();
+    if (isNaN(t)) return 0;
+    return Math.floor((Date.now() - t) / 86400000);
+  };
+  const needsReply = (o) =>
+    !o.messages.length || o.messages[o.messages.length - 1].from === "customer";
+  const isUrgent = (o) => {
+    const d = daysUntil(o.deadline);
+    if (d !== null && d <= 14) return true;
+    return o.stage === "new" && ageDays(o) >= 2;
+  };
+
+  const filtered = orders.filter((o) => {
+    if (statusFilter === "urgent" && !isUrgent(o)) return false;
+    if (statusFilter === "soon" && !needsReply(o)) return false;
+    if (stageFilter !== "all" && o.stage !== stageFilter) return false;
+    if (occasionFilter !== "all" && String(o.occasion).toLowerCase() !== occasionFilter) return false;
+    return true;
+  });
+
+  const selectedOrder = filtered.find((o) => o.id === selectedId) || filtered[0] || null;
+  const messages = selectedOrder ? selectedOrder.messages : [];
+
+  const moveStage = async (stage) => {
+    if (!selectedOrder) return;
+    const id = selectedOrder.id;
+    setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, stage: stage } : o)));
+    try {
+      await setCustomOrderStage(id, stage);
+    } catch (e) {
+      alert("Could not update the stage: " + e.message);
+      load();
+    }
+  };
+
+  const sendQuote = async () => {
+    if (!selectedOrder || sendingQuote) return;
+    if (!replyText.trim()) return alert("Write a message to the customer first.");
+    const amt = quoteAmount ? Number(quoteAmount) : 0;
+    const who = selectedOrder.customerName || "the customer";
+    const priceLine = amt > 0 ? " with a price of $" + amt.toFixed(2) : " (no price)";
+    if (!window.confirm("Email this quote to " + who + priceLine + "?")) return;
+    setSendingQuote(true);
+    try {
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess && sess.session ? sess.session.access_token : "";
+      const res = await fetch("/api/send-custom-quote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+        body: JSON.stringify({ id: selectedOrder.id, amount: amt, message: replyText }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        alert((data && data.error) || "Could not send the quote.");
+      } else {
+        setReplyText("");
+        setQuoteAmount("");
+        await load();
+        alert("Quote emailed to " + who + ".");
+      }
+    } catch (e) {
+      alert("Could not send the quote: " + e.message);
+    }
+    setSendingQuote(false);
+  };
+
+  const waLink = (n) => "https://wa.me/" + String(n || "").replace(/[^0-9]/g, "");
+  const fmtDate = (v) => {
+    if (!v) return "";
+    const t = new Date(v);
+    return isNaN(t.getTime()) ? String(v) : t.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  };
+
+  const railTitle = { fontSize: 10, fontWeight: 700, letterSpacing: 1.2, color: COLORS.textMuted, margin: "14px 0 6px" };
+  const railItem = (active) => ({
+    padding: "6px 9px", borderRadius: 7, fontSize: 12, fontFamily: FONTS.body, cursor: "pointer",
+    background: active ? COLORS.saffron : "transparent",
+    color: active ? "#fff" : COLORS.charcoal, marginBottom: 2,
+  });
 
   return (
-    <div style={{ animation: "fadeIn 0.3s ease", display: "flex", height: "calc(100vh - 48px)", margin: "-24px -32px", overflow: "hidden" }}>
-
-      {/* Filter Rail */}
-      <div style={{ width: 168, background: COLORS.cream2, borderRight: `0.5px solid ${COLORS.wheat}`, padding: "20px 12px", overflowY: "auto", flexShrink: 0 }}>
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.2, color: COLORS.textMuted, marginBottom: 10, fontFamily: FONTS.body }}>STATUS</div>
-        {[["all", "All Requests"], ["urgent", "🔴 Urgent"], ["soon", "🟡 Needs Reply"]].map(([v, l]) => (
-          <div key={v} onClick={() => setStageFilter(v)} style={{ padding: "7px 10px", borderRadius: 8, fontSize: 12, fontFamily: FONTS.body, cursor: "pointer", marginBottom: 3, background: stageFilter === v ? COLORS.saffron + "22" : "transparent", color: stageFilter === v ? COLORS.saffron : COLORS.inkBrown, fontWeight: stageFilter === v ? 600 : 400 }}>{l}</div>
+    <div style={{ animation: "fadeIn 0.3s ease", display: "flex", height: "calc(100vh - 48px)", margin: "-24px -32px" }}>
+      {/* Filter rail */}
+      <div style={{ width: 168, background: COLORS.cream2, borderRight: "0.5px solid " + COLORS.wheat, padding: "16px 12px", overflowY: "auto", flexShrink: 0 }}>
+        <div style={railTitle}>STATUS</div>
+        {[["all", "All Requests"], ["urgent", "Urgent"], ["soon", "Needs Reply"]].map(([v, l]) => (
+          <div key={v} onClick={() => setStatusFilter(v)} style={railItem(statusFilter === v)}>{l}</div>
         ))}
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.2, color: COLORS.textMuted, margin: "16px 0 10px", fontFamily: FONTS.body }}>PIPELINE</div>
-        {Object.entries(CUSTOM_STAGE_INFO).map(([k, s]) => (
-          <div key={k} onClick={() => setStageFilter(k)} style={{ padding: "7px 10px", borderRadius: 8, fontSize: 12, fontFamily: FONTS.body, cursor: "pointer", marginBottom: 3, background: stageFilter === k ? s.color + "22" : "transparent", color: stageFilter === k ? s.color : COLORS.inkBrown, fontWeight: stageFilter === k ? 600 : 400 }}>{s.label}</div>
+        <div style={railTitle}>PIPELINE</div>
+        <div onClick={() => setStageFilter("all")} style={railItem(stageFilter === "all")}>All Stages</div>
+        {STAGES_ORDERED.map((s) => (
+          <div key={s.id} onClick={() => setStageFilter(s.id)} style={railItem(stageFilter === s.id)}>{s.label}</div>
         ))}
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.2, color: COLORS.textMuted, margin: "16px 0 10px", fontFamily: FONTS.body }}>OCCASION</div>
-        {["Wedding", "Graduation", "Baby", "Birthday", "Eid"].map(o => (
-          <div key={o} style={{ padding: "6px 10px", borderRadius: 8, fontSize: 12, fontFamily: FONTS.body, cursor: "pointer", marginBottom: 2, color: COLORS.inkBrown }}>{o}</div>
+        <div style={railTitle}>OCCASION</div>
+        <div onClick={() => setOccasionFilter("all")} style={railItem(occasionFilter === "all")}>Any</div>
+        {["wedding", "graduation", "baby", "birthday", "eid"].map((o) => (
+          <div key={o} onClick={() => setOccasionFilter(o)} style={railItem(occasionFilter === o)}>{o.charAt(0).toUpperCase() + o.slice(1)}</div>
         ))}
       </div>
 
-      {/* Request List */}
-      <div style={{ width: 260, borderRight: `0.5px solid ${COLORS.wheat}`, overflowY: "auto", flexShrink: 0, background: "#FDFAF4" }}>
-        <div style={{ padding: "16px 14px 10px", borderBottom: `0.5px solid ${COLORS.wheat}` }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.charcoal, fontFamily: FONTS.body }}>Custom Orders</div>
-          <div style={{ fontSize: 11, color: COLORS.textMuted, fontFamily: FONTS.body }}>{filtered.length} requests</div>
-        </div>
-        {filtered.map(order => {
-          const stage = CUSTOM_STAGE_INFO[order.stage];
-          const urgency = URGENCY_INFO[order.urgency];
-          const isSelected = selectedOrder?.id === order.id;
-          return (
-            <div key={order.id} onClick={() => setSelectedOrder(order)} style={{ padding: "14px", borderBottom: `0.5px solid ${COLORS.wheat}`, cursor: "pointer", background: isSelected ? COLORS.saffron + "12" : "transparent" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                <span style={{ fontSize: 12, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body }}>{order.customerName}</span>
-                <span style={{ fontSize: 10, color: urgency.color, fontFamily: FONTS.body }}>{urgency.label}</span>
-              </div>
-              <div style={{ fontFamily: FONTS.arabic, fontSize: 16, color: COLORS.saffron, direction: "rtl", textAlign: "right", marginBottom: 4 }}>{order.arabicText}</div>
-              <div style={{ fontSize: 11, color: COLORS.textMuted, fontFamily: FONTS.body, marginBottom: 6, lineHeight: 1.4 }}>{order.snippet?.slice(0, 60)}…</div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: 9, background: stage.bg, color: stage.color, padding: "2px 7px", borderRadius: 8, fontWeight: 600 }}>{stage.label}</span>
-                <span style={{ fontSize: 10, color: COLORS.textMuted }}>📅 {order.deadline}</span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Conversation View */}
-      {selectedOrder ? (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-          {/* Customer Header */}
-          <div style={{ padding: "16px 20px", borderBottom: `0.5px solid ${COLORS.wheat}`, background: "#FFF", display: "flex", alignItems: "center", gap: 14, flexShrink: 0 }}>
-            <HeritageAvatar name={selectedOrder.customerName} heritage={selectedOrder.heritage} size={44} />
-            <div style={{ flex: 1 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{ fontFamily: FONTS.display, fontSize: 18, fontWeight: 600, color: COLORS.charcoal }}>{selectedOrder.customerName}</div>
-                {CUSTOMERS_DATA.find(c => c.id === selectedOrder.customerId)?.tags.includes("VIP") && (
-                  <span style={{ fontSize: 9, background: COLORS.saffron, color: "#FFF", padding: "2px 7px", borderRadius: 5, fontWeight: 700 }}>VIP</span>
-                )}
-              </div>
-              <div style={{ fontSize: 11, color: COLORS.textMuted, fontFamily: FONTS.body }}>{selectedOrder.flag} {selectedOrder.heritage} · {CUSTOMERS_DATA.find(c => c.id === selectedOrder.customerId)?.email}</div>
-            </div>
-            {/* Pipeline progress */}
-            <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-              {STAGES_ORDERED.map((s, i) => {
-                const idx = STAGES_ORDERED.indexOf(selectedOrder.stage);
-                const active = i <= idx;
-                const info = CUSTOM_STAGE_INFO[s];
-                return (
-                  <React.Fragment key={s}>
-                    <div style={{ fontSize: 10, fontFamily: FONTS.body, color: active ? info.color : COLORS.textMuted, fontWeight: active ? 600 : 400, whiteSpace: "nowrap" }}>{info.label}</div>
-                    {i < STAGES_ORDERED.length - 1 && <div style={{ width: 20, height: 1, background: active && i < idx ? info.color : COLORS.wheat }} />}
-                  </React.Fragment>
-                );
-              })}
-            </div>
+      {/* Request list */}
+      <div style={{ width: 300, borderRight: "0.5px solid " + COLORS.wheat, overflowY: "auto", flexShrink: 0 }}>
+        <div style={{ padding: "16px 16px 10px", borderBottom: "0.5px solid " + COLORS.wheat }}>
+          <div style={{ fontFamily: FONTS.display, fontSize: 20, fontWeight: 600, color: COLORS.charcoal }}>Custom Orders</div>
+          <div style={{ fontSize: 11, color: COLORS.textMuted, fontFamily: FONTS.body }}>
+            {loading ? "Loading..." : filtered.length + (filtered.length === 1 ? " request" : " requests")}
           </div>
+        </div>
+        {loadError && (
+          <div style={{ margin: 12, padding: 10, background: "#FDF3EC", border: "0.5px solid " + COLORS.terracotta, borderRadius: 8, fontSize: 12, color: COLORS.terracotta, fontFamily: FONTS.body }}>{loadError}</div>
+        )}
+        {!loading && !filtered.length && !loadError && (
+          <div style={{ padding: 24, textAlign: "center", fontSize: 12, color: COLORS.textMuted, fontFamily: FONTS.body, lineHeight: 1.6 }}>
+            No requests yet. They arrive here when a customer submits the Custom Order form on the site.
+          </div>
+        )}
+        {filtered.map((o) => (
+          <div key={o.id} onClick={() => setSelectedId(o.id)} style={{
+            padding: "12px 16px", borderBottom: "0.5px solid " + COLORS.wheat, cursor: "pointer",
+            background: selectedOrder && selectedOrder.id === o.id ? COLORS.cream2 : "transparent",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body, marginRight: "auto" }}>{o.customerName}</div>
+              {isUrgent(o) && <span style={{ fontSize: 9, background: COLORS.terracotta + "22", color: COLORS.terracotta, padding: "1px 6px", borderRadius: 8, fontWeight: 700 }}>URGENT</span>}
+              {needsReply(o) && <span style={{ fontSize: 9, background: COLORS.saffron + "22", color: COLORS.saffron, padding: "1px 6px", borderRadius: 8, fontWeight: 700 }}>REPLY</span>}
+            </div>
+            <div style={{ fontSize: 11, color: COLORS.textMuted, fontFamily: FONTS.body, marginTop: 2 }}>
+              {[o.occasion, o.style].filter(Boolean).join(" · ") || "Custom request"}
+            </div>
+            {o.arabicText && <div style={{ fontFamily: FONTS.arabic, fontSize: 13, color: COLORS.saffron, marginTop: 2 }}>{o.arabicText}</div>}
+            <div style={{ fontSize: 10, color: COLORS.textMuted, fontFamily: FONTS.body, marginTop: 4 }}>{o.reference} · {fmtDate(o.createdAt)}</div>
+          </div>
+        ))}
+      </div>
 
-          {/* Scrollable content */}
-          <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px" }}>
-            {/* Request Card */}
-            <div style={{ background: COLORS.charcoal, borderRadius: 12, padding: "16px 20px", marginBottom: 16 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.2, color: COLORS.wheat, marginBottom: 10 }}>ORIGINAL REQUEST</div>
-              <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 10 }}>
-                {[["Occasion", selectedOrder.occasion], ["Style", selectedOrder.style], ["Color", selectedOrder.color], ["Deadline", selectedOrder.deadline]].map(([k, v]) => (
-                  <div key={k}>
-                    <div style={{ fontSize: 9, color: COLORS.textMuted, fontFamily: FONTS.body }}>{k}</div>
-                    <div style={{ fontSize: 12, color: "#FFF", fontFamily: FONTS.body, fontWeight: 500 }}>{v}</div>
+      {/* Detail */}
+      <div style={{ flex: 1, overflowY: "auto", padding: 24 }}>
+        {!selectedOrder ? (
+          <div style={{ color: COLORS.textMuted, fontSize: 13, fontFamily: FONTS.body, textAlign: "center", marginTop: 60 }}>
+            {loading ? "Loading requests..." : "Select a request to view"}
+          </div>
+        ) : (
+          <div style={{ maxWidth: 720 }}>
+            <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 16 }}>
+              <div style={{ marginRight: "auto" }}>
+                <div style={{ fontFamily: FONTS.display, fontSize: 24, fontWeight: 600, color: COLORS.charcoal }}>{selectedOrder.customerName}</div>
+                <div style={{ fontSize: 12, color: COLORS.textMuted, fontFamily: FONTS.body }}>{selectedOrder.reference} · {fmtDate(selectedOrder.createdAt)}</div>
+              </div>
+              {selectedOrder.whatsapp && (
+                <a href={waLink(selectedOrder.whatsapp)} target="_blank" rel="noopener noreferrer" style={{ background: "#25D366", color: "#fff", textDecoration: "none", padding: "8px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600, fontFamily: FONTS.body, marginRight: 8 }}>WhatsApp</a>
+              )}
+              {selectedOrder.email && (
+                <a href={"mailto:" + selectedOrder.email} style={{ background: "#fff", border: "0.5px solid " + COLORS.wheat, color: COLORS.charcoal, textDecoration: "none", padding: "8px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600, fontFamily: FONTS.body }}>Email</a>
+              )}
+            </div>
+
+            {/* Pipeline */}
+            <div style={{ display: "flex", gap: 6, marginBottom: 18, flexWrap: "wrap" }}>
+              {STAGES_ORDERED.map((s) => (
+                <button key={s.id} onClick={() => moveStage(s.id)} style={{
+                  padding: "7px 13px", borderRadius: 20, fontSize: 11, fontWeight: 600, fontFamily: FONTS.body, cursor: "pointer",
+                  border: "0.5px solid " + (selectedOrder.stage === s.id ? COLORS.saffron : COLORS.wheat),
+                  background: selectedOrder.stage === s.id ? COLORS.saffron : "#fff",
+                  color: selectedOrder.stage === s.id ? "#fff" : COLORS.textMuted,
+                }}>{s.label}</button>
+              ))}
+            </div>
+
+            <SectionCard>
+              <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.textMuted, marginBottom: 10, letterSpacing: 0.5 }}>THE REQUEST</div>
+              {[
+                ["Occasion", selectedOrder.occasion],
+                ["Arabic text", selectedOrder.arabicText],
+                ["Style", selectedOrder.style],
+                ["Colour", selectedOrder.color],
+                ["Deadline", selectedOrder.deadline],
+                ["Email", selectedOrder.email],
+                ["WhatsApp", selectedOrder.whatsapp],
+              ].filter(([k, v]) => v).map(([k, v]) => (
+                <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "0.5px solid " + COLORS.wheat, fontSize: 12, fontFamily: FONTS.body, gap: 16 }}>
+                  <span style={{ color: COLORS.textMuted, flexShrink: 0 }}>{k}</span>
+                  <span style={{ color: COLORS.charcoal, fontWeight: 500, textAlign: "right", wordBreak: "break-word" }}>{v}</span>
+                </div>
+              ))}
+              {selectedOrder.notes && (
+                <div style={{ marginTop: 10, fontSize: 12, color: COLORS.textMuted, fontFamily: FONTS.body, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{selectedOrder.notes}</div>
+              )}
+            </SectionCard>
+
+            {selectedOrder.quote && selectedOrder.quote.amount > 0 && (
+              <SectionCard>
+                <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.textMuted, letterSpacing: 0.5 }}>QUOTED</div>
+                <div style={{ fontFamily: FONTS.display, fontSize: 26, fontWeight: 600, color: COLORS.charcoal }}>{"$" + Number(selectedOrder.quote.amount).toFixed(2)}</div>
+              </SectionCard>
+            )}
+
+            {messages.length > 0 && (
+              <SectionCard>
+                <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.textMuted, marginBottom: 10, letterSpacing: 0.5 }}>CONVERSATION</div>
+                {messages.map((m, i) => (
+                  <div key={i} style={{ marginBottom: 8, textAlign: m.from === "shop" ? "right" : "left" }}>
+                    <div style={{ display: "inline-block", maxWidth: "80%", padding: "8px 12px", borderRadius: 10, fontSize: 12, fontFamily: FONTS.body, lineHeight: 1.6, whiteSpace: "pre-wrap",
+                      background: m.from === "shop" ? COLORS.saffron : COLORS.cream2,
+                      color: m.from === "shop" ? "#fff" : COLORS.charcoal }}>{m.text}</div>
+                    <div style={{ fontSize: 9, color: COLORS.textMuted, marginTop: 2 }}>{fmtDate(m.at)}</div>
                   </div>
                 ))}
-              </div>
-              <div style={{ fontFamily: FONTS.arabic, fontSize: 36, color: COLORS.saffron, direction: "rtl", textAlign: "right" }}>{selectedOrder.arabicText}</div>
-            </div>
+              </SectionCard>
+            )}
 
-            {/* Messages */}
-            {messages.map((msg, i) => (
-              <div key={i} style={{ display: "flex", justifyContent: msg.from === "owner" ? "flex-end" : "flex-start", marginBottom: 12 }}>
-                <div style={{ maxWidth: "70%", background: msg.from === "owner" ? COLORS.saffron + "18" : "#FFF", border: `0.5px solid ${msg.from === "owner" ? COLORS.saffron + "44" : COLORS.wheat}`, borderRadius: 12, padding: "10px 14px" }}>
-                  <div style={{ fontSize: 12, color: COLORS.charcoal, fontFamily: FONTS.body, lineHeight: 1.5 }}>{msg.text}</div>
-                  <div style={{ fontSize: 10, color: COLORS.textMuted, marginTop: 4, fontFamily: FONTS.body }}>{msg.time}</div>
-                </div>
+            <SectionCard>
+              <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.textMuted, marginBottom: 10, letterSpacing: 0.5 }}>SEND A QUOTE</div>
+              <textarea value={replyText} onChange={(e) => setReplyText(e.target.value)} rows={4}
+                placeholder={"Hi " + selectedOrder.customerName + ", I can make this for you..."}
+                style={{ width: "100%", padding: "10px 12px", border: "0.5px solid " + COLORS.wheat, borderRadius: 8, fontSize: 13, fontFamily: FONTS.body, boxSizing: "border-box", resize: "vertical", outline: "none" }} />
+              <div style={{ display: "flex", gap: 8, marginTop: 8, alignItems: "center" }}>
+                <input value={quoteAmount} onChange={(e) => setQuoteAmount(e.target.value)} type="number" step="0.01" placeholder="Price (optional)"
+                  style={{ flex: 1, padding: "10px 12px", border: "0.5px solid " + COLORS.wheat, borderRadius: 8, fontSize: 13, fontFamily: FONTS.body, boxSizing: "border-box", outline: "none" }} />
+                <PrimaryBtn onClick={sendQuote} disabled={sendingQuote} style={{ flex: 1 }}>{sendingQuote ? "Sending..." : "Send Quote"}</PrimaryBtn>
               </div>
-            ))}
-          </div>
-
-          {/* Reply Box */}
-          <div style={{ padding: "12px 20px", borderTop: `0.5px solid ${COLORS.wheat}`, background: "#FFF", flexShrink: 0 }}>
-            <textarea value={replyText} onChange={e => setReplyText(e.target.value)} placeholder="Write a reply…" style={{ width: "100%", minHeight: 72, padding: "10px 12px", border: `0.5px solid ${COLORS.wheat}`, borderRadius: 8, fontSize: 13, fontFamily: FONTS.body, resize: "none", outline: "none", boxSizing: "border-box", marginBottom: 8 }} />
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ display: "flex", gap: 6 }}>
-                {["📎 Attach", "🖼 Mockup", "📋 Template", "🌐 Translate"].map(t => (
-                  <GhostBtn key={t} style={{ padding: "5px 10px", fontSize: 10 }}>{t}</GhostBtn>
-                ))}
+              <div style={{ fontSize: 11, color: COLORS.textMuted, fontFamily: FONTS.body, marginTop: 8 }}>
+                Emails the customer from order@souk3d.com and moves this request to Quote Sent.
               </div>
-              <PrimaryBtn style={{ padding: "8px 20px" }}>Send Reply</PrimaryBtn>
-            </div>
+            </SectionCard>
           </div>
-        </div>
-      ) : (
-        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: COLORS.textMuted, fontFamily: FONTS.body }}>Select a request to view</div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
-
-// ─── ANALYTICS PAGE ────────────────────────────────────────────────────────────
-const ANALYTICS_TREND = [
-  { date: "May 1", revenue: 310, orders: 5 }, { date: "May 3", revenue: 480, orders: 8 },
-  { date: "May 5", revenue: 390, orders: 6 }, { date: "May 7", revenue: 620, orders: 10 },
-  { date: "May 9", revenue: 540, orders: 9 }, { date: "May 11", revenue: 780, orders: 13 },
-  { date: "May 13", revenue: 920, orders: 15 },
-];
-const COUNTRY_DATA = [
-  { country: "🇺🇸 USA", orders: 47, pct: 58 }, { country: "🇨🇦 Canada", orders: 18, pct: 22 },
-  { country: "🇬🇧 UK", orders: 9, pct: 11 }, { country: "🇦🇺 Australia", orders: 4, pct: 5 },
-  { country: "🇩🇪 Germany", orders: 3, pct: 4 },
-];
-const TRAFFIC_DATA = [
-  { source: "Instagram", visits: 1240, pct: 44 }, { source: "Direct", visits: 680, pct: 24 },
-  { source: "Etsy", visits: 420, pct: 15 }, { source: "TikTok", visits: 310, pct: 11 },
-  { source: "Other", visits: 170, pct: 6 },
-];
 
 function AnalyticsPage() {
   const [range, setRange] = useState("7d");
