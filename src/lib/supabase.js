@@ -307,6 +307,50 @@ export async function migrateLocalProducts(localProducts) {
   return rows.length;
 }
 
+// ---------------------------------------------------------------------------
+// Custom order requests
+// ---------------------------------------------------------------------------
+export function rowToCustomOrder(r) {
+  const q = r.request || {};
+  return {
+    id: r.id,
+    reference: "CR-" + String(r.id).slice(0, 8).toUpperCase(),
+    stage: r.status || "new",
+    customerId: r.customer_id || null,
+    customerName: q.name || "Guest",
+    email: q.email || "",
+    whatsapp: q.whatsapp || "",
+    occasion: q.occasion || "",
+    arabicText: q.arabicText || "",
+    style: q.style || "",
+    color: q.color || "",
+    deadline: q.deadline || "",
+    notes: q.notes || "",
+    heritage: q.heritage || "",
+    flag: "",
+    messages: Array.isArray(r.messages) ? r.messages : [],
+    quote: r.quote || null,
+    createdAt: r.created_at || "",
+  };
+}
+
+export async function fetchCustomOrders() {
+  const { data, error } = await supabase
+    .from("custom_orders")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data || []).map(rowToCustomOrder);
+}
+
+export async function setCustomOrderStage(id, stage) {
+  const { error } = await supabase
+    .from("custom_orders")
+    .update({ status: stage })
+    .eq("id", id);
+  if (error) throw error;
+}
+
 export function rowToOrder(r) {
   const a = r.shipping_address || {};
   const loc = [a.city, a.state].filter(Boolean).join(", ");
