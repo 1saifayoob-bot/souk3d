@@ -1,5 +1,6 @@
 {
-    "rewrites": [
-      { "source": "/(.*)", "destination": "/index.html" }
-        ]
+  "rewrites": [
+    { "source": "/p/:sku", "destination": "/api/product-page?sku=:sku" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
