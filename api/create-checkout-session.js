@@ -15,7 +15,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { items, contact, address, shippingMethod, giftMessage } =
+    const { items, contact, address, shippingMethod, giftMessage, promoCode } =
 
 req.body || {};
 
@@ -37,6 +37,32 @@ req.body || {};
       isMember = false;
     }
     const MEMBER_DISCOUNT = 0.05;
+
+    // Promo codes are validated against the database HERE. Whatever percentage
+    // the browser claims is ignored - only what the discounts table says counts.
+    let promoPercent = 0;
+    let promoApplied = "";
+    const wanted = String(promoCode || "").trim().toUpperCase();
+    if (wanted) {
+      try {
+        const { data: dc } = await supabase
+          .from("discounts")
+          .select("code, type, value, status")
+          .ilike("code", wanted)
+          .eq("status", "active")
+          .maybeSingle();
+        if (dc && dc.type === "percent") {
+          promoPercent = Math.max(0, Math.min(50, Number(dc.value) || 0)) / 100;
+          promoApplied = dc.code;
+        }
+      } catch (e) {
+        promoPercent = 0;
+      }
+    }
+
+    // Member 5% and a promo code stack, but never below 50% off in total.
+    const memberPart = isMember ? MEMBER_DISCOUNT : 0;
+    const totalOff = Math.min(0.5, memberPart + promoPercent);
 
     if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: "Your cart is empty." });
@@ -73,7 +99,7 @@ req.body || {};
         quantity: qty,
         price_data: {
           currency: "usd",
-      unit_amount: isMember ? Math.round(unit * (1 - MEMBER_DISCOUNT)) : unit,
+      unit_amount: totalOff > 0 ? Math.round(unit * (1 - totalOff)) : unit,
           product_data: {
             name: p.name || "Souk3D item",
             images: safeImg,
