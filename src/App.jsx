@@ -111,12 +111,42 @@ function ProductCard({ product, onView, onAddToCart }) {
 }
 
 // ─── CART DRAWER ─────────────────────────────────────────────────────────────
-function CartDrawer({ cart, onClose, onUpdateQty, onRemove, onCheckout }) {
-  const [promoCode, setPromoCode] = useState("");
-  const [promoApplied, setPromoApplied] = useState(false);
+function CartDrawer({ cart, onClose, onUpdateQty, onRemove, onCheckout, user, promoCode, setPromoCode, promo, setPromo }) {
+  const [promoError, setPromoError] = useState("");
+  const [checkingPromo, setCheckingPromo] = useState(false);
+
+  // Ask the database whether the code is real. The server re-checks at
+  // checkout anyway - this is just so the customer gets an honest answer.
+  const applyPromo = async () => {
+    const code = String(promoCode || "").trim().toUpperCase();
+    setPromoError("");
+    if (!code) return;
+    setCheckingPromo(true);
+    try {
+      const { data } = await supabase
+        .from("discounts")
+        .select("code, type, value, status")
+        .ilike("code", code)
+        .eq("status", "active")
+        .maybeSingle();
+      if (data && data.type === "percent") {
+        setPromo({ code: data.code, percent: (Number(data.value) || 0) / 100 });
+      } else {
+        setPromo(null);
+        setPromoError("That code is not valid.");
+      }
+    } catch (e) {
+      setPromo(null);
+      setPromoError("Could not check that code. Please try again.");
+    }
+    setCheckingPromo(false);
+  };
   const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
   const shipping = subtotal >= 75 ? 0 : 5.99;
-  const discount = promoApplied ? subtotal * 0.1 : 0;
+  const memberPct = user ? 0.05 : 0;
+  const promoPct = promo ? promo.percent : 0;
+  const totalPct = Math.min(0.5, memberPct + promoPct);
+  const discount = subtotal * totalPct;
   const total = subtotal + shipping - discount;
   const freeShipProgress = Math.min(100, (subtotal / 75) * 100);
 
@@ -179,9 +209,19 @@ function CartDrawer({ cart, onClose, onUpdateQty, onRemove, onCheckout }) {
         <div style={{ padding: "16px 22px", borderTop: `0.5px solid ${C.wheat}`, flexShrink: 0 }}>
           <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
             <input value={promoCode} onChange={e => setPromoCode(e.target.value)} placeholder="Promo code" style={{ flex: 1, padding: "9px 12px", border: `0.5px solid ${C.wheat}`, borderRadius: 8, fontSize: 12, fontFamily: F.body, outline: "none" }} />
-            <button onClick={() => { if (promoCode.toUpperCase() === "WEDCOME10") setPromoApplied(true); }} style={{ padding: "9px 14px", background: C.charcoal, color: "#FFF", border: "none", borderRadius: 8, fontSize: 12, fontFamily: F.body, cursor: "pointer" }}>Apply</button>
+          <button onClick={applyPromo} disabled={checkingPromo} style={{ padding: "10px 16px", background: C.charcoal, color: "#FFF", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 600, fontFamily: F.body, cursor: checkingPromo ? "wait" : "pointer" }}>{checkingPromo ? "..." : "Apply"}</button>
           </div>
-          {promoApplied && <div style={{ fontSize: 11, color: C.olive, marginBottom: 8, fontFamily: F.body }}>✓ WELCOME10 applied — 10% off!</div>}
+        {promo && (
+          <div style={{ fontSize: 11, color: C.olive, marginBottom: 8, fontFamily: F.body }}>{promo.code + " applied — " + Math.round(promo.percent * 100) + "% off"}</div>
+        )}
+        {promoError && (
+          <div style={{ fontSize: 11, color: C.terracotta, marginBottom: 8, fontFamily: F.body }}>{promoError}</div>
+        )}
+        {user ? (
+          <div style={{ fontSize: 11, color: C.olive, marginBottom: 8, fontFamily: F.body }}>Member discount — 5% off applied ✦</div>
+        ) : (
+          <div style={{ fontSize: 11, color: C.saffron, marginBottom: 8, fontFamily: F.body }}>Sign in and save 5% on this order</div>
+        )}
           {[["Subtotal", `$${subtotal.toFixed(2)}`], ["Shipping", subtotal >= 75 ? "Free" : "$5.99"], ...(promoApplied ? [["Discount (10%)", `-$${discount.toFixed(2)}`]] : [])].map(([k, v]) => (
             <div key={k} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, fontFamily: F.body, marginBottom: 4, color: k === "Discount (10%)" ? C.olive : C.charcoal }}><span>{k}</span><span style={{ fontWeight: 500 }}>{v}</span></div>
           ))}
@@ -196,7 +236,7 @@ function CartDrawer({ cart, onClose, onUpdateQty, onRemove, onCheckout }) {
 }
 
 // ─── PRODUCT DETAIL PACE �,� 450─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-function ProductDetail({ product, onBack, onAddToCart }) {
+function ProductDetail({product, onBack, onAddToCart, user }) {
   const [tab, setTab] = useState("description");
   const [activeImg, setActiveImg] = useState(0);
   const galleryObjs = (product.images && product.images.length ? product.images.filter((im) => im && im.url) : (product.imageUrl ? [{ url: product.imageUrl }] : [])).filter((im, i, arr) => arr.findIndex((x) => x.url === im.url) === i);
@@ -289,6 +329,12 @@ function ProductDetail({ product, onBack, onAddToCart }) {
             ))}
           </div>
 
+            {!user && (
+              <div style={{ marginTop: 14, background: C.cream2, border: `0.5px solid ${C.wheat}`, borderRadius: 8, padding: "10px 12px", fontSize: 12, fontFamily: F.body, color: C.charcoal }}>
+                Members pay <strong>{"$" + (Number(product.price || 0) * 0.95).toFixed(2)}</strong> · <span style={{ color: C.saffron, fontWeight: 600 }}>join free</span> for 5% off and members-only pieces
+              </div>
+            )}
+
             <ShareRow product={product} />
         </div>
       </div>
@@ -343,7 +389,7 @@ function OrderConfirmed({ onContinue }) {
   );
 }
 
-function CheckoutPage({ cart, onBack }) {
+function CheckoutPage({ cart, onBack, promo, user }) {
   const [contact, setContact] = useState({ email: "", phone: "" });
   const [address, setAddress] = useState({ name: "", line1: "", line2: "", city: "", state: "", zip: "", country: "US" });
   const [shippingMethod, setShippingMethod] = useState("standard");
@@ -371,6 +417,7 @@ function CheckoutPage({ cart, onBack }) {
           address,
           shippingMethod,
           giftMessage,
+          promoCode: promo ? promo.code : "",
         }),
       });
       const data = await res.json();
@@ -1155,6 +1202,8 @@ export default function App() {
   const [cartOpen, setCartOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [authOpen, setAuthOpen] = useState(false);
+  const [promoCode, setPromoCode] = useState("");
+  const [promo, setPromo] = useState(null);
 
   // Keep the header in sync with the session (login, logout, token refresh).
   useEffect(() => {
@@ -1277,14 +1326,14 @@ export default function App() {
         />
       )}
       {page === "product" && viewingProduct && (
-        <ProductDetail
+        <ProductDetail user={user}
           product={viewingProduct}
           onBack={goHome}
           onAddToCart={addToCart}
         />
       )}
       {page === "checkout" && (
-        <CheckoutPage cart={cart} onBack={() => setPage("home")} />
+        <CheckoutPage cart={cart} promo={promo} user={user} onBack={() => setPage("home")} />
       )}
       {page === "order-confirmed" && (
           <OrderConfirmed onContinue={() => setPage("home")} />
@@ -1302,7 +1351,7 @@ export default function App() {
 
       {/* Cart drawer */}
       {cartOpen && (
-        <CartDrawer
+        <CartDrawer user={user} promoCode={promoCode} setPromoCode={setPromoCode} promo={promo} setPromo={setPromo}
           cart={cart}
           onClose={() => setCartOpen(false)}
           onUpdateQty={updateQty}
