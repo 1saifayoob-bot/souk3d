@@ -16,6 +16,25 @@ export default async function handler(req, res) {
 
   try {
     const { items, contact, address, shippingMethod, giftMessage } =
+
+    // Member discount is decided HERE, from the caller's signed token - never
+    // from anything the browser claims. A guest cannot fake this.
+    let isMember = false;
+    let memberEmail = "";
+    try {
+      const authHeader = req.headers.authorization || "";
+      const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+      if (token) {
+        const { data: u } = await supabase.auth.getUser(token);
+        if (u && u.user && u.user.email) {
+          isMember = true;
+          memberEmail = u.user.email;
+        }
+      }
+    } catch (e) {
+      isMember = false;
+    }
+    const MEMBER_DISCOUNT = 0.05;
       req.body || {};
 
     if (!Array.isArray(items) || items.length === 0) {
@@ -53,7 +72,7 @@ export default async function handler(req, res) {
         quantity: qty,
         price_data: {
           currency: "usd",
-          unit_amount: unit,
+      unit_amount: isMember ? Math.round(unit * (1 - MEMBER_DISCOUNT)) : unit,
           product_data: {
             name: p.name || "Souk3D item",
             images: safeImg,
