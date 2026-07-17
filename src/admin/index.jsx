@@ -350,7 +350,7 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
     featured: false, emoji: "🏺", desc: "", customizable: false, badge: "",
     images: [],
     desc_ar: "",
-    hint: "", buyUrl: "",
+    hint: "", buyUrl: "", membersOnly: false, publicAt: "",
   };
   const [form, setForm] = useState(product ? {
     ...product,
@@ -688,6 +688,27 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
               </select>
               <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 9, fontSize: 12, cursor: "pointer" }}>Featured on homepage<input type="checkbox" checked={!!form.featured} onChange={(e) => set("featured", e.target.checked)} /></label>
               <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 12, cursor: "pointer" }}>Accepts custom text<input type="checkbox" checked={!!form.customizable} onChange={(e) => set("customizable", e.target.checked)} /></label>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, fontFamily: FONTS.body, color: COLORS.charcoal, cursor: "pointer" }}>Members only<input type="checkbox" checked={!!form.membersOnly} onChange={(e) => set("membersOnly", e.target.checked)} /></label>
+          <div style={{ gridColumn: "1 / -1", marginTop: 6 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.textMuted, marginBottom: 4, letterSpacing: 0.5 }}>EARLY ACCESS — PUBLIC FROM</div>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+              <input
+                type="datetime-local"
+                value={form.publicAt ? String(form.publicAt).slice(0, 16) : ""}
+                onChange={(e) => set("publicAt", e.target.value ? new Date(e.target.value).toISOString() : "")}
+                style={{ padding: "8px 12px", border: "0.5px solid " + COLORS.wheat, borderRadius: 8, fontSize: 12, fontFamily: FONTS.body, outline: "none" }}
+              />
+              <GhostBtn type="button" onClick={() => set("publicAt", new Date(Date.now() + 48 * 3600 * 1000).toISOString())} style={{ fontSize: 11 }}>Members first for 48h</GhostBtn>
+              {form.publicAt && (
+                <GhostBtn type="button" onClick={() => set("publicAt", "")} style={{ fontSize: 11 }}>Clear</GhostBtn>
+              )}
+            </div>
+            <div style={{ fontSize: 11, color: COLORS.textMuted, fontFamily: FONTS.body, marginTop: 4 }}>
+              {form.publicAt
+                ? "Members only until " + new Date(form.publicAt).toLocaleString() + ", then public."
+                : "Leave empty to go public immediately."}
+            </div>
+          </div>
             </div>
             <div style={{ background: "#fff", border: "1px solid " + COLORS.wheat, borderRadius: 12, padding: "14px 15px", marginBottom: 14 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
@@ -880,7 +901,11 @@ function ProductsPage() {
                 <td style={{ padding: "12px 8px", fontSize: 12, color: COLORS.textMuted }}>${p.cost || 0}</td>
                 <td style={{ padding: "12px 8px", fontSize: 12, color: p.stock === 0 ? COLORS.terracotta : COLORS.charcoal, fontWeight: p.stock < 5 ? 600 : 400 }}>{p.stock === 0 ? "Out" : p.stock}</td>
                 <td style={{ padding: "12px 8px", fontSize: 12, color: COLORS.charcoal }}>{p.orders || 0}</td>
-                <td style={{ padding: "12px 8px" }}><Badge status={p.status} /></td>
+                <td style={{ padding: "12px 8px", whiteSpace: "nowrap" }}>
+                  <Badge status={p.status} />
+                  {p.membersOnly && <span style={{ marginLeft: 4, fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 8, background: COLORS.saffron + "22", color: COLORS.saffron }}>MEMBERS</span>}
+                  {p.earlyAccess && <span style={{ marginLeft: 4, fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 8, background: COLORS.damascene + "22", color: COLORS.damascene }}>EARLY</span>}
+                </td>
                 <td style={{ padding: "12px 8px", position: "relative", whiteSpace: "nowrap" }}>
                   <GhostBtn onClick={(e) => { e.stopPropagation(); openEdit(p); }} style={{ padding: "4px 10px", fontSize: 10 }}>Edit</GhostBtn>
                   <button onClick={(e) => { e.stopPropagation(); setMenuFor(menuFor === p.id ? null : p.id); }} title="More actions" style={{ marginLeft: 4, padding: "3px 8px", border: "0.5px solid " + COLORS.wheat, borderRadius: 6, background: "transparent", cursor: "pointer", color: COLORS.textMuted, fontSize: 13, lineHeight: 1 }}>⋯</button>
