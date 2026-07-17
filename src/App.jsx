@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { fetchProducts } from "./lib/supabase";
+import { fetchProducts, signUpCustomer, signInCustomer, signOutCustomer, sendPasswordReset, getCurrentUser, onAuthChange, fetchMyOrders } from "./lib/supabase";
 
 // ─── BRAND CONSTANTS ───────────────────────────────────────────────────────────
 const C = {
@@ -900,11 +900,208 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder }) {
 }
 
 // ─── STOREFRONT ROOT ──────────────────────────────────────────────────────────
+// ─── AUTH MODAL ──────────────────────────────────────────
+function AuthModal({ onClose, onSignedIn }) {
+  const [mode, setMode] = useState("login"); // login | signup | forgot
+  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+
+  const set = (k) => (e) => setForm((p) => ({ ...p, [k]: e.target.value }));
+
+  const submit = async () => {
+    if (busy) return;
+    setError("");
+    setNotice("");
+    if (!form.email.trim()) return setError("Please enter your email.");
+    if (mode !== "forgot" && form.password.length < 6) return setError("Password must be at least 6 characters.");
+    setBusy(true);
+    try {
+      if (mode === "signup") {
+        const r = await signUpCustomer(form.email.trim(), form.password, form.name.trim());
+        if (r.needsConfirmation) {
+          setNotice("Almost there! Check " + form.email.trim() + " and click the link to confirm your account.");
+        } else {
+          onSignedIn();
+        }
+      } else if (mode === "login") {
+        await signInCustomer(form.email.trim(), form.password);
+        onSignedIn();
+      } else {
+        await sendPasswordReset(form.email.trim());
+        setNotice("If that email has an account, a reset link is on its way.");
+      }
+    } catch (e) {
+      const m = String(e.message || e);
+      if (/Invalid login/i.test(m)) setError("That email or password is not right.");
+      else if (/already registered/i.test(m)) setError("That email already has an account. Try signing in.");
+      else if (/Email not confirmed/i.test(m)) setError("Please confirm your email first - check your inbox.");
+      else setError(m);
+    }
+    setBusy(false);
+  };
+
+  const input = {
+    width: "100%", padding: "11px 12px", border: `0.5px solid ${C.wheat}`, borderRadius: 8,
+    fontSize: 13, fontFamily: F.body, boxSizing: "border-box", outline: "none", marginBottom: 10,
+  };
+  const title = mode === "signup" ? "Create your account" : mode === "forgot" ? "Reset your password" : "Welcome back";
+  const titleAr = mode === "signup" ? "أنشئ حسابك" : mode === "forgot" ? "إعادة تعيين كلمة السر" : "أهلاً بعودتك";
+
+  return (
+    <>
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(42,31,24,0.5)", zIndex: 200 }} />
+      <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: "min(400px, 92vw)", background: "#FFF", borderRadius: 16, zIndex: 201, padding: 28, boxShadow: "0 24px 60px rgba(0,0,0,0.28)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div>
+            <div style={{ fontFamily: F.display, fontSize: 24, fontWeight: 600, color: C.charcoal }}>{title}</div>
+            <div style={{ fontFamily: F.arabic, fontSize: 15, color: C.saffron, marginBottom: 16 }}>{titleAr}</div>
+          </div>
+          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: C.textMuted }}>✕</button>
+        </div>
+
+        {notice ? (
+          <div style={{ background: "#F0F7F0", border: `0.5px solid ${C.olive}`, color: C.olive, borderRadius: 8, padding: "12px 14px", fontSize: 13, fontFamily: F.body, lineHeight: 1.6 }}>{notice}</div>
+        ) : (
+          <>
+            {mode === "signup" && (
+              <input value={form.name} onChange={set("name")} placeholder="Your name" style={input} />
+            )}
+            <input value={form.email} onChange={set("email")} type="email" placeholder="you@example.com" style={input} />
+            {mode !== "forgot" && (
+              <input value={form.password} onChange={set("password")} type="password" placeholder="Password" style={input}
+                onKeyDown={(e) => { if (e.key === "Enter") submit(); }} />
+            )}
+            {error && (
+              <div style={{ color: C.terracotta, fontSize: 12, fontFamily: F.body, marginBottom: 10 }}>{error}</div>
+            )}
+            <button onClick={submit} disabled={busy} style={{ width: "100%", padding: "13px", background: busy ? C.wheat : C.saffron, color: "#FFF", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, fontFamily: F.body, cursor: busy ? "not-allowed" : "pointer" }}>
+              {busy ? "Please wait..." : mode === "signup" ? "Create account" : mode === "forgot" ? "Send reset link" : "Sign in"}
+            </button>
+          </>
+        )}
+
+        <div style={{ marginTop: 14, fontSize: 12, fontFamily: F.body, color: C.textMuted, textAlign: "center", lineHeight: 1.8 }}>
+          {mode === "login" && (
+            <>
+              <span onClick={() => { setMode("signup"); setError(""); }} style={{ color: C.saffron, cursor: "pointer", fontWeight: 600 }}>Create an account</span>
+              {" · "}
+              <span onClick={() => { setMode("forgot"); setError(""); }} style={{ cursor: "pointer" }}>Forgot password?</span>
+            </>
+          )}
+          {mode !== "login" && (
+            <span onClick={() => { setMode("login"); setError(""); setNotice(""); }} style={{ color: C.saffron, cursor: "pointer", fontWeight: 600 }}>← Back to sign in</span>
+          )}
+        </div>
+        <div style={{ marginTop: 12, fontSize: 11, color: C.textMuted, fontFamily: F.body, textAlign: "center" }}>
+          You can always check out as a guest - an account just keeps your orders in one place.
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ─── MY ACCOUNT ──────────────────────────────────────────
+function AccountPage({ user, onBack, onSignOut }) {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let live = true;
+    fetchMyOrders()
+      .then((list) => { if (live) { setOrders(list); setError(""); } })
+      .catch((e) => { if (live) setError(e.message || "Could not load your orders."); })
+      .finally(() => { if (live) setLoading(false); });
+    return () => { live = false; };
+  }, []);
+
+  const name = (user.user_metadata && user.user_metadata.name) || user.email;
+  const card = { background: "#FFF", border: `0.5px solid ${C.wheat}`, borderRadius: 12, padding: 20, marginBottom: 14 };
+
+  return (
+    <div style={{ maxWidth: 760, margin: "0 auto", padding: "32px 20px" }}>
+      <div style={{ display: "flex", alignItems: "center", marginBottom: 22 }}>
+        <div style={{ marginRight: "auto" }}>
+          <div style={{ fontFamily: F.display, fontSize: 30, fontWeight: 600, color: C.charcoal }}>My Account</div>
+          <div style={{ fontFamily: F.arabic, fontSize: 17, color: C.saffron }}>حسابي</div>
+        </div>
+        <button onClick={onBack} style={{ background: "none", border: `0.5px solid ${C.wheat}`, borderRadius: 8, padding: "8px 14px", fontSize: 12, fontFamily: F.body, cursor: "pointer", color: C.charcoal, marginRight: 8 }}>Keep shopping</button>
+        <button onClick={onSignOut} style={{ background: "none", border: `0.5px solid ${C.wheat}`, borderRadius: 8, padding: "8px 14px", fontSize: 12, fontFamily: F.body, cursor: "pointer", color: C.textMuted }}>Sign out</button>
+      </div>
+
+      <div style={card}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, letterSpacing: 0.5, marginBottom: 8 }}>SIGNED IN AS</div>
+        <div style={{ fontSize: 15, fontFamily: F.body, color: C.charcoal, fontWeight: 600 }}>{name}</div>
+        <div style={{ fontSize: 13, fontFamily: F.body, color: C.textMuted }}>{user.email}</div>
+      </div>
+
+      <div style={{ fontFamily: F.display, fontSize: 20, fontWeight: 600, color: C.charcoal, margin: "20px 0 10px" }}>Order history</div>
+
+      {loading && <div style={{ ...card, color: C.textMuted, fontSize: 13, fontFamily: F.body }}>Loading your orders...</div>}
+      {error && <div style={{ ...card, color: C.terracotta, fontSize: 13, fontFamily: F.body }}>{error}</div>}
+
+      {!loading && !error && orders.length === 0 && (
+        <div style={{ ...card, textAlign: "center", padding: 34 }}>
+          <div style={{ fontSize: 34, marginBottom: 8 }}>🏺</div>
+          <div style={{ fontSize: 14, fontFamily: F.body, color: C.charcoal, marginBottom: 4 }}>No orders yet</div>
+          <div style={{ fontSize: 13, fontFamily: F.body, color: C.textMuted, lineHeight: 1.6 }}>
+            Orders you place with this email will appear here, with tracking as soon as they ship.
+          </div>
+        </div>
+      )}
+
+      {orders.map((o) => (
+        <div key={o.id} style={card}>
+          <div style={{ display: "flex", alignItems: "center", marginBottom: 8, flexWrap: "wrap", gap: 8 }}>
+            <div style={{ fontFamily: F.body, fontSize: 14, fontWeight: 700, color: C.charcoal, marginRight: "auto" }}>{o.orderNumber}</div>
+            <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 10, fontFamily: F.body,
+              background: o.status === "delivered" ? C.olive + "22" : o.status === "shipped" ? C.damascene + "22" : C.saffron + "22",
+              color: o.status === "delivered" ? C.olive : o.status === "shipped" ? C.damascene : C.saffron }}>
+              {String(o.status || "new").replace("_", " ").toUpperCase()}
+            </span>
+            <span style={{ fontSize: 12, color: C.textMuted, fontFamily: F.body }}>{o.date}</span>
+          </div>
+          {(o.items || []).map((it, i) => (
+            <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, fontFamily: F.body, color: C.textMuted, padding: "3px 0" }}>
+              <span>{it.name} × {it.qty}</span>
+              <span>{"$" + Number((it.price || 0) * (it.qty || 1)).toFixed(2)}</span>
+            </div>
+          ))}
+          <div style={{ display: "flex", justifyContent: "space-between", borderTop: `0.5px solid ${C.wheat}`, marginTop: 8, paddingTop: 8, fontSize: 14, fontFamily: F.body, fontWeight: 700, color: C.charcoal }}>
+            <span>Total</span>
+            <span>{"$" + Number(o.total || 0).toFixed(2)}</span>
+          </div>
+          {o.trackingNumber && (
+            <div style={{ marginTop: 10 }}>
+              <div style={{ fontSize: 12, color: C.textMuted, fontFamily: F.body, marginBottom: 6 }}>Tracking: {o.trackingNumber}</div>
+              {o.trackingUrl && (
+                <a href={o.trackingUrl} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", background: C.saffron, color: "#FFF", textDecoration: "none", padding: "9px 18px", borderRadius: 8, fontSize: 12, fontWeight: 600, fontFamily: F.body }}>Track your package</a>
+              )}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function App() {
   const [page, setPage] = useState("home");
   const [viewingProduct, setViewingProduct] = useState(null);
   const [cart, setCart] = useState([]);
   const [cartOpen, setCartOpen] = useState(false);
+  const [user, setUser] = useState(null);
+  const [authOpen, setAuthOpen] = useState(false);
+
+  // Keep the header in sync with the session (login, logout, token refresh).
+  useEffect(() => {
+    getCurrentUser().then(setUser).catch(() => setUser(null));
+    const off = onAuthChange(setUser);
+    return off;
+  }, []);
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const co = params.get("checkout");
@@ -959,7 +1156,11 @@ export default function App() {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <span style={{ fontSize: 18, cursor: "pointer", color: C.charcoal }}>🔍</span>
-          <span style={{ fontSize: 18, cursor: "pointer", color: C.charcoal }}>👤</span>
+          <span
+            onClick={() => { if (user) { setPage("account"); setViewingProduct(null); } else { setAuthOpen(true); } }}
+            title={user ? "My account" : "Sign in"}
+            style={{ fontSize: 18, cursor: "pointer", color: user ? C.saffron : C.charcoal }}
+          >👤</span>
           <div onClick={() => setCartOpen(true)} style={{ position: "relative", cursor: "pointer" }}>
             <span style={{ fontSize: 18, color: C.charcoal }}>🛒</span>
             {cartCount > 0 && (
@@ -990,6 +1191,13 @@ export default function App() {
       {page === "order-confirmed" && (
           <OrderConfirmed onContinue={() => setPage("home")} />
         )}
+        {page === "account" && user && (
+          <AccountPage
+            user={user}
+            onBack={() => setPage("home")}
+            onSignOut={async () => { await signOutCustomer(); setUser(null); setPage("home"); }}
+          />
+        )}
         {page === "custom-order" && (
         <CustomOrderForm onBack={() => setPage("home")} />
       )}
@@ -1002,6 +1210,13 @@ export default function App() {
           onUpdateQty={updateQty}
           onRemove={id => setCart(prev => prev.filter(i => i.id !== id))}
           onCheckout={() => { setCartOpen(false); setPage("checkout"); }}
+        />
+      )}
+
+      {authOpen && (
+        <AuthModal
+          onClose={() => setAuthOpen(false)}
+          onSignedIn={() => { setAuthOpen(false); setPage("account"); }}
         />
       )}
     </div>
