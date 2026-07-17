@@ -105,8 +105,6 @@ function ProductCard({ product, onView, onAddToCart }) {
                   Buy on {product.buyUrl.toLowerCase().includes("amazon") ? "Amazon" : product.buyUrl.toLowerCase().includes("etsy") ? "Etsy" : product.buyUrl.toLowerCase().includes("ebay") ? "eBay" : "their store"}
                 </a>
               )}
-
-            <ShareRow product={product} />
       </div>
     </div>
   );
@@ -290,6 +288,8 @@ function ProductDetail({ product, onBack, onAddToCart }) {
               <span key={b} style={{ fontSize: 11, color: C.textMuted, fontFamily: F.body }}>{b}</span>
             ))}
           </div>
+
+            <ShareRow product={product} />
         </div>
       </div>
 
