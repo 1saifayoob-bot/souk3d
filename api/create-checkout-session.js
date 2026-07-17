@@ -17,6 +17,8 @@ export default async function handler(req, res) {
   try {
     const { items, contact, address, shippingMethod, giftMessage } =
 
+req.body || {};
+
     // Member discount is decided HERE, from the caller's signed token - never
     // from anything the browser claims. A guest cannot fake this.
     let isMember = false;
@@ -35,7 +37,6 @@ export default async function handler(req, res) {
       isMember = false;
     }
     const MEMBER_DISCOUNT = 0.05;
-      req.body || {};
 
     if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: "Your cart is empty." });
