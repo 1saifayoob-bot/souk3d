@@ -222,7 +222,7 @@ function CartDrawer({ cart, onClose, onUpdateQty, onRemove, onCheckout, user, pr
         ) : (
           <div style={{ fontSize: 11, color: C.saffron, marginBottom: 8, fontFamily: F.body }}>Sign in and save 5% on this order</div>
         )}
-          {[["Subtotal", `$${subtotal.toFixed(2)}`], ["Shipping", subtotal >= 75 ? "Free" : "$5.99"], ...(promoApplied ? [["Discount (10%)", `-$${discount.toFixed(2)}`]] : [])].map(([k, v]) => (
+          {[["Subtotal", `$${subtotal.toFixed(2)}`], ["Shipping", subtotal >= 75 ? "Free" : "$5.99"], ...(discount > 0 ? [["Discount (10%)", `-$${discount.toFixed(2)}`]] : [])].map(([k, v]) => (
             <div key={k} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, fontFamily: F.body, marginBottom: 4, color: k === "Discount (10%)" ? C.olive : C.charcoal }}><span>{k}</span><span style={{ fontWeight: 500 }}>{v}</span></div>
           ))}
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 16, fontWeight: 700, color: C.charcoal, fontFamily: F.body, borderTop: `0.5px solid ${C.wheat}`, paddingTop: 10, marginTop: 6, marginBottom: 14 }}>
