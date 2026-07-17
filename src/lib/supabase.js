@@ -308,6 +308,92 @@ export async function migrateLocalProducts(localProducts) {
 }
 
 // ---------------------------------------------------------------------------
+// Customer accounts (storefront)
+// Customers authenticate with the same Supabase Auth as admins, but RLS gives
+// them nothing except their own rows: admin policies require is_admin(), and
+// the "read own" policies match on the email inside their signed token.
+// ---------------------------------------------------------------------------
+export async function signUpCustomer(email, password, name) {
+  const { data, error } = await supabase.auth.signUp({
+    email: email,
+    password: password,
+    options: {
+      data: { name: name || "" },
+      emailRedirectTo: window.location.origin,
+    },
+  });
+  if (error) throw error;
+  // No session means Supabase sent a confirmation email and is waiting.
+  return { needsConfirmation: !data.session, user: data.user };
+}
+
+export async function signInCustomer(email, password) {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: email,
+    password: password,
+  });
+  if (error) throw error;
+  return data.user;
+}
+
+export async function signOutCustomer() {
+  const { error } = await supabase.auth.signOut();
+  if (error) throw error;
+}
+
+export async function sendPasswordReset(email) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + "?reset=1",
+  });
+  if (error) throw error;
+}
+
+export async function updatePassword(newPassword) {
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) throw error;
+}
+
+export async function getCurrentUser() {
+  const { data } = await supabase.auth.getSession();
+  return data && data.session ? data.session.user : null;
+}
+
+export function onAuthChange(cb) {
+  const { data } = supabase.auth.onAuthStateChange(function (_e, session) {
+    cb(session ? session.user : null);
+  });
+  return function () { data.subscription.unsubscribe(); };
+}
+
+// A signed-in customer's own orders. RLS does the filtering, not this query -
+// even if this asked for everything, the database would only return their own.
+export async function fetchMyOrders() {
+  const { data, error } = await supabase
+    .from("orders")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data || []).map(rowToOrder);
+}
+
+// A signed-in customer's own custom order requests.
+export async function fetchMyCustomOrders() {
+  const { data, error } = await supabase
+    .from("custom_orders")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data || []).map(rowToCustomOrder);
+}
+
+// The customer's own CRM record (saved address, phone).
+export async function fetchMyProfile() {
+  const { data, error } = await supabase.from("customers").select("*").maybeSingle();
+  if (error) return null;
+  return data;
+}
+
+// ---------------------------------------------------------------------------
 // Customers (CRM)
 // The customers table is filled automatically by the Stripe webhook and the
 // custom order endpoint. Orders and lifetime value are computed here rather
