@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { fetchProducts, signUpCustomer, signInCustomer, signOutCustomer, sendPasswordReset, getCurrentUser, onAuthChange, fetchMyOrders } from "./lib/supabase";
+import { supabase, fetchProducts, signUpCustomer, signInCustomer, signOutCustomer, sendPasswordReset, getCurrentUser, onAuthChange, fetchMyOrders } from "./lib/supabase";
 
 // ─── BRAND CONSTANTS ───────────────────────────────────────────────────────────
 const C = {
@@ -105,6 +105,8 @@ function ProductCard({ product, onView, onAddToCart }) {
                   Buy on {product.buyUrl.toLowerCase().includes("amazon") ? "Amazon" : product.buyUrl.toLowerCase().includes("etsy") ? "Etsy" : product.buyUrl.toLowerCase().includes("ebay") ? "eBay" : "their store"}
                 </a>
               )}
+
+            <ShareRow product={product} />
       </div>
     </div>
   );
@@ -355,9 +357,14 @@ function CheckoutPage({ cart, onBack }) {
     }
     setPaying(true);
     try {
+      // Attach the session token if signed in - the server decides the discount.
+      const { data: sess } = await supabase.auth.getSession();
+      const memberToken = sess && sess.session ? sess.session.access_token : "";
       const res = await fetch("/api/create-checkout-session", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: memberToken
+          ? { "Content-Type": "application/json", Authorization: "Bearer " + memberToken }
+          : { "Content-Type": "application/json" },
         body: JSON.stringify({
           items: cart.map((i) => ({ id: i.id, qty: i.qty })),
           contact,
@@ -900,6 +907,60 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder }) {
 }
 
 // ─── STOREFRONT ROOT ──────────────────────────────────────────────────────────
+// ─── SHARE ───────────────────────────────────────────────
+// Products live at /p/<sku> so there is something real to share.
+export function productUrl(p) {
+  return window.location.origin + "/p/" + encodeURIComponent(p.sku || "");
+}
+
+function ShareRow({ product }) {
+  const [copied, setCopied] = useState(false);
+  const url = productUrl(product);
+  const text = product.name + " — $" + Number(product.price || 0).toFixed(2) + " · Souk3D";
+  const enc = encodeURIComponent;
+
+  const links = [
+    { label: "WhatsApp", bg: "#25D366", href: "https://wa.me/?text=" + enc(text + " " + url) },
+    { label: "Facebook", bg: "#1877F2", href: "https://www.facebook.com/sharer/sharer.php?u=" + enc(url) },
+    { label: "X", bg: "#000000", href: "https://twitter.com/intent/tweet?text=" + enc(text) + "&url=" + enc(url) },
+    { label: "Pinterest", bg: "#E60023", href: "https://pinterest.com/pin/create/button/?url=" + enc(url) + "&media=" + enc(product.imageUrl || "") + "&description=" + enc(text) },
+  ];
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (e) {
+      window.prompt("Copy this link:", url);
+    }
+  };
+
+  const nativeShare = async () => {
+    try {
+      await navigator.share({ title: product.name, text: text, url: url });
+    } catch (e) { /* user dismissed the sheet */ }
+  };
+
+  return (
+    <div style={{ marginTop: 20, paddingTop: 16, borderTop: `0.5px solid ${C.wheat}` }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, letterSpacing: 0.5, marginBottom: 8, fontFamily: F.body }}>SHARE THIS · شاركها</div>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        {typeof navigator !== "undefined" && navigator.share && (
+          <button onClick={nativeShare} style={{ padding: "9px 16px", background: C.charcoal, color: "#FFF", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 600, fontFamily: F.body, cursor: "pointer" }}>Share</button>
+        )}
+        {links.map((l) => (
+          <a key={l.label} href={l.href} target="_blank" rel="noopener noreferrer"
+            style={{ padding: "9px 16px", background: l.bg, color: "#FFF", textDecoration: "none", borderRadius: 8, fontSize: 12, fontWeight: 600, fontFamily: F.body }}>{l.label}</a>
+        ))}
+        <button onClick={copy} style={{ padding: "9px 16px", background: copied ? C.olive : "#FFF", color: copied ? "#FFF" : C.charcoal, border: `0.5px solid ${copied ? C.olive : C.wheat}`, borderRadius: 8, fontSize: 12, fontWeight: 600, fontFamily: F.body, cursor: "pointer" }}>
+          {copied ? "Copied!" : "Copy link"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── AUTH MODAL ──────────────────────────────────────────
 function AuthModal({ onClose, onSignedIn }) {
   const [mode, setMode] = useState("login"); // login | signup | forgot
@@ -1102,6 +1163,43 @@ export default function App() {
     return off;
   }, []);
 
+  // Products have real URLs (/p/<sku>) so they can be shared and linked.
+  const openProduct = (p) => {
+    setViewingProduct(p);
+    setPage("product");
+    if (p && p.sku) window.history.pushState({ sku: p.sku }, "", "/p/" + encodeURIComponent(p.sku));
+  };
+  const goHome = () => {
+    setViewingProduct(null);
+    setPage("home");
+    window.history.pushState({}, "", "/");
+  };
+
+  // Open the right product when someone lands on a shared link.
+  useEffect(() => {
+    const m = window.location.pathname.match(/^\/p\/(.+)$/);
+    if (!m) return;
+    const sku = decodeURIComponent(m[1]);
+    let live = true;
+    fetchProducts({ activeOnly: true })
+      .then((list) => {
+        const found = (list || []).find((p) => p.sku === sku);
+        if (live && found) { setViewingProduct(found); setPage("product"); }
+      })
+      .catch(() => {});
+    return () => { live = false; };
+  }, []);
+
+  // Keep the browser back/forward buttons honest.
+  useEffect(() => {
+    const onPop = () => {
+      const m = window.location.pathname.match(/^\/p\//);
+      if (!m) { setViewingProduct(null); setPage("home"); }
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const co = params.get("checkout");
@@ -1173,7 +1271,7 @@ export default function App() {
       {/* Pages */}
       {page === "home" && !viewingProduct && (
         <Homepage
-          onViewProduct={(p) => { setViewingProduct(p); setPage("product"); }}
+          onViewProduct={openProduct}
           onAddToCart={addToCart}
           onCustomOrder={() => setPage("custom-order")}
         />
@@ -1181,7 +1279,7 @@ export default function App() {
       {page === "product" && viewingProduct && (
         <ProductDetail
           product={viewingProduct}
-          onBack={() => { setViewingProduct(null); setPage("home"); }}
+          onBack={goHome}
           onAddToCart={addToCart}
         />
       )}
