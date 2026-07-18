@@ -2085,70 +2085,63 @@ function DiscountsPage() {
 }
 
 function EmailMarketingPage() {
-  const [tab, setTab] = useState("campaigns");
-  const [automations, setAutomations] = useState(AUTOMATIONS);
+  const [subscribers, setSubscribers] = useState(0);
+  const [loading, setLoading] = useState(true);
 
-  const toggleAuto = (idx) => setAutomations(prev => prev.map((a, i) => i === idx ? { ...a, active: !a.active } : a));
+  useEffect(function () {
+    var live = true;
+    fetchCustomers().then(function (list) { if (live) setSubscribers((list || []).length); }).catch(function () {}).finally(function () { if (live) setLoading(false); });
+    return function () { live = false; };
+  }, []);
+
+  var automated = [
+    { name: 'Order confirmation', when: 'Sent the moment a customer pays', on: true },
+    { name: 'Shipping + tracking', when: 'Sent when you buy a label or mark shipped', on: true },
+    { name: 'Custom order received', when: 'Sent when someone submits a custom request', on: true },
+    { name: 'Custom order quote', when: 'Sent when you send a quote from Custom Orders', on: true },
+    { name: 'Account confirmation + reset', when: 'Sent on signup and password reset', on: true },
+  ];
+  var kpi = { flex: 1, minWidth: 150, background: '#fff', border: '0.5px solid ' + COLORS.wheat, borderRadius: 10, padding: 16 };
+  var kpiLabel = { fontSize: 10, fontWeight: 700, letterSpacing: 0.6, color: COLORS.textMuted };
+  var kpiValue = { fontFamily: FONTS.display, fontSize: 26, fontWeight: 600, color: COLORS.charcoal, marginTop: 4 };
 
   return (
-    <div style={{ animation: "fadeIn 0.3s ease" }}>
-      <div style={{ position: "sticky", top: -24, zIndex: 10, background: COLORS.cream, margin: "-24px -32px 0", padding: "24px 32px 14px", borderBottom: `0.5px solid ${COLORS.wheat}`, boxShadow: "0 4px 12px rgba(0,0,0,0.04)" }}>
-        <div style={{ display: "flex", alignItems: "center", marginBottom: 12 }}>
-          <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal, letterSpacing: "0.01em" }}>✉ Email & Marketing</div>
-          <div style={{ fontFamily: FONTS.body, fontSize: 12, color: COLORS.textMuted, marginTop: 2 }}>Manage campaigns & automations</div>
-        </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          {["campaigns", "automations"].map(t => (
-            <button key={t} onClick={() => setTab(t)}
-              style={{ padding: "7px 18px", borderRadius: 8, border: "none", cursor: "pointer", fontFamily: FONTS.body, fontSize: 13, fontWeight: tab === t ? 600 : 400, background: tab === t ? COLORS.saffron : "transparent", color: tab === t ? "#fff" : COLORS.charcoal, transition: "all 0.15s" }}>
-              {t === "campaigns" ? "📣 Campaigns" : "⚡ Automations"}
-            </button>
-          ))}
-        </div>
+    <div style={{ animation: 'fadeIn 0.3s ease' }}>
+      <div style={{ position: 'sticky', top: -24, zIndex: 10, background: COLORS.cream, margin: '-24px -32px 0', padding: '24px 32px 14px', borderBottom: '0.5px solid ' + COLORS.wheat }}>
+        <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal }}>Email & Marketing</div>
+      </div>
+      <div style={{ height: 14 }} />
+
+      <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
+        <div style={kpi}><div style={kpiLabel}>SUBSCRIBERS</div><div style={kpiValue}>{loading ? '...' : subscribers}</div></div>
+        <div style={kpi}><div style={kpiLabel}>AUTOMATED EMAILS</div><div style={kpiValue}>{automated.length}</div></div>
+        <div style={kpi}><div style={kpiLabel}>WELCOME CODE</div><div style={kpiValue}>WELCOME10</div></div>
       </div>
 
-      {tab === "campaigns" && (
-        <div style={{ marginTop: 24 }}>
-          {CAMPAIGNS_DATA.map(c => (
-            <div key={c.id} style={{ background: "#fff", borderRadius: 12, padding: "16px 20px", marginBottom: 12, display: "flex", alignItems: "center", gap: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0, background: c.status === "sent" ? "#22c55e" : c.status === "active" ? COLORS.saffron : "#d1d5db" }} />
-              <div style={{ flex: 1 }}>
-                <div style={{ fontFamily: FONTS.body, fontSize: 14, fontWeight: 600, color: COLORS.charcoal }}>{c.name}</div>
-                <div style={{ fontFamily: FONTS.body, fontSize: 12, color: COLORS.textMuted, marginTop: 2 }}>{c.date}</div>
-              </div>
-              {c.opens > 0 && <div style={{ textAlign: "center", minWidth: 48 }}><div style={{ fontFamily: FONTS.display, fontSize: 16, fontWeight: 700, color: COLORS.charcoal }}>{c.opens}%</div><div style={{ fontFamily: FONTS.body, fontSize: 11, color: COLORS.textMuted }}>Opens</div></div>}
-              {c.clicks > 0 && <div style={{ textAlign: "center", minWidth: 48 }}><div style={{ fontFamily: FONTS.display, fontSize: 16, fontWeight: 700, color: COLORS.charcoal }}>{c.clicks}%</div><div style={{ fontFamily: FONTS.body, fontSize: 11, color: COLORS.textMuted }}>Clicks</div></div>}
-              {c.revenue > 0 && <div style={{ textAlign: "center", minWidth: 60 }}><div style={{ fontFamily: FONTS.display, fontSize: 16, fontWeight: 700, color: COLORS.damascene }}>${c.revenue}</div><div style={{ fontFamily: FONTS.body, fontSize: 11, color: COLORS.textMuted }}>Revenue</div></div>}
-              <span style={{ padding: "3px 10px", borderRadius: 6, fontSize: 11, fontFamily: FONTS.body, fontWeight: 600, background: c.status === "sent" ? "#dcfce7" : c.status === "active" ? "#fef9c3" : "#f3f4f6", color: c.status === "sent" ? "#16a34a" : c.status === "active" ? "#ca8a04" : COLORS.textMuted }}>{c.status}</span>
+      <SectionCard>
+        <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.textMuted, letterSpacing: 0.5, marginBottom: 12 }}>AUTOMATED EMAILS — LIVE</div>
+        {automated.map(function (a, i) { return (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', padding: '10px 0', borderBottom: '0.5px solid ' + COLORS.wheat }}>
+            <div style={{ marginRight: 'auto' }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body }}>{a.name}</div>
+              <div style={{ fontSize: 12, color: COLORS.textMuted, fontFamily: FONTS.body }}>{a.when}</div>
             </div>
-          ))}
-          <button style={{ display: "block", width: "100%", padding: 13, borderRadius: 10, border: "1.5px dashed #E8D5A8", background: "transparent", fontFamily: FONTS.body, fontSize: 14, color: COLORS.textMuted, cursor: "pointer", marginTop: 8 }}>+ New Campaign</button>
-        </div>
-      )}
+            <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 10, background: COLORS.olive + '22', color: COLORS.olive }}>ACTIVE</span>
+          </div>
+        ); })}
+        <div style={{ fontSize: 12, color: COLORS.textMuted, fontFamily: FONTS.body, marginTop: 12, lineHeight: 1.6 }}>These send automatically from order@souk3d.com. Nothing to configure.</div>
+      </SectionCard>
 
-      {tab === "automations" && (
-        <div style={{ marginTop: 24 }}>
-          {automations.map((a, idx) => (
-            <div key={idx} style={{ background: "#fff", borderRadius: 12, padding: "16px 20px", marginBottom: 12, display: "flex", alignItems: "center", gap: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
-              <span style={{ fontSize: 22, width: 32, textAlign: "center", flexShrink: 0 }}>{a.icon}</span>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontFamily: FONTS.body, fontSize: 14, fontWeight: 600, color: COLORS.charcoal }}>{a.name}</div>
-                <div style={{ fontFamily: FONTS.body, fontSize: 12, color: COLORS.textMuted, marginTop: 2 }}>{a.trigger}</div>
-              </div>
-              <div style={{ textAlign: "center", minWidth: 44 }}><div style={{ fontFamily: FONTS.display, fontSize: 16, fontWeight: 700, color: COLORS.charcoal }}>{a.sent}</div><div style={{ fontFamily: FONTS.body, fontSize: 11, color: COLORS.textMuted }}>Sent</div></div>
-              <div style={{ textAlign: "center", minWidth: 52 }}><div style={{ fontFamily: FONTS.display, fontSize: 16, fontWeight: 700, color: COLORS.charcoal }}>{a.openRate}%</div><div style={{ fontFamily: FONTS.body, fontSize: 11, color: COLORS.textMuted }}>Open rate</div></div>
-              <div onClick={() => toggleAuto(idx)} style={{ width: 42, height: 24, borderRadius: 12, cursor: "pointer", background: a.active ? COLORS.saffron : "#d1d5db", position: "relative", flexShrink: 0, transition: "background 0.2s" }}>
-                <div style={{ position: "absolute", top: 3, left: a.active ? 21 : 3, width: 18, height: 18, borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
-              </div>
-            </div>
-          ))}
+      <SectionCard>
+        <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.textMuted, letterSpacing: 0.5, marginBottom: 10 }}>NEWSLETTER CAMPAIGNS</div>
+        <div style={{ fontSize: 13, color: COLORS.charcoal, fontFamily: FONTS.body, lineHeight: 1.7 }}>
+          Bulk newsletter sending is not built yet. For now you can <strong>export your customer list</strong> from the Customers tab (Export CSV) and send a campaign through a tool like Mailchimp or Resend Broadcasts. When you are ready, we can build one-click campaigns here.
         </div>
-      )}
+      </SectionCard>
     </div>
   );
 }
 
-// --- SETTINGS PAGE ---
 function SettingsPage() {
   const [saved, setSaved] = useState(false);
   const _ss = (() => { try { return JSON.parse(localStorage.getItem("souk3d_settings")) || {}; } catch { return {}; } })();
