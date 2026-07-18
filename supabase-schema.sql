@@ -102,3 +102,22 @@ create policy "Admin full access" on discounts for all using (auth.role() = 'aut
 
 -- Allow public read on products (storefront)
 create policy "Public read products" on products for select using (status = 'active');
+
+-- 6. Newsletter subscribers (Email & Marketing tab)
+create table if not exists newsletter_subscribers (
+  id uuid primary key default gen_random_uuid(),
+  email text unique not null,
+  status text not null default 'subscribed',
+  source text default 'site',
+  unsubscribe_token uuid not null default gen_random_uuid(),
+  created_at timestamptz default now(),
+  unsubscribed_at timestamptz
+);
+alter table newsletter_subscribers enable row level security;
+-- No policies on purpose: only the service role (the /api endpoints) can read or write.
+create index if not exists newsletter_subscribers_status_idx on newsletter_subscribers (status);
+
+-- Make sure the WELCOME10 code advertised on the homepage actually works at checkout.
+insert into discounts (code, name, type, value, status)
+select 'WELCOME10', 'Newsletter welcome — 10% off', 'percent', 10, 'active'
+where not exists (select 1 from discounts where code ilike 'WELCOME10');
