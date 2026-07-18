@@ -1,4 +1,4 @@
-+8import React, { useState, useMemo, useRef, useEffect } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { supabase, fetchProducts, saveProduct, deleteProductById, migrateLocalProducts, fetchOrders, setProductStatus, reoptimizeProductImages, fetchProductIds, fetchProductById, productNeedsOptimizing, fetchCustomOrders, setCustomOrderStage, fetchCustomers, fetchDiscounts, saveDiscount, setDiscountStatus, deleteDiscountById } from "../lib/supabase";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart, PieChart, Pie, Cell, BarChart, Bar } from "recharts";
 
