@@ -534,6 +534,58 @@ export function rowToOrder(r) {
   };
 }
 
+// ---------------------------------------------------------------------------
+// Discounts (admin management). The real validation happens server-side at
+// checkout; these helpers just let the admin see and edit codes.
+// ---------------------------------------------------------------------------
+export async function fetchDiscounts() {
+  const { data, error } = await supabase
+    .from("discounts")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data || []).map(function (r) {
+    return {
+      id: r.id,
+      code: r.code || "",
+      name: r.name || "",
+      type: r.type || "percent",
+      value: r.value != null ? Number(r.value) : 0,
+      status: r.status || "active",
+      usageLimit: r.usage_limit != null ? Number(r.usage_limit) : null,
+      createdAt: r.created_at || "",
+    };
+  });
+}
+
+export async function saveDiscount(dc) {
+  const row = {
+    code: String(dc.code || "").trim().toUpperCase(),
+    name: dc.name || "",
+    type: dc.type || "percent",
+    value: dc.value === "" || dc.value == null ? 0 : Number(dc.value),
+    status: dc.status || "active",
+    usage_limit: dc.usageLimit === "" || dc.usageLimit == null ? null : parseInt(dc.usageLimit, 10),
+  };
+  const { data, error } = await supabase
+    .from("discounts")
+    .upsert(row, { onConflict: "code" })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function setDiscountStatus(id, status) {
+  const { error } = await supabase.from("discounts").update({ status: status }).eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteDiscountById(id) {
+  const { error } = await supabase.from("discounts").delete().eq("id", id);
+  if (error) throw error;
+}
+
 export async function fetchOrders() {
   const { data, error } = await supabase
     .from("orders")
