@@ -777,6 +777,62 @@ function useProducts() {
   return products;
 }
 
+function NewsletterSignup() {
+  const [email, setEmail] = useState("");
+  const [state, setState] = useState("idle"); // idle | sending | done | already | error
+  const [errMsg, setErrMsg] = useState("");
+
+  const submit = async () => {
+    const clean = email.trim();
+    if (!clean || state === "sending") return;
+    setState("sending");
+    setErrMsg("");
+    try {
+      const r = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "subscribe", email: clean, source: "homepage" }),
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.error || "Something went wrong.");
+      setState(data.already ? "already" : "done");
+    } catch (e) {
+      setErrMsg(e.message || "Something went wrong. Please try again.");
+      setState("error");
+    }
+  };
+
+  return (
+    <div style={{ background: C.saffron + "14", border: `0.5px solid ${C.saffron}44`, borderRadius: 20, padding: "40px", textAlign: "center", marginBottom: 40 }}>
+      <div style={{ fontFamily: F.display, fontSize: 28, fontWeight: 600, color: C.charcoal, marginBottom: 6 }}>Join the Souk3D Family</div>
+      <div style={{ fontFamily: F.arabic, fontSize: 18, color: C.saffron, marginBottom: 12 }}>انضم إلى عائلتنا</div>
+      <p style={{ fontSize: 14, color: C.textMuted, fontFamily: F.body, marginBottom: 20 }}>Get 10% off your first order with code <strong style={{ color: C.saffron }}>WELCOME10</strong> when you subscribe.</p>
+      {state === "done" || state === "already" ? (
+        <div style={{ fontSize: 15, fontWeight: 600, color: C.olive, fontFamily: F.body }}>
+          {state === "done" ? "Ahlan! Check your inbox — your WELCOME10 code is on its way ✦" : "You are already on the list — use WELCOME10 at checkout ✦"}
+        </div>
+      ) : (
+        <>
+          <div style={{ display: "flex", gap: 10, maxWidth: 420, margin: "0 auto" }}>
+            <input
+              type="email"
+              placeholder="your@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") submit(); }}
+              style={{ flex: 1, padding: "12px 14px", border: `0.5px solid ${C.wheat}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }}
+            />
+            <button onClick={submit} disabled={state === "sending"} style={{ padding: "12px 24px", background: C.charcoal, color: "#FFF", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, fontFamily: F.body, cursor: "pointer", opacity: state === "sending" ? 0.6 : 1 }}>
+              {state === "sending" ? "Joining…" : "Subscribe"}
+            </button>
+          </div>
+          {state === "error" && <div style={{ fontSize: 12, color: "#B33", fontFamily: F.body, marginTop: 10 }}>{errMsg}</div>}
+        </>
+      )}
+    </div>
+  );
+}
+
 function Homepage({ onViewProduct, onAddToCart, onCustomOrder }) {
   const STORE_PRODUCTS = useProducts();
   return (
@@ -910,15 +966,7 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder }) {
         </div>
 
         {/* Newsletter */}
-        <div style={{ background: C.saffron + "14", border: `0.5px solid ${C.saffron}44`, borderRadius: 20, padding: "40px", textAlign: "center", marginBottom: 40 }}>
-          <div style={{ fontFamily: F.display, fontSize: 28, fontWeight: 600, color: C.charcoal, marginBottom: 6 }}>Join the Souk3D Family</div>
-          <div style={{ fontFamily: F.arabic, fontSize: 18, color: C.saffron, marginBottom: 12 }}>انضم إلى عائل٪نا</div>
-          <p style={{ fontSize: 14, color: C.textMuted, fontFamily: F.body, marginBottom: 20 }}>Get 10% off your first order with code <strong style={{ color: C.saffron }}>WELCOME10</strong> when you subscribe.</p>
-          <div style={{ display: "flex", gap: 10, maxWidth: 420, margin: "0 auto" }}>
-            <input placeholder="your@email.com" style={{ flex: 1, padding: "12px 14px", border: `0.5px solid ${C.wheat}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }} />
-            <button style={{ padding: "12px 24px", background: C.charcoal, color: "#FFF", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, fontFamily: F.body, cursor: "pointer" }}>Subscribe</button>
-          </div>
-        </div>
+        <NewsletterSignup />
       </div>
 
       {/* Footer */}
