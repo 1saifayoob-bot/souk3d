@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useRef, useEffect } from "react";
-import { supabase, fetchProducts, saveProduct, deleteProductById, migrateLocalProducts, fetchOrders, setProductStatus, reoptimizeProductImages, fetchProductIds, fetchProductById, productNeedsOptimizing, fetchCustomOrders, setCustomOrderStage, fetchCustomers } from "../lib/supabase";
++8import React, { useState, useMemo, useRef, useEffect } from "react";
+import { supabase, fetchProducts, saveProduct, deleteProductById, migrateLocalProducts, fetchOrders, setProductStatus, reoptimizeProductImages, fetchProductIds, fetchProductById, productNeedsOptimizing, fetchCustomOrders, setCustomOrderStage, fetchCustomers, fetchDiscounts, saveDiscount, setDiscountStatus, deleteDiscountById } from "../lib/supabase";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart, PieChart, Pie, Cell, BarChart, Bar } from "recharts";
 
 // ─── BRAND CONSTANTS ───────────────────────────────────────────────────────────
@@ -1861,353 +1861,228 @@ function CustomOrdersPage() {
 }
 
 function AnalyticsPage() {
-  const [range, setRange] = useState("7d");
+  const [orders, setOrders] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [range, setRange] = useState('30d');
+
+  useEffect(function () {
+    var live = true;
+    Promise.all([fetchOrders(), fetchProducts()])
+      .then(function (res) { if (live) { setOrders(res[0] || []); setProducts(res[1] || []); } })
+      .catch(function (e) { console.error('Analytics load failed', e); })
+      .finally(function () { if (live) setLoading(false); });
+    return function () { live = false; };
+  }, []);
+
+  var days = range === '7d' ? 7 : range === '90d' ? 90 : range === 'all' ? 3650 : 30;
+  var cutoff = Date.now() - days * 86400000;
+  var paid = orders.filter(function (o) { return o.paymentStatus === 'paid'; });
+  var inRange = paid.filter(function (o) { var t = new Date(o.date).getTime(); return isNaN(t) ? true : t >= cutoff; });
+
+  var revenue = inRange.reduce(function (s, o) { return s + (Number(o.total) || 0); }, 0);
+  var orderCount = inRange.length;
+  var aov = orderCount ? revenue / orderCount : 0;
+  var units = inRange.reduce(function (s, o) { return s + (o.items || []).reduce(function (a, it) { return a + (Number(it.qty) || 1); }, 0); }, 0);
+
+  // Top products by revenue, from the order line items.
+  var byProduct = {};
+  inRange.forEach(function (o) {
+    (o.items || []).forEach(function (it) {
+      var name = it.name || 'Item';
+      var rev = (Number(it.price) || 0) * (Number(it.qty) || 1);
+      if (!byProduct[name]) byProduct[name] = { name: name, revenue: 0, qty: 0 };
+      byProduct[name].revenue += rev;
+      byProduct[name].qty += (Number(it.qty) || 1);
+    });
+  });
+  var topProducts = Object.keys(byProduct).map(function (k) { return byProduct[k]; }).sort(function (a, b) { return b.revenue - a.revenue; }).slice(0, 5);
+
+  // Daily revenue series for the chart.
+  var buckets = Math.min(days, 30);
+  var series = [];
+  for (var i = buckets - 1; i >= 0; i--) {
+    var dayStart = new Date(); dayStart.setHours(0, 0, 0, 0); dayStart.setDate(dayStart.getDate() - i);
+    var dayEnd = dayStart.getTime() + 86400000;
+    var dayRev = paid.reduce(function (s, o) { var t = new Date(o.date).getTime(); return (t >= dayStart.getTime() && t < dayEnd) ? s + (Number(o.total) || 0) : s; }, 0);
+    series.push({ label: (dayStart.getMonth() + 1) + '/' + dayStart.getDate(), revenue: Math.round(dayRev * 100) / 100 });
+  }
+
+  var money = function (n) { return '$' + Number(n || 0).toFixed(2); };
+  var kpi = { flex: 1, minWidth: 150, background: '#fff', border: '0.5px solid ' + COLORS.wheat, borderRadius: 10, padding: 16 };
+  var kpiLabel = { fontSize: 10, fontWeight: 700, letterSpacing: 0.6, color: COLORS.textMuted, fontFamily: FONTS.body };
+  var kpiValue = { fontFamily: FONTS.display, fontSize: 26, fontWeight: 600, color: COLORS.charcoal, marginTop: 4 };
 
   return (
-    <div style={{ animation: "fadeIn 0.3s ease" }}>
-      <div style={{ position: "sticky", top: -24, zIndex: 10, background: COLORS.cream, margin: "-24px -32px 0", padding: "24px 32px 14px", borderBottom: `0.5px solid ${COLORS.wheat}`, boxShadow: "0 4px 12px rgba(0,0,0,0.04)" }}>
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal, flex: 1 }}>Analytics</div>
-          <div style={{ display: "flex", gap: 4 }}>
-            {["Today", "7d", "30d", "90d", "Year"].map(r => (
-              <FilterPill key={r} label={r} active={range === r} onClick={() => setRange(r)} />
-            ))}
+    <div style={{ animation: 'fadeIn 0.3s ease' }}>
+      <div style={{ position: 'sticky', top: -24, zIndex: 10, background: COLORS.cream, margin: '-24px -32px 0', padding: '24px 32px 14px', borderBottom: '0.5px solid ' + COLORS.wheat }}>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal, marginRight: 'auto' }}>Analytics</div>
+          <div style={{ display: 'flex', gap: 4 }}>
+            {['7d', '30d', '90d', 'all'].map(function (r) { return (<FilterPill key={r} label={r === 'all' ? 'All' : r} active={range === r} onClick={function () { setRange(r); }} />); })}
           </div>
         </div>
       </div>
       <div style={{ height: 14 }} />
 
-      {/* Big 4 KPIs */}
-      <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
-        <div style={{ flex: 2, minWidth: 200, background: COLORS.charcoal, borderRadius: 10, padding: "18px 20px" }}>
-          <div style={{ fontSize: 10, color: COLORS.wheat, letterSpacing: 0.8, fontFamily: FONTS.body, marginBottom: 4 }}>TOTAL REVENUE</div>
-          <div style={{ fontFamily: FONTS.display, fontSize: 36, fontWeight: 700, color: "#FFF" }}>$4,520</div>
-          <div style={{ fontSize: 11, color: COLORS.saffronLight }}>↑ 23% vs previous {range}</div>
-          <div style={{ marginTop: 10, height: 50 }}>
-            <ResponsiveContainer width="100%" height={50}>
-              <AreaChart data={ANALYTICS_TREND}>
-                <defs><linearGradient id="spark" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={COLORS.saffron} stopOpacity={0.5}/><stop offset="95%" stopColor={COLORS.saffron} stopOpacity={0}/></linearGradient></defs>
-                <Area type="monotone" dataKey="revenue" stroke={COLORS.saffronLight} strokeWidth={1.5} fill="url(#spark)" dot={false} />
-              </AreaChart>
-            </ResponsiveContainer>
+      {loading ? (
+        <SectionCard><div style={{ color: COLORS.textMuted, fontSize: 13, fontFamily: FONTS.body, padding: 20, textAlign: 'center' }}>Loading analytics...</div></SectionCard>
+      ) : (
+        <>
+          <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
+            <div style={kpi}><div style={kpiLabel}>REVENUE</div><div style={kpiValue}>{money(revenue)}</div></div>
+            <div style={kpi}><div style={kpiLabel}>ORDERS</div><div style={kpiValue}>{orderCount}</div></div>
+            <div style={kpi}><div style={kpiLabel}>AVG ORDER</div><div style={kpiValue}>{money(aov)}</div></div>
+            <div style={kpi}><div style={kpiLabel}>UNITS SOLD</div><div style={kpiValue}>{units}</div></div>
           </div>
-        </div>
-        <StatCard label="ORDERS" value="81" sub="↑ 12 vs prev period" />
-        <StatCard label="AVG ORDER VALUE" value="$55.80" sub="↑ $4.20 this period" />
-        <StatCard label="NEW CUSTOMERS" value="24" sub="↑ 6 vs prev period" />
-      </div>
 
-      {/* Revenue Trend */}
-      <SectionCard style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body, marginBottom: 14 }}>Revenue Trend</div>
-        <ResponsiveContainer width="100%" height={200}>
-          <AreaChart data={ANALYTICS_TREND}>
-            <defs>
-              <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={COLORS.saffron} stopOpacity={0.35}/>
-                <stop offset="95%" stopColor={COLORS.saffron} stopOpacity={0}/>
-              </linearGradient>
-            </defs>
-            <XAxis dataKey="date" tick={{ fontSize: 10, fontFamily: FONTS.body, fill: COLORS.textMuted }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 10, fontFamily: FONTS.body, fill: COLORS.textMuted }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} />
-            <Tooltip formatter={v => [`$${v}`, "Revenue"]} contentStyle={{ fontFamily: FONTS.body, fontSize: 11, borderRadius: 8, border: `0.5px solid ${COLORS.wheat}` }} />
-            <Area type="monotone" dataKey="revenue" stroke={COLORS.saffron} strokeWidth={2.5} fill="url(#revGrad)" />
-          </AreaChart>
-        </ResponsiveContainer>
-      </SectionCard>
+          <SectionCard>
+            <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.textMuted, letterSpacing: 0.5, marginBottom: 12 }}>REVENUE — LAST {buckets} DAYS</div>
+            {revenue > 0 ? (
+              <ResponsiveContainer width="100%" height={220}>
+                <AreaChart data={series}>
+                  <defs><linearGradient id="rev" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={COLORS.saffron} stopOpacity={0.35} /><stop offset="100%" stopColor={COLORS.saffron} stopOpacity={0} /></linearGradient></defs>
+                  <XAxis dataKey="label" tick={{ fontSize: 10, fill: COLORS.textMuted }} interval="preserveStartEnd" />
+                  <YAxis tick={{ fontSize: 10, fill: COLORS.textMuted }} width={40} />
+                  <Tooltip formatter={function (v) { return money(v); }} />
+                  <Area type="monotone" dataKey="revenue" stroke={COLORS.saffron} strokeWidth={2} fill="url(#rev)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div style={{ color: COLORS.textMuted, fontSize: 13, fontFamily: FONTS.body, padding: 30, textAlign: 'center' }}>No paid orders in this range yet. Your revenue chart appears here after your first sale.</div>
+            )}
+          </SectionCard>
 
-      {/* 3-column row */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 16 }}>
-        {/* Heritage donut */}
-        <SectionCard style={{ marginBottom: 0 }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body, marginBottom: 12 }}>Sales by Heritage</div>
-          <ResponsiveContainer width="100%" height={140}>
-            <PieChart>
-              <Pie data={HERITAGE_DATA} cx="50%" cy="50%" innerRadius={40} outerRadius={60} dataKey="value">
-                {HERITAGE_DATA.map((entry, i) => <Cell key={i} fill={entry.color} />)}
-              </Pie>
-              <Tooltip formatter={(v, n) => [`${v}%`, n]} contentStyle={{ fontFamily: FONTS.body, fontSize: 11, borderRadius: 8 }} />
-            </PieChart>
-          </ResponsiveContainer>
-          {HERITAGE_DATA.map(h => (
-            <div key={h.name} style={{ display: "flex", justifyContent: "space-between", fontSize: 11, fontFamily: FONTS.body, marginTop: 4 }}>
-              <span style={{ display: "flex", alignItems: "center", gap: 6 }}><span style={{ width: 8, height: 8, borderRadius: "50%", background: h.color, display: "inline-block" }}/>{h.name}</span>
-              <span style={{ fontWeight: 600, color: COLORS.charcoal }}>{h.value}%</span>
-            </div>
-          ))}
-        </SectionCard>
-
-        {/* Top countries */}
-        <SectionCard style={{ marginBottom: 0 }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body, marginBottom: 12 }}>Top Countries</div>
-          {COUNTRY_DATA.map(c => (
-            <div key={c.country} style={{ marginBottom: 10 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, fontFamily: FONTS.body, marginBottom: 3 }}>
-                <span>{c.country}</span><span style={{ fontWeight: 600, color: COLORS.charcoal }}>{c.orders} orders</span>
+          <SectionCard>
+            <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.textMuted, letterSpacing: 0.5, marginBottom: 12 }}>TOP PRODUCTS</div>
+            {topProducts.length === 0 ? (
+              <div style={{ color: COLORS.textMuted, fontSize: 13, fontFamily: FONTS.body, padding: 10 }}>No sales yet.</div>
+            ) : topProducts.map(function (p, i) { return (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', padding: '8px 0', borderBottom: '0.5px solid ' + COLORS.wheat, fontSize: 13, fontFamily: FONTS.body }}>
+                <span style={{ color: COLORS.charcoal, marginRight: 'auto' }}>{p.name}</span>
+                <span style={{ color: COLORS.textMuted, marginRight: 16 }}>{p.qty + ' sold'}</span>
+                <span style={{ color: COLORS.charcoal, fontWeight: 600 }}>{money(p.revenue)}</span>
               </div>
-              <div style={{ height: 4, background: COLORS.cream2, borderRadius: 4 }}>
-                <div style={{ height: 4, width: `${c.pct}%`, background: COLORS.saffron, borderRadius: 4 }} />
-              </div>
-            </div>
-          ))}
-        </SectionCard>
-
-        {/* Traffic sources */}
-        <SectionCard style={{ marginBottom: 0 }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body, marginBottom: 12 }}>Traffic Sources</div>
-          {TRAFFIC_DATA.map(t => (
-            <div key={t.source} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: `0.5px solid ${COLORS.wheat}`, fontSize: 11, fontFamily: FONTS.body }}>
-              <span>{t.source}</span>
-              <div style={{ textAlign: "right" }}>
-                <div style={{ fontWeight: 600, color: COLORS.charcoal }}>{t.visits.toLocaleString()}</div>
-                <div style={{ fontSize: 9, color: COLORS.textMuted }}>{t.pct}%</div>
-              </div>
-            </div>
-          ))}
-        </SectionCard>
-      </div>
-
-      {/* Best sellers + Smart alerts */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-        <SectionCard style={{ marginBottom: 0 }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body, marginBottom: 12 }}>Best Sellers</div>
-          {PRODUCTS_DATA.map((p, i) => (
-            <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: `0.5px solid ${COLORS.wheat}` }}>
-              <div style={{ width: 22, height: 22, borderRadius: 6, background: COLORS.saffron + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: COLORS.saffron }}>{i + 1}</div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 12, fontWeight: 500, color: COLORS.charcoal, fontFamily: FONTS.body }}>{p.name}</div>
-                <div style={{ fontSize: 10, color: COLORS.textMuted }}>{p.orders} orders</div>
-              </div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.charcoal }}>${p.revenue.toFixed(0)}</div>
-            </div>
-          ))}
-        </SectionCard>
-        <SectionCard style={{ marginBottom: 0 }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.charcoal, fontFamily: FONTS.body, marginBottom: 12 }}>Smart Alerts</div>
-          {[
-            { type: "warn", msg: "Lebanese Cedar Stand has been out of stock for 7 days — restock soon" },
-            { type: "good", msg: "Revenue up 23% this week — your best 7-day streak this month!" },
-            { type: "info", msg: "5 custom order requests waiting — oldest is 3 days old" },
-            { type: "warn", msg: "Kufic Calligraphy Frame low stock (7 units) — consider restocking" },
-          ].map((a, i) => {
-            const c = a.type === "warn" ? COLORS.terracotta : a.type === "good" ? COLORS.olive : COLORS.damascene;
-            return (
-              <div key={i} style={{ padding: "10px 12px", borderRadius: 8, background: c + "14", borderLeft: `3px solid ${c}`, marginBottom: 8 }}>
-                <div style={{ fontSize: 12, color: COLORS.charcoal, fontFamily: FONTS.body }}>{a.msg}</div>
-              </div>
-            );
-          })}
-        </SectionCard>
-      </div>
+            ); })}
+          </SectionCard>
+        </>
+      )}
     </div>
   );
 }
 
-// ─── DISCOUNTS PAGE ────────────────────────────────────────────────────────────
 function DiscountsPage() {
-  const [tab, setTab] = useState("codes");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [showCreate, setShowCreate] = useState(false);
-  const [showTemplates, setShowTemplates] = useState(false);
-  const [newCode, setNewCode] = useState({ code: "", name: "", type: "percent", value: "", minOrder: "", limit: "" });
+  const [codes, setCodes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState(null);
+  const [saving, setSaving] = useState(false);
 
-  const [discounts, setDiscounts] = useState(() => { try { return JSON.parse(localStorage.getItem("souk3d_discounts")) || DISCOUNTS_DATA; } catch { return DISCOUNTS_DATA; } });
-  const saveDiscounts = (d) => { setDiscounts(d); localStorage.setItem("souk3d_discounts", JSON.stringify(d)); };
-  const filtered = discounts.filter(d => statusFilter === "all" || d.status === statusFilter);
-  const totalUsed = discounts.reduce((s, d) => s + d.usageCount, 0);
-  const totalRevenue = discounts.reduce((s, d) => s + d.revenue, 0);
-  const topCode = discounts.reduce((a, b) => a.revenue > b.revenue ? a : b, discounts[0] || {});
+  const load = function () {
+    fetchDiscounts().then(function (list) { setCodes(list || []); }).catch(function (e) { console.error('Load discounts failed', e); }).finally(function () { setLoading(false); });
+  };
+  useEffect(function () { load(); }, []);
 
-  const TEMPLATES = [
-    { group: "Diaspora Calendar", items: [{ code: "RAMADAN20", label: "Ramadan Kareem 20%" }, { code: "EID15", label: "Eid Mubarak 15%" }, { code: "NAKBA74", label: "Nakba Day Solidarity" }] },
-    { group: "Universal", items: [{ code: "WELCOME10", label: "New Customer 10%" }, { code: "WINBACK20", label: "Win-Back 20%" }, { code: "VIP25", label: "VIP Loyalty 25%" }] },
-    { group: "Seasonal", items: [{ code: "WEDDING15", label: "Wedding Season 15%" }, { code: "GRAD10", label: "Graduation 10%" }] },
-    { group: "Sales", items: [{ code: "BFCM30", label: "Black Friday 30%" }, { code: "HOLIDAY15", label: "Holiday 15%" }] },
-  ];
+  const blank = { code: '', name: '', type: 'percent', value: '', status: 'active', usageLimit: '' };
+  const openNew = function () { setForm(Object.assign({}, blank)); setShowForm(true); };
+  const openEdit = function (c) { setForm({ id: c.id, code: c.code, name: c.name, type: c.type, value: c.value, status: c.status, usageLimit: c.usageLimit == null ? '' : c.usageLimit }); setShowForm(true); };
+  const set = function (k) { return function (e) { setForm(function (p) { var n = Object.assign({}, p); n[k] = e.target.value; return n; }); }; };
+
+  const save = async function () {
+    if (saving) return;
+    if (!form.code || !String(form.code).trim()) return alert('Enter a code.');
+    if (form.value === '' || Number(form.value) <= 0) return alert('Enter a discount value greater than zero.');
+    setSaving(true);
+    try { await saveDiscount(form); await load(); setShowForm(false); setForm(null); }
+    catch (e) { alert('Save failed: ' + e.message); }
+    setSaving(false);
+  };
+
+  const toggle = async function (c) {
+    var next = c.status === 'active' ? 'paused' : 'active';
+    try { await setDiscountStatus(c.id, next); setCodes(function (prev) { return prev.map(function (x) { return x.id === c.id ? Object.assign({}, x, { status: next }) : x; }); }); }
+    catch (e) { alert('Could not update: ' + e.message); }
+  };
+
+  const remove = async function (c) {
+    if (!window.confirm('Delete code ' + c.code + '? This cannot be undone.')) return;
+    try { await deleteDiscountById(c.id); setCodes(function (prev) { return prev.filter(function (x) { return x.id !== c.id; }); }); }
+    catch (e) { alert('Delete failed: ' + e.message); }
+  };
+
+  const activeCount = codes.filter(function (c) { return c.status === 'active'; }).length;
+  const input = { width: '100%', padding: '9px 12px', border: '0.5px solid ' + COLORS.wheat, borderRadius: 8, fontSize: 13, fontFamily: FONTS.body, boxSizing: 'border-box', outline: 'none', marginBottom: 10 };
+  const label = { fontSize: 11, fontWeight: 600, color: COLORS.textMuted, marginBottom: 4, fontFamily: FONTS.body };
 
   return (
-    <div style={{ animation: "fadeIn 0.3s ease" }}>
-      <div style={{ position: "sticky", top: -24, zIndex: 10, background: COLORS.cream, margin: "-24px -32px 0", padding: "24px 32px 14px", borderBottom: `0.5px solid ${COLORS.wheat}`, boxShadow: "0 4px 12px rgba(0,0,0,0.04)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-          <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal, flex: 1 }}>Discounts</div>
-          <GhostBtn onClick={() => setShowTemplates(true)}>📋 Templates</GhostBtn>
-          <PrimaryBtn onClick={() => setShowCreate(true)}>+ Create Code</PrimaryBtn>
-        </div>
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-          {[["codes", "🎟 Promo Codes"], ["sales", "🔥 Auto Sales"], ["bundles", "📦 Bundles"]].map(([v, l]) => (
-            <FilterPill key={v} label={l} active={tab === v} onClick={() => setTab(v)} />
-          ))}
-          <div style={{ flex: 1 }} />
-          {["all", "active", "scheduled", "paused", "expired"].map(s => (
-            <FilterPill key={s} label={s.charAt(0).toUpperCase() + s.slice(1)} active={statusFilter === s} onClick={() => setStatusFilter(s)} />
-          ))}
+    <div style={{ animation: 'fadeIn 0.3s ease' }}>
+      <div style={{ position: 'sticky', top: -24, zIndex: 10, background: COLORS.cream, margin: '-24px -32px 0', padding: '24px 32px 14px', borderBottom: '0.5px solid ' + COLORS.wheat }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal, marginRight: 'auto' }}>Discounts</div>
+          <PrimaryBtn onClick={openNew}>+ New Code</PrimaryBtn>
         </div>
       </div>
       <div style={{ height: 14 }} />
 
-      <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
-        <StatCard label="CODES USED" value={totalUsed} sub="all time" />
-        <StatCard label="TOP CODE" value={topCode.code} sub={`$${topCode.revenue.toFixed(0)} revenue`} dark />
-        <StatCard label="DISCOUNTED REVENUE" value={`$${totalRevenue.toLocaleString()}`} />
-        <StatCard label="ACTIVE CAMPAIGNS" value={DISCOUNTS_DATA.filter(d => d.status === "active").length} />
+      <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
+        <div style={{ flex: 1, minWidth: 140, background: '#fff', border: '0.5px solid ' + COLORS.wheat, borderRadius: 10, padding: 16 }}><div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 0.6, color: COLORS.textMuted }}>ACTIVE CODES</div><div style={{ fontFamily: FONTS.display, fontSize: 26, fontWeight: 600, color: COLORS.charcoal, marginTop: 4 }}>{activeCount}</div></div>
+        <div style={{ flex: 1, minWidth: 140, background: '#fff', border: '0.5px solid ' + COLORS.wheat, borderRadius: 10, padding: 16 }}><div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 0.6, color: COLORS.textMuted }}>TOTAL CODES</div><div style={{ fontFamily: FONTS.display, fontSize: 26, fontWeight: 600, color: COLORS.charcoal, marginTop: 4 }}>{codes.length}</div></div>
       </div>
 
-      {/* Live campaigns banner */}
-      {DISCOUNTS_DATA.filter(d => d.status === "active").length > 0 && (
-        <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
-          {DISCOUNTS_DATA.filter(d => d.status === "active").slice(0, 2).map(d => (
-            <div key={d.id} style={{ flex: 1, background: COLORS.charcoal, borderRadius: 10, padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
-                <div style={{ fontSize: 9, color: COLORS.saffronLight, letterSpacing: 1, marginBottom: 4, fontFamily: FONTS.body }}>ACTIVE CAMPAIGN</div>
-                <div style={{ fontSize: 18, fontFamily: "monospace", fontWeight: 700, color: COLORS.saffron }}>{d.code}</div>
-                <div style={{ fontSize: 11, color: COLORS.wheat, marginTop: 2, fontFamily: FONTS.body }}>{d.name}</div>
-              </div>
-              <div style={{ textAlign: "right" }}>
-                <div style={{ fontSize: 24, fontWeight: 700, color: "#FFF", fontFamily: FONTS.body }}>{d.type === "percent" ? `${d.value}%` : d.type === "free_shipping" ? "Free Ship" : `$${d.value}`}</div>
-                <div style={{ fontSize: 10, color: COLORS.textMuted, fontFamily: FONTS.body }}>{d.usageCount} uses · ${d.revenue} rev</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {tab === "codes" && (
-        <SectionCard>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: FONTS.body }}>
-            <thead>
-              <tr style={{ borderBottom: `0.5px solid ${COLORS.wheat}` }}>
-                {["Code", "Discount", "Conditions", "Status", "Usage", "Revenue", "Period", ""].map(h => (
-                  <th key={h} style={{ textAlign: "left", fontSize: 10, fontWeight: 600, color: COLORS.textMuted, letterSpacing: 0.5, padding: "0 8px 10px" }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
+      <SectionCard>
+        {loading ? (
+          <div style={{ color: COLORS.textMuted, fontSize: 13, fontFamily: FONTS.body, padding: 20, textAlign: 'center' }}>Loading codes...</div>
+        ) : codes.length === 0 ? (
+          <div style={{ color: COLORS.textMuted, fontSize: 13, fontFamily: FONTS.body, padding: 24, textAlign: 'center' }}>No discount codes yet. Click "+ New Code" to create one.</div>
+        ) : (
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: FONTS.body }}>
+            <thead><tr style={{ borderBottom: '0.5px solid ' + COLORS.wheat }}>{['Code', 'Description', 'Discount', 'Limit', 'Status', ''].map(function (h) { return (<th key={h} style={{ textAlign: 'left', fontSize: 10, fontWeight: 600, color: COLORS.textMuted, letterSpacing: 0.5, padding: '0 8px 10px' }}>{h}</th>); })}</tr></thead>
             <tbody>
-              {filtered.map(d => (
-                <tr key={d.id} style={{ borderBottom: `0.5px solid ${COLORS.wheat}` }}>
-                  <td style={{ padding: "12px 8px" }}>
-                    <div style={{ fontFamily: "monospace", fontSize: 13, fontWeight: 700, color: COLORS.damascene, background: COLORS.damascene + "14", padding: "3px 8px", borderRadius: 6, display: "inline-block" }}>{d.code}</div>
-                    <div style={{ fontSize: 10, color: COLORS.textMuted, marginTop: 2 }}>{d.name}</div>
-                  </td>
-                  <td style={{ padding: "12px 8px", fontSize: 14, fontWeight: 700, color: COLORS.charcoal }}>
-                    {d.type === "percent" ? `${d.value}%` : d.type === "free_shipping" ? "Free Shipping" : `$${d.value} off`}
-                  </td>
-                  <td style={{ padding: "12px 8px", fontSize: 11, color: COLORS.textMuted }}>{d.conditions}</td>
-                  <td style={{ padding: "12px 8px" }}><Badge status={d.status} /></td>
-                  <td style={{ padding: "12px 8px", minWidth: 100 }}>
-                    <div style={{ fontSize: 11, color: COLORS.charcoal, marginBottom: 4 }}>{d.usageCount}{d.usageLimit ? `/${d.usageLimit}` : ""}</div>
-                    {d.usageLimit && (
-                      <div style={{ height: 4, background: COLORS.cream2, borderRadius: 4 }}>
-                        <div style={{ height: 4, width: `${Math.min(100, d.usageCount / d.usageLimit * 100)}%`, background: COLORS.saffron, borderRadius: 4 }} />
-                      </div>
-                    )}
-                  </td>
-                  <td style={{ padding: "12px 8px", fontSize: 13, fontWeight: 600, color: COLORS.charcoal }}>${d.revenue.toLocaleString()}</td>
-                  <td style={{ padding: "12px 8px", fontSize: 10, color: COLORS.textMuted }}>{d.startsAt}{d.endsAt ? ` – ${d.endsAt}` : " · Ongoing"}</td>
-                  <td style={{ padding: "12px 8px" }}>
-                    <div style={{ display: "flex", gap: 4 }}>
-                      <GhostBtn style={{ padding: "4px 8px", fontSize: 10 }}>Edit</GhostBtn>
-                      <GhostBtn style={{ padding: "4px 8px", fontSize: 10 }}>⋯</GhostBtn>
-                    </div>
+              {codes.map(function (c) { return (
+                <tr key={c.id} style={{ borderBottom: '0.5px solid ' + COLORS.wheat }}>
+                  <td style={{ padding: '12px 8px', fontSize: 13, fontWeight: 700, color: COLORS.charcoal, fontFamily: 'monospace' }}>{c.code}</td>
+                  <td style={{ padding: '12px 8px', fontSize: 12, color: COLORS.textMuted }}>{c.name || '—'}</td>
+                  <td style={{ padding: '12px 8px', fontSize: 13, color: COLORS.charcoal, fontWeight: 600 }}>{c.type === 'percent' ? (c.value + '% off') : ('$' + Number(c.value).toFixed(2) + ' off')}</td>
+                  <td style={{ padding: '12px 8px', fontSize: 12, color: COLORS.textMuted }}>{c.usageLimit == null ? 'Unlimited' : c.usageLimit}</td>
+                  <td style={{ padding: '12px 8px' }}><span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 8, background: (c.status === 'active' ? COLORS.olive : COLORS.textMuted) + '22', color: c.status === 'active' ? COLORS.olive : COLORS.textMuted }}>{String(c.status).toUpperCase()}</span></td>
+                  <td style={{ padding: '12px 8px', whiteSpace: 'nowrap', textAlign: 'right' }}>
+                    <GhostBtn onClick={function () { openEdit(c); }} style={{ padding: '4px 10px', fontSize: 10, marginRight: 4 }}>Edit</GhostBtn>
+                    <GhostBtn onClick={function () { toggle(c); }} style={{ padding: '4px 10px', fontSize: 10, marginRight: 4 }}>{c.status === 'active' ? 'Pause' : 'Activate'}</GhostBtn>
+                    <GhostBtn onClick={function () { remove(c); }} style={{ padding: '4px 10px', fontSize: 10, color: COLORS.terracotta, borderColor: COLORS.terracotta }}>Delete</GhostBtn>
                   </td>
                 </tr>
-              ))}
+              ); })}
             </tbody>
           </table>
-        </SectionCard>
-      )}
-      {tab !== "codes" && (
-        <SectionCard>
-          <div style={{ textAlign: "center", padding: "40px 0", color: COLORS.textMuted, fontFamily: FONTS.body, fontSize: 13 }}>
-            {tab === "sales" ? "🔥 Set up automatic sales — coming soon" : "📦 Bundle deals — coming soon"}
-          </div>
-        </SectionCard>
-      )}
+        )}
+      </SectionCard>
 
-      {/* Templates slide-in */}
-      {showTemplates && (
+      {showForm && form && (
         <>
-          <div onClick={() => setShowTemplates(false)} style={{ position: "fixed", inset: 0, background: "rgba(42,31,24,0.5)", zIndex: 100 }} />
-          <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: "min(520px, 92vw)", background: COLORS.cream, zIndex: 101, boxShadow: "-20px 0 60px rgba(0,0,0,0.3)", animation: "slideIn 0.3s ease", overflowY: "auto", padding: 28 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20 }}>
-              <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal }}>Discount Templates</div>
-              <button onClick={() => setShowTemplates(false)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: COLORS.textMuted }}>✕</button>
+          <div onClick={function () { setShowForm(false); setForm(null); }} style={{ position: 'fixed', inset: 0, background: 'rgba(42,31,24,0.5)', zIndex: 100 }} />
+          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 'min(420px, 92vw)', background: '#fff', borderRadius: 14, zIndex: 101, padding: 24 }}>
+            <div style={{ fontFamily: FONTS.display, fontSize: 20, fontWeight: 600, color: COLORS.charcoal, marginBottom: 16 }}>{form.id ? 'Edit code' : 'New discount code'}</div>
+            <div style={label}>CODE</div>
+            <input value={form.code} onChange={set('code')} placeholder="SUMMER20" style={Object.assign({}, input, { textTransform: 'uppercase', fontFamily: 'monospace' })} />
+            <div style={label}>DESCRIPTION</div>
+            <input value={form.name} onChange={set('name')} placeholder="Summer sale" style={input} />
+            <div style={{ display: 'flex', gap: 10 }}>
+              <div style={{ flex: 1 }}><div style={label}>TYPE</div><select value={form.type} onChange={set('type')} style={input}><option value="percent">Percent off</option><option value="fixed">Amount off</option></select></div>
+              <div style={{ flex: 1 }}><div style={label}>{form.type === 'percent' ? 'PERCENT' : 'AMOUNT ($)'}</div><input value={form.value} onChange={set('value')} type="number" step="0.01" placeholder={form.type === 'percent' ? '10' : '5.00'} style={input} /></div>
             </div>
-            {TEMPLATES.map(group => (
-              <div key={group.group} style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: COLORS.textMuted, marginBottom: 10, fontFamily: FONTS.body }}>{group.group.toUpperCase()}</div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                  {group.items.map(item => (
-                    <div key={item.code} onClick={() => { setNewCode(n => ({ ...n, code: item.code })); setShowTemplates(false); setShowCreate(true); }} style={{ background: "#FFF", border: `0.5px solid ${COLORS.wheat}`, borderRadius: 8, padding: "12px 14px", cursor: "pointer" }}>
-                      <div style={{ fontFamily: "monospace", fontSize: 12, fontWeight: 700, color: COLORS.damascene }}>{item.code}</div>
-                      <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 4, fontFamily: FONTS.body }}>{item.label}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* Create code slide-in */}
-      {showCreate && (
-        <>
-          <div onClick={() => setShowCreate(false)} style={{ position: "fixed", inset: 0, background: "rgba(42,31,24,0.5)", zIndex: 100 }} />
-          <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: "min(520px, 92vw)", background: COLORS.cream, zIndex: 101, boxShadow: "-20px 0 60px rgba(0,0,0,0.3)", animation: "slideIn 0.3s ease", overflowY: "auto", padding: 28 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 24 }}>
-              <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal }}>Create Discount Code</div>
-              <button onClick={() => setShowCreate(false)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: COLORS.textMuted }}>✕</button>
+            <div style={label}>USAGE LIMIT (optional)</div>
+            <input value={form.usageLimit} onChange={set('usageLimit')} type="number" placeholder="Leave empty for unlimited" style={input} />
+            <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+              <PrimaryBtn onClick={save} disabled={saving} style={{ flex: 1 }}>{saving ? 'Saving...' : 'Save code'}</PrimaryBtn>
+              <GhostBtn onClick={function () { setShowForm(false); setForm(null); }} style={{ flex: 1 }}>Cancel</GhostBtn>
             </div>
-            {[["Discount Code", "code", "WELCOME10"], ["Campaign Name", "name", "New Customer Welcome"]].map(([label, key, ph]) => (
-              <div key={key} style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.textMuted, marginBottom: 6, fontFamily: FONTS.body }}>{label.toUpperCase()}</div>
-                <input value={newCode[key]} onChange={e => setNewCode(n => ({ ...n, [key]: e.target.value }))} placeholder={ph} style={{ width: "100%", padding: "10px 12px", border: `0.5px solid ${COLORS.wheat}`, borderRadius: 8, fontSize: 13, fontFamily: key === "code" ? "monospace" : FONTS.body, outline: "none", boxSizing: "border-box" }} />
-              </div>
-            ))}
-            <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.textMuted, marginBottom: 6, fontFamily: FONTS.body }}>DISCOUNT TYPE</div>
-              <div style={{ display: "flex", gap: 8 }}>
-                {[["percent", "% Off"], ["fixed", "$ Fixed"], ["free_shipping", "Free Shipping"]].map(([v, l]) => (
-                  <button key={v} onClick={() => setNewCode(n => ({ ...n, type: v }))} style={{ flex: 1, padding: "9px 8px", border: `0.5px solid ${newCode.type === v ? COLORS.saffron : COLORS.wheat}`, borderRadius: 8, background: newCode.type === v ? COLORS.saffron + "18" : "#FFF", color: newCode.type === v ? COLORS.saffron : COLORS.charcoal, fontSize: 12, fontFamily: FONTS.body, cursor: "pointer", fontWeight: newCode.type === v ? 600 : 400 }}>{l}</button>
-                ))}
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: 10, marginBottom: 24 }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.textMuted, marginBottom: 6, fontFamily: FONTS.body }}>{newCode.type === "percent" ? "PERCENT OFF" : "AMOUNT OFF"}</div>
-                <input value={newCode.value} onChange={e => setNewCode(n => ({ ...n, value: e.target.value }))} placeholder={newCode.type === "percent" ? "10" : "5.00"} style={{ width: "100%", padding: "10px 12px", border: `0.5px solid ${COLORS.wheat}`, borderRadius: 8, fontSize: 13, fontFamily: FONTS.body, outline: "none", boxSizing: "border-box" }} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.textMuted, marginBottom: 6, fontFamily: FONTS.body }}>MIN ORDER ($)</div>
-                <input value={newCode.minOrder} onChange={e => setNewCode(n => ({ ...n, minOrder: e.target.value }))} placeholder="0" style={{ width: "100%", padding: "10px 12px", border: `0.5px solid ${COLORS.wheat}`, borderRadius: 8, fontSize: 13, fontFamily: FONTS.body, outline: "none", boxSizing: "border-box" }} />
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <PrimaryBtn style={{ flex: 1 }} onClick={() => { if(!newCode.code||!newCode.value)return; const nd=[...discounts,{id:Date.now(),code:newCode.code.toUpperCase(),name:newCode.name||newCode.code,type:newCode.type,value:parseFloat(newCode.value)||0,minOrder:parseFloat(newCode.minOrder)||0,usageCount:0,usageLimit:parseInt(newCode.limit)||null,revenue:0,status:"active"}]; saveDiscounts(nd); setNewCode({code:"",name:"",type:"percent",value:"",minOrder:"",limit:""}); setShowCreate(false); }}>Create Code</PrimaryBtn>
-              <GhostBtn style={{ flex: 1 }} onClick={() => setShowCreate(false)}>Cancel</GhostBtn>
-            </div>
+            {form.type === 'percent' && Number(form.value) > 50 && (<div style={{ fontSize: 11, color: COLORS.terracotta, marginTop: 8, fontFamily: FONTS.body }}>Note: checkout caps total discounts at 50%.</div>)}
           </div>
         </>
       )}
     </div>
   );
 }
-
-// ─── EMAIL & MARKETING PAGE ────────────────────────────────────────────────────
-const CAMPAIGNS_DATA = [
-  { id: 1, name: "Eid al-Adha Collection Drop", status: "sent", date: "Jun 5", opens: 68, clicks: 31, revenue: 840 },
-  { id: 2, name: "New Customer Welcome Series", status: "active", date: "Ongoing", opens: 74, clicks: 42, revenue: 1240 },
-  { id: 3, name: "Ramadan Win-Back Flow", status: "sent", date: "Mar 15", opens: 41, clicks: 18, revenue: 390 },
-  { id: 4, name: "Wedding Season Lookbook", status: "draft", date: "Scheduled Jun 20", opens: 0, clicks: 0, revenue: 0 },
-];
-const AUTOMATIONS = [
-  { icon: "✅", name: "Order Confirmation", trigger: "Immediately after purchase", active: true, sent: 81, openRate: 94 },
-  { icon: "🚚", name: "Shipping Update", trigger: "When tracking added", active: true, sent: 67, openRate: 89 },
-  { icon: "👋", name: "Welcome Series", trigger: "On signup (3 emails, 7 days)", active: true, sent: 24, openRate: 71 },
-  { icon: "🛒", name: "Abandoned Cart", trigger: "1 hour after cart abandoned", active: false, sent: 12, openRate: 38 },
-  { icon: "✦", name: "Custom Order Milestones", trigger: "Quote sent / Mockup ready / Approved", active: true, sent: 19, openRate: 86 },
-  { icon: "💌", name: "Win-Back", trigger: "90 days since last order", active: false, sent: 8, openRate: 29 },
-];
 
 function EmailMarketingPage() {
   const [tab, setTab] = useState("campaigns");
