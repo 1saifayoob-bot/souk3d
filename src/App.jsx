@@ -185,7 +185,7 @@ function CartDrawer({ cart, onClose, onUpdateQty, onRemove, onCheckout, user, pr
            )}
           {cart.map(item => (
             <div key={item.id} style={{ display: "flex", gap: 12, padding: "12px 0", borderBottom: `0.5px solid ${C.wheat}` }}>
-              <div style={{ width: 64, height: 64, background: `linear-gradient(135deg, ${C.cream2} 0%, ${C.wheat}44 100%)`, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, flexShrink: 0 }}>{item.emojh}</div>
+              <div style={{ width: 64, height: 64, background: `linear-gradient(135deg, ${C.cream2} 0%, ${C.wheat}44 100%)`, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, flexShrink: 0, overflow: "hidden" }}>{(item.thumbUrl || item.imageUrl) ? <img src={item.thumbUrl || item.imageUrl} alt={item.name || ""} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : item.emoji}</div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 500, color: C.charcoal, fontFamily: F.body }}>{item.name}</div>
                 {item.customText && <div style={{ fontFamily: F.arabic, fontSize: 14, color: C.saffron, direction: "rtl", textAlign: "right" }}>{item.customText}</div>}
@@ -222,8 +222,8 @@ function CartDrawer({ cart, onClose, onUpdateQty, onRemove, onCheckout, user, pr
         ) : (
           <div style={{ fontSize: 11, color: C.saffron, marginBottom: 8, fontFamily: F.body }}>Sign in and save 5% on this order</div>
         )}
-          {[["Subtotal", `$${subtotal.toFixed(2)}`], ["Shipping", subtotal >= 75 ? "Free" : "$5.99"], ...(discount > 0 ? [["Discount (10%)", `-$${discount.toFixed(2)}`]] : [])].map(([k, v]) => (
-            <div key={k} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, fontFamily: F.body, marginBottom: 4, color: k === "Discount (10%)" ? C.olive : C.charcoal }}><span>{k}</span><span style={{ fontWeight: 500 }}>{v}</span></div>
+          {[["Subtotal", `$${subtotal.toFixed(2)}`], ["Shipping", subtotal >= 75 ? "Free" : "$5.99"], ...(discount > 0 ? [[`Discount (${Math.round(totalPct * 100)}%)`, `-$${discount.toFixed(2)}`]] : [])].map(([k, v]) => (
+            <div key={k} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, fontFamily: F.body, marginBottom: 4, color: k.startsWith("Discount") ? C.olive : C.charcoal }}><span>{k}</span><span style={{ fontWeight: 500 }}>{v}</span></div>
           ))}
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 16, fontWeight: 700, color: C.charcoal, fontFamily: F.body, borderTop: `0.5px solid ${C.wheat}`, paddingTop: 10, marginTop: 6, marginBottom: 14 }}>
             <span>Total</span><span>${total.toFixed(2)}</span>
@@ -236,7 +236,7 @@ function CartDrawer({ cart, onClose, onUpdateQty, onRemove, onCheckout, user, pr
 }
 
 // ─── PRODUCT DETAIL PACE �,� 450─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-function ProductDetail({product, onBack, onAddToCart, user }) {
+function ProductDetail({product, onBack, onAddToCart, onBuyNow, user }) {
   const [tab, setTab] = useState("description");
   const [activeImg, setActiveImg] = useState(0);
   const galleryObjs = (product.images && product.images.length ? product.images.filter((im) => im && im.url) : (product.imageUrl ? [{ url: product.imageUrl }] : [])).filter((im, i, arr) => arr.findIndex((x) => x.url === im.url) === i);
@@ -320,7 +320,7 @@ function ProductDetail({product, onBack, onAddToCart, user }) {
             </div>
             <button onClick={handleAdd} style={{ flex: 1, padding: "14px", background: C.charcoal, color: "#FFF", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, fontFamily: F.body, cursor: "pointer" }}>Add to Cart</button>
           </div>
-          <button style={{ width: "100%", padding: "13px", background: C.saffron, color: "#FFF", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, fontFamily: F.body, cursor: "pointer", marginBottom: 16 }}>Buy Now</button>
+          <button onClick={() => onBuyNow({ ...product, qty, customText: customText || undefined })} style={{ width: "100%", padding: "13px", background: C.saffron, color: "#FFF", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, fontFamily: F.body, cursor: "pointer", marginBottom: 16 }}>Buy Now</button>
 
           {/* Trust badges */}
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
@@ -435,7 +435,11 @@ function CheckoutPage({ cart, onBack, promo, user }) {
 
   const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
   const shipping = shippingMethod === "express" ? 12.99 : subtotal >= 75 ? 0 : 5.99;
-  const total = subtotal + shipping;
+  const memberPct = user ? 0.05 : 0;
+  const promoPct = promo ? promo.percent : 0;
+  const totalPct = Math.min(0.5, memberPct + promoPct);
+  const discount = subtotal * totalPct;
+  const total = subtotal + shipping - discount;
 
   if (step === "success") {
     return (
@@ -514,14 +518,10 @@ function CheckoutPage({ cart, onBack, promo, user }) {
           {/* Payment */}
           <div style={{ background: "#FFF", border: `0.5px solid ${C.wheat}`, borderRadius: 12, padding: "20px" }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: C.charcoal, fontFamily: F.body, marginBottom: 14 }}>Payment</div>
-            <div style={{ padding: "12px", border: `0.5px solid ${C.wheat}`, borderRadius: 8, background: "#FAFAFA", marginBottom: 12 }}>
-              <input placeholder="1234 5678 9012 3456" style={{ width: "100%", border: "none", background: "transparent", fontSize: 15, fontFamily: "monospace", letterSpacing: 2, outline: "none", marginBottom: 8, boxSizing: "border-box" }} />
-              <div style={{ display: "flex", gap: 8 }}>
-                <input placeholder="MM/YY" style={{ flex: 1, border: "none", background: "transparent", fontSize: 13, fontFamily: "monospace", outline: "none" }} />
-                <input placeholder="CVC" style={{ flex: 1, border: "none", background: "transparent", fontSize: 13, fontFamily: "monospace", outline: "none" }} />
-              </div>
+            <div style={{ padding: "12px", border: `0.5px solid ${C.wheat}`, borderRadius: 8, background: "#FAFAFA", marginBottom: 12, fontSize: 12, color: C.textMuted, fontFamily: F.body, lineHeight: 1.6 }}>
+              🔒 You will enter your card details on Stripe's secure checkout page in the next step. We never see or store your card number.
             </div>
-            <button onClick={() => placeOrder()} style={{ width: "100%", padding: "14px", background: C.saffron, color: "#FFF", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, fontFamily: F.body, cursor: "pointer" }}>Place Order · ${total.toFixed(2)}</button>
+            <button onClick={() => placeOrder()} disabled={paying} style={{ width: "100%", padding: "14px", background: paying ? C.wheat : C.saffron, color: "#FFF", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, fontFamily: F.body, cursor: paying ? "wait" : "pointer" }}>{paying ? "Opening secure checkout…" : `Pay securely with Stripe · $${total.toFixed(2)}`}</button>
         </div>
         </div>
 
@@ -540,8 +540,8 @@ function CheckoutPage({ cart, onBack, promo, user }) {
               </div>
             ))}
             <div style={{ borderTop: `0.5px solid ${C.wheat}`, paddingTop: 12, marginTop: 4 }}>
-              {[["Subtotal", `$${subtotal.toFixed(2)}`], ["Shipping", shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`], ["Total", `$${total.toFixed(2)}`]].map(([k, v], i) => (
-                <div key={k} style={{ display: "flex", justifyContent: "space-between", fontSize: i === 2 ? 15 : 13, fontWeight: i === 2 ? 700 : 400, marginBottom: 6, fontFamily: F.body, color: C.charcoal, borderTop: i === 2 ? `0.5px solid ${C.wheat}` : "none", paddingTop: i === 2 ? 8 : 0 }}>
+              {[["Subtotal", `$${subtotal.toFixed(2)}`], ["Shipping", shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`], ...(discount > 0 ? [[`Discount (${Math.round(totalPct * 100)}%)`, `-$${discount.toFixed(2)}`]] : []), ["Total", `$${total.toFixed(2)}`]].map(([k, v], i) => (
+                <div key={k} style={{ display: "flex", justifyContent: "space-between", fontSize: k === "Total" ? 15 : 13, fontWeight: k === "Total" ? 700 : 400, marginBottom: 6, fontFamily: F.body, color: k.startsWith("Discount") ? C.olive : C.charcoal, borderTop: k === "Total" ? `0.5px solid ${C.wheat}` : "none", paddingTop: k === "Total" ? 8 : 0 }}>
                   <span>{k}</span><span>{v}</span>
                 </div>
               ))}
@@ -1378,6 +1378,7 @@ export default function App() {
           product={viewingProduct}
           onBack={goHome}
           onAddToCart={addToCart}
+          onBuyNow={(item) => { addToCart(item); setCartOpen(false); setPage("checkout"); }}
         />
       )}
       {page === "checkout" && (
