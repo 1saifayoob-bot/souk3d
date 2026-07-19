@@ -2085,14 +2085,51 @@ function DiscountsPage() {
 }
 
 function EmailMarketingPage() {
-  const [subscribers, setSubscribers] = useState(0);
+  const [subs, setSubs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadErr, setLoadErr] = useState("");
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [sending, setSending] = useState(""); // "" | "test" | "all"
+
+  async function callNewsletter(payload) {
+    const { data: sess } = await supabase.auth.getSession();
+    const token = sess && sess.session ? sess.session.access_token : "";
+    const r = await fetch("/api/newsletter", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+      body: JSON.stringify(payload),
+    });
+    const data = await r.json().catch(function () { return {}; });
+    if (!r.ok) throw new Error(data.error || "Request failed.");
+    return data;
+  }
 
   useEffect(function () {
     var live = true;
-    fetchCustomers().then(function (list) { if (live) setSubscribers((list || []).length); }).catch(function () {}).finally(function () { if (live) setLoading(false); });
+    callNewsletter({ action: "list" })
+      .then(function (d) { if (live) setSubs(d.subscribers || []); })
+      .catch(function (e) { if (live) setLoadErr(e.message || "Could not load subscribers."); })
+      .finally(function () { if (live) setLoading(false); });
     return function () { live = false; };
   }, []);
+
+  const active = subs.filter(function (s) { return s.status === "subscribed"; });
+
+  async function handleSend(test) {
+    if (!subject.trim() || !message.trim()) { alert("Please add a subject and a message first."); return; }
+    if (!test && !window.confirm("Send this campaign to " + active.length + " subscriber" + (active.length === 1 ? "" : "s") + "? This cannot be undone.")) return;
+    setSending(test ? "test" : "all");
+    try {
+      const d = await callNewsletter({ action: "send", subject: subject.trim(), message: message.trim(), test: !!test });
+      if (test) alert("Test email sent to your own inbox.");
+      else {
+        alert("Campaign sent to " + d.sent + " subscriber" + (d.sent === 1 ? "" : "s") + (d.failed ? " (" + d.failed + " failed — check Vercel logs)." : "."));
+        setSubject(""); setMessage("");
+      }
+    } catch (e) { alert(e.message || "Sending failed."); }
+    setSending("");
+  }
 
   var automated = [
     { name: 'Order confirmation', when: 'Sent the moment a customer pays', on: true },
@@ -2100,6 +2137,7 @@ function EmailMarketingPage() {
     { name: 'Custom order received', when: 'Sent when someone submits a custom request', on: true },
     { name: 'Custom order quote', when: 'Sent when you send a quote from Custom Orders', on: true },
     { name: 'Account confirmation + reset', when: 'Sent on signup and password reset', on: true },
+    { name: 'Newsletter welcome (WELCOME10)', when: 'Sent when someone joins from the homepage signup box', on: true },
   ];
   var kpi = { flex: 1, minWidth: 150, background: '#fff', border: '0.5px solid ' + COLORS.wheat, borderRadius: 10, padding: 16 };
   var kpiLabel = { fontSize: 10, fontWeight: 700, letterSpacing: 0.6, color: COLORS.textMuted };
@@ -2113,7 +2151,8 @@ function EmailMarketingPage() {
       <div style={{ height: 14 }} />
 
       <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
-        <div style={kpi}><div style={kpiLabel}>SUBSCRIBERS</div><div style={kpiValue}>{loading ? '...' : subscribers}</div></div>
+        <div style={kpi}><div style={kpiLabel}>SUBSCRIBERS</div><div style={kpiValue}>{loading ? '...' : active.length}</div></div>
+        <div style={kpi}><div style={kpiLabel}>UNSUBSCRIBED</div><div style={kpiValue}>{loading ? '...' : subs.length - active.length}</div></div>
         <div style={kpi}><div style={kpiLabel}>AUTOMATED EMAILS</div><div style={kpiValue}>{automated.length}</div></div>
         <div style={kpi}><div style={kpiLabel}>WELCOME CODE</div><div style={kpiValue}>WELCOME10</div></div>
       </div>
@@ -2133,10 +2172,48 @@ function EmailMarketingPage() {
       </SectionCard>
 
       <SectionCard>
-        <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.textMuted, letterSpacing: 0.5, marginBottom: 10 }}>NEWSLETTER CAMPAIGNS</div>
-        <div style={{ fontSize: 13, color: COLORS.charcoal, fontFamily: FONTS.body, lineHeight: 1.7 }}>
-          Bulk newsletter sending is not built yet. For now you can <strong>export your customer list</strong> from the Customers tab (Export CSV) and send a campaign through a tool like Mailchimp or Resend Broadcasts. When you are ready, we can build one-click campaigns here.
+        <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.textMuted, letterSpacing: 0.5, marginBottom: 12 }}>SEND A CAMPAIGN</div>
+        <div style={{ fontSize: 12, color: COLORS.textMuted, fontFamily: FONTS.body, marginBottom: 12, lineHeight: 1.6 }}>Sends from order@souk3d.com in the Souk3D email template with an unsubscribe link. Blank lines start new paragraphs. Always send yourself a test first.</div>
+        <input placeholder="Subject line" value={subject} onChange={function (e) { setSubject(e.target.value); }} style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', border: '1px solid ' + COLORS.wheat, borderRadius: 8, fontFamily: FONTS.body, fontSize: 14, marginBottom: 10 }} />
+        <textarea placeholder="Write your newsletter…" value={message} onChange={function (e) { setMessage(e.target.value); }} rows={8} style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', border: '1px solid ' + COLORS.wheat, borderRadius: 8, fontFamily: FONTS.body, fontSize: 14, marginBottom: 12, resize: 'vertical' }} />
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <button onClick={function () { handleSend(true); }} disabled={!!sending} style={{ padding: '10px 18px', background: '#fff', color: COLORS.charcoal, border: '1px solid ' + COLORS.wheat, borderRadius: 8, fontSize: 13, fontWeight: 600, fontFamily: FONTS.body, cursor: 'pointer', opacity: sending ? 0.6 : 1 }}>{sending === 'test' ? 'Sending…' : 'Send test to me'}</button>
+          <button onClick={function () { handleSend(false); }} disabled={!!sending || active.length === 0} style={{ padding: '10px 18px', background: COLORS.charcoal, color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 700, fontFamily: FONTS.body, cursor: 'pointer', opacity: sending || active.length === 0 ? 0.6 : 1 }}>{sending === 'all' ? 'Sending…' : 'Send to ' + active.length + ' subscriber' + (active.length === 1 ? '' : 's')}</button>
         </div>
+      </SectionCard>
+
+      <SectionCard>
+        <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.textMuted, letterSpacing: 0.5, marginBottom: 12 }}>SUBSCRIBERS</div>
+        {loading ? (
+          <div style={{ fontSize: 13, color: COLORS.textMuted, fontFamily: FONTS.body }}>Loading…</div>
+        ) : loadErr ? (
+          <div style={{ fontSize: 13, color: '#B33', fontFamily: FONTS.body }}>{loadErr}</div>
+        ) : subs.length === 0 ? (
+          <div style={{ fontSize: 13, color: COLORS.textMuted, fontFamily: FONTS.body, lineHeight: 1.7 }}>No subscribers yet. The signup box on the homepage now saves emails here and sends the WELCOME10 code automatically.</div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, fontFamily: FONTS.body }}>
+              <thead><tr style={{ background: COLORS.cream2, textAlign: 'left' }}>
+                <th style={{ padding: '8px 12px', fontWeight: 600 }}>Email</th>
+                <th style={{ padding: '8px 12px', fontWeight: 600 }}>Joined</th>
+                <th style={{ padding: '8px 12px', fontWeight: 600 }}>Source</th>
+                <th style={{ padding: '8px 12px', fontWeight: 600 }}>Status</th>
+              </tr></thead>
+              <tbody>
+                {subs.map(function (s) { return (
+                  <tr key={s.id} style={{ borderTop: '0.5px solid ' + COLORS.wheat }}>
+                    <td style={{ padding: '8px 12px', color: COLORS.charcoal }}>{s.email}</td>
+                    <td style={{ padding: '8px 12px', color: COLORS.textMuted }}>{s.created_at ? new Date(s.created_at).toLocaleDateString() : ''}</td>
+                    <td style={{ padding: '8px 12px', color: COLORS.textMuted }}>{s.source || ''}</td>
+                    <td style={{ padding: '8px 12px' }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 10, background: (s.status === 'subscribed' ? COLORS.olive : COLORS.textMuted) + '22', color: s.status === 'subscribed' ? COLORS.olive : COLORS.textMuted }}>{s.status === 'subscribed' ? 'ACTIVE' : 'UNSUBSCRIBED'}</span>
+                    </td>
+                  </tr>
+                ); })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </SectionCard>
     </div>
   );
