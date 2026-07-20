@@ -73,7 +73,7 @@ req.body || {};
     const ids = items.map((i) => i.id).filter(Boolean);
     const { data: products, error } = await supabase
       .from("products")
-      .select("id, name, price, stock, images, status")
+      .select("id, name, price, stock, images, status, variations")
       .in("id", ids);
     if (error) throw error;
 
@@ -88,7 +88,21 @@ req.body || {};
       const p = byId[item.id];
       if (!p || p.status !== "active") continue;
       const qty = Math.max(1, Math.min(99, parseInt(item.qty, 10) || 1));
-      const unit = Math.round(Number(p.price) * 100);
+      // Variation deltas are validated against the DB-defined options; only
+      // what the products table says can change the price, never the browser.
+      let unit = Math.round(Number(p.price) * 100);
+      let varLabel = "";
+      if (Array.isArray(p.variations) && item.variation && typeof item.variation === "object") {
+        for (const g of p.variations) {
+          if (!g || !g.name || !Array.isArray(g.options)) continue;
+          const opt = g.options.find((o) => o && o.label === item.variation[g.name]);
+          if (opt) {
+            unit += Math.round((Number(opt.delta) || 0) * 100);
+            varLabel += (varLabel ? ", " : "") + g.name + ": " + opt.label;
+          }
+        }
+      }
+      const customText = String(item.customText || "").slice(0, 120);
       if (!unit || unit < 0) continue;
       subtotalCents += unit * qty;
       const imgUrl =
@@ -101,9 +115,9 @@ req.body || {};
           currency: "usd",
       unit_amount: totalOff > 0 ? Math.round(unit * (1 - totalOff)) : unit,
           product_data: {
-            name: p.name || "Souk3D item",
+            name: (p.name || "Souk3D item") + (varLabel ? " (" + varLabel + ")" : "") + (customText ? " \u2014 \u201C" + customText + "\u201D" : ""),
             images: safeImg,
-            metadata: { product_id: p.id },
+            metadata: { product_id: p.id, variation: varLabel, custom_text: customText },
           },
         },
       });
