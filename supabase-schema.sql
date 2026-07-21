@@ -121,3 +121,9 @@ create index if not exists newsletter_subscribers_status_idx on newsletter_subsc
 insert into discounts (code, name, type, value, status)
 select 'WELCOME10', 'Newsletter welcome — 10% off', 'percent', 10, 'active'
 where not exists (select 1 from discounts where code ilike 'WELCOME10');
+
+-- Product variations (e.g. Size / Color), added 2026-07-20.
+-- jsonb array: [{ "name": "Size", "options": [{ "label": "Small", "delta": 0 }, { "label": "Large", "delta": 5 }] }]
+-- "delta" is a dollar amount added to the base price; validated server-side in
+-- api/create-checkout-session.js so the browser can never influence pricing.
+alter table products add column if not exists variations jsonb not null default '[]'::jsonb;
