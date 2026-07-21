@@ -186,6 +186,7 @@ export function rowToProduct(r) {
     badge: r.badge || "",
     emoji: r.emoji || "🏺",
     customizable: !!r.customizable,
+    variations: Array.isArray(r.variations) ? r.variations : [],
   };
 }
 
@@ -215,6 +216,7 @@ export function productToRow(p) {
     badge: p.badge || null,
     emoji: p.emoji || "🏺",
     customizable: !!p.customizable,
+    variations: Array.isArray(p.variations) ? p.variations : [],
     image_bg: p.imageBg || (images[0] && images[0].bg) || "cream",
   };
 }
