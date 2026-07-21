@@ -351,6 +351,7 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
     images: [],
     desc_ar: "",
     hint: "", buyUrl: "", membersOnly: false, publicAt: "",
+    variations: [],
   };
   const [form, setForm] = useState(product ? {
     ...product,
@@ -550,6 +551,7 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
       stars: product?.stars || 0,
       reviews: product?.reviews || 0,
       images: form.images || [],
+      variations: (form.variations || []).map(function (g) { return { name: String(g.name || "").trim(), options: (g.options || []).map(function (o) { return { label: String(o.label || "").trim(), delta: parseFloat(o.delta) || 0 }; }).filter(function (o) { return o.label; }) }; }).filter(function (g) { return g.name && g.options.length > 0; }),
     };
     try {
       await onSave(saved, isEdit);
@@ -726,6 +728,27 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
               <div style={{ fontSize: 11, letterSpacing: 0.5, textTransform: "uppercase", color: COLORS.saffronDark, fontWeight: 600, marginBottom: 11 }}>Inventory</div>
               <label style={labelStyle}>STOCK</label>
               <input type="number" value={form.stock} onChange={(e) => set("stock", e.target.value)} placeholder="0" style={inputStyle(false)} />
+            </div>
+            <div style={{ background: "#fff", border: "1px solid " + COLORS.wheat, borderRadius: 12, padding: "14px 15px", marginBottom: 14 }}>
+              <div style={{ fontSize: 11, letterSpacing: 0.5, textTransform: "uppercase", color: COLORS.saffronDark, fontWeight: 600, marginBottom: 4 }}>Variations (optional)</div>
+              <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 11, lineHeight: 1.5 }}>e.g. Size or Color. Price adjustment is added to the base price: 2 means +$2.00, -1.5 means $1.50 less, 0 or blank means same price.</div>
+              {(form.variations || []).map(function (g, gi) { return (
+                <div key={gi} style={{ border: "1px solid " + COLORS.wheat, borderRadius: 8, padding: 10, marginBottom: 10 }}>
+                  <div style={{ display: "flex", gap: 8, marginBottom: 8, alignItems: "center" }}>
+                    <input value={g.name || ""} onChange={function (e) { var v = (form.variations || []).slice(); v[gi] = { ...v[gi], name: e.target.value }; set("variations", v); }} placeholder="Variation name (e.g. Size)" style={{ ...inputStyle(false), flex: 1 }} />
+                    <button onClick={function () { var v = (form.variations || []).slice(); v.splice(gi, 1); set("variations", v); }} title="Remove variation" style={{ background: "none", border: "none", color: "#B33", cursor: "pointer", fontSize: 15, padding: 4 }}>✕</button>
+                  </div>
+                  {(g.options || []).map(function (o, oi) { return (
+                    <div key={oi} style={{ display: "flex", gap: 8, marginBottom: 6, alignItems: "center" }}>
+                      <input value={o.label || ""} onChange={function (e) { var v = (form.variations || []).slice(); var opts = (v[gi].options || []).slice(); opts[oi] = { ...opts[oi], label: e.target.value }; v[gi] = { ...v[gi], options: opts }; set("variations", v); }} placeholder="Option (e.g. Small)" style={{ ...inputStyle(false), flex: 2 }} />
+                      <input type="number" step="0.5" value={o.delta === 0 || o.delta ? o.delta : ""} onChange={function (e) { var v = (form.variations || []).slice(); var opts = (v[gi].options || []).slice(); opts[oi] = { ...opts[oi], delta: e.target.value }; v[gi] = { ...v[gi], options: opts }; set("variations", v); }} placeholder="+/- $" style={{ ...inputStyle(false), flex: 1 }} />
+                      <button onClick={function () { var v = (form.variations || []).slice(); var opts = (v[gi].options || []).slice(); opts.splice(oi, 1); v[gi] = { ...v[gi], options: opts }; set("variations", v); }} title="Remove option" style={{ background: "none", border: "none", color: COLORS.textMuted, cursor: "pointer", fontSize: 13, padding: 4 }}>✕</button>
+                    </div>
+                  ); })}
+                  <button onClick={function () { var v = (form.variations || []).slice(); v[gi] = { ...v[gi], options: (v[gi].options || []).concat([{ label: "", delta: "" }]) }; set("variations", v); }} style={{ background: "none", border: "1px dashed " + COLORS.wheat, borderRadius: 6, padding: "6px 10px", fontSize: 12, color: COLORS.charcoal, cursor: "pointer" }}>+ Add option</button>
+                </div>
+              ); })}
+              <button onClick={function () { set("variations", (form.variations || []).concat([{ name: "", options: [{ label: "", delta: "" }] }])); }} style={{ background: "none", border: "1px dashed " + COLORS.saffronDark, borderRadius: 6, padding: "7px 12px", fontSize: 12, color: COLORS.saffronDark, fontWeight: 600, cursor: "pointer" }}>+ Add variation</button>
             </div>
             <div style={{ background: "#fff", border: "1px solid " + COLORS.wheat, borderRadius: 12, padding: "14px 15px" }}>
               <div style={{ fontSize: 11, letterSpacing: 0.5, textTransform: "uppercase", color: COLORS.saffronDark, fontWeight: 600, marginBottom: 11 }}>Organization</div>
