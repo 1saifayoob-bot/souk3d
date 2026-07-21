@@ -184,20 +184,21 @@ function CartDrawer({ cart, onClose, onUpdateQty, onRemove, onCheckout, user, pr
             </div>
            )}
           {cart.map(item => (
-            <div key={item.id} style={{ display: "flex", gap: 12, padding: "12px 0", borderBottom: `0.5px solid ${C.wheat}` }}>
+            <div key={item.lineId || item.id} style={{ display: "flex", gap: 12, padding: "12px 0", borderBottom: `0.5px solid ${C.wheat}` }}>
               <div style={{ width: 64, height: 64, background: `linear-gradient(135deg, ${C.cream2} 0%, ${C.wheat}44 100%)`, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, flexShrink: 0, overflow: "hidden" }}>{(item.thumbUrl || item.imageUrl) ? <img src={item.thumbUrl || item.imageUrl} alt={item.name || ""} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : item.emoji}</div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 500, color: C.charcoal, fontFamily: F.body }}>{item.name}</div>
+                {item.variation && <div style={{ fontSize: 11, color: C.textMuted, fontFamily: F.body, marginBottom: 2 }}>{Object.entries(item.variation).map(([g, l]) => g + ": " + l).join(" \u00b7 ")}</div>}
                 {item.customText && <div style={{ fontFamily: F.arabic, fontSize: 14, color: C.saffron, direction: "rtl", textAlign: "right" }}>{item.customText}</div>}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 8 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, border: `0.5px solid ${C.wheat}`, borderRadius: 6, overflow: "hidden" }}>
-                    <button onClick={() => onUpdateQty(item.id, item.qty - 1)} style={{ width: 28, height: 28, background: "none", border: "none", cursor: "pointer", fontSize: 14 }}>−</button>
+                    <button onClick={() => onUpdateQty(item.lineId || item.id, item.qty - 1)} style={{ width: 28, height: 28, background: "none", border: "none", cursor: "pointer", fontSize: 14 }}>−</button>
                     <span style={{ fontSize: 13, fontFamily: F.body, fontWeight: 600 }}>{item.qty}</span>
-                    <button onClick={() => onUpdateQty(item.id, item.qty + 1)} style={{ width: 28, height: 28, background: "none", border: "none", cursor: "pointer", fontSize: 14 }}>+</button>
+                    <button onClick={() => onUpdateQty(item.lineId || item.id, item.qty + 1)} style={{ width: 28, height: 28, background: "none", border: "none", cursor: "pointer", fontSize: 14 }}>+</button>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{ fontSize: 14, fontWeight: 700, color: C.charcoal }}>${(item.price * item.qty).toFixed(2)}</span>
-                    <button onClick={() => onRemove(item.id)} style={{ background: "none", border: "none", color: C.textMuted, cursor: "pointer", fontSize: 12 }}>✕</button>
+                    <button onClick={() => onRemove(item.lineId || item.id)} style={{ background: "none", border: "none", color: C.textMuted, cursor: "pointer", fontSize: 12 }}>✕</button>
                   </div>
                 </div>
               </div>
@@ -244,11 +245,16 @@ function ProductDetail({product, onBack, onAddToCart, onBuyNow, user }) {
   const mainSrc = galleryImgs[activeImg] || galleryImgs[0] || product.imageUrl || "";
   const [qty, setQty] = useState(1);
   const [customText, setCustomText] = useState("");
+  const varGroups = (Array.isArray(product.variations) ? product.variations : []).filter(g => g && g.name && Array.isArray(g.options) && g.options.length > 0);
+  const [chosen, setChosen] = useState(() => { const init = {}; varGroups.forEach(g => { init[g.name] = g.options[0].label; }); return init; });
+  useEffect(() => { const init = {}; varGroups.forEach(g => { init[g.name] = g.options[0].label; }); setChosen(init); setQty(1); }, [product.id]);
+  const varDelta = varGroups.reduce((s, g) => { const o = g.options.find(x => x.label === chosen[g.name]); return s + (o ? (Number(o.delta) || 0) : 0); }, 0);
+  const unitPrice = (Number(product.price) || 0) + varDelta;
   const [selectedStyle, setSelectedStyle] = useState("Diwani");
   const STYLES = ["Diwani", "Modern", "Kufi", "Classic"];
 
   const handleAdd = () => {
-    onAddToCart({ ...product, qty, customText: customText || undefined });
+    onAddToCart({ ...product, qty, customText: customText || undefined, variation: varGroups.length ? chosen : undefined, price: unitPrice });
   };
 
   return (
@@ -291,7 +297,7 @@ function ProductDetail({product, onBack, onAddToCart, onBuyNow, user }) {
             <span style={{ fontSize: 13, color: C.textMuted, fontFamily: F.body }}>{product.stars} ({product.reviews} reviews)</span>
           </div>
           <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 16 }}>
-            <span style={{ fontFamily: F.body, fontSize: 28, fontWeight: 700, color: C.charcoal }}>${product.price}</span>
+            <span style={{ fontFamily: F.body, fontSize: 28, fontWeight: 700, color: C.charcoal }}>${unitPrice.toFixed(2)}</span>
             {product.compareAt && <span style={{ fontSize: 16, color: C.textMuted, textDecoration: "line-through" }}>${product.compareAt}</span>}
           </div>
           <p style={{ fontSize: 14, color: C.textMuted, fontFamily: F.body, lineHeight: 1.7, marginBottom: 20 }}>{product.desc}</p>
@@ -311,6 +317,17 @@ function ProductDetail({product, onBack, onAddToCart, onBuyNow, user }) {
             </div>
           )}
 
+          {varGroups.map(g => (
+            <div key={g.name} style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 0.5, color: C.textMuted, fontFamily: F.body, marginBottom: 6, textTransform: "uppercase" }}>{g.name}</div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {g.options.map(o => { const on = chosen[g.name] === o.label; const d = Number(o.delta) || 0; return (
+                  <button key={o.label} onClick={() => setChosen(c => ({ ...c, [g.name]: o.label }))} style={{ padding: "8px 14px", borderRadius: 8, border: on ? `1.5px solid ${C.saffron}` : `1px solid ${C.wheat}`, background: on ? C.saffron + "18" : "#FFF", color: C.charcoal, fontSize: 13, fontFamily: F.body, fontWeight: on ? 700 : 500, cursor: "pointer" }}>{o.label}{d ? ` (${d > 0 ? "+" : "\u2212"}$${Math.abs(d).toFixed(2)})` : ""}</button>
+                ); })}
+              </div>
+            </div>
+          ))}
+
           {/* Qty + CTA */}
           <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 16 }}>
             <div style={{ display: "flex", alignItems: "center", border: `0.5px solid ${C.wheat}`, borderRadius: 8, overflow: "hidden" }}>
@@ -320,7 +337,7 @@ function ProductDetail({product, onBack, onAddToCart, onBuyNow, user }) {
             </div>
             <button onClick={handleAdd} style={{ flex: 1, padding: "14px", background: C.charcoal, color: "#FFF", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, fontFamily: F.body, cursor: "pointer" }}>Add to Cart</button>
           </div>
-          <button onClick={() => onBuyNow({ ...product, qty, customText: customText || undefined })} style={{ width: "100%", padding: "13px", background: C.saffron, color: "#FFF", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, fontFamily: F.body, cursor: "pointer", marginBottom: 16 }}>Buy Now</button>
+          <button onClick={() => onBuyNow({ ...product, qty, customText: customText || undefined, variation: varGroups.length ? chosen : undefined, price: unitPrice })} style={{ width: "100%", padding: "13px", background: C.saffron, color: "#FFF", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, fontFamily: F.body, cursor: "pointer", marginBottom: 16 }}>Buy Now</button>
 
           {/* Trust badges */}
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
@@ -412,7 +429,7 @@ function CheckoutPage({ cart, onBack, promo, user }) {
           ? { "Content-Type": "application/json", Authorization: "Bearer " + memberToken }
           : { "Content-Type": "application/json" },
         body: JSON.stringify({
-          items: cart.map((i) => ({ id: i.id, qty: i.qty })),
+          items: cart.map((i) => ({ id: i.id, qty: i.qty, variation: i.variation || null, customText: i.customText || "" })),
           contact,
           address,
           shippingMethod,
@@ -530,12 +547,12 @@ function CheckoutPage({ cart, onBack, promo, user }) {
           <div style={{ background: "#FFF", border: `0.5px solid ${C.wheat}`, borderRadius: 12, padding: "20px" }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: C.charcoal, fontFamily: F.body, marginBottom: 14 }}>Order Summary</div>
             {cart.map(item => (
-              <div key={item.id} style={{ display: "flex", gap: 10, marginBottom: 12, alignItems: "center" }}>
+              <div key={item.lineId || item.id} style={{ display: "flex", gap: 10, marginBottom: 12, alignItems: "center" }}>
                 <div style={{ width: 48, height: 48, background: `linear-gradient(135deg, ${C.cream2} 0%, ${C.wheat}44 100%)`, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0, position: "relative" }}>
                   {item.emoji}
                   <div style={{ position: "absolute", top: -6, right: -6, width: 18, height: 18, background: C.charcoal, color: "#FFF", borderRadius: "50%", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{item.qty}</div>
                 </div>
-                <div style={{ flex: 1, fontSize: 12, fontFamily: F.body }}>{item.name}</div>
+                <div style={{ flex: 1, fontSize: 12, fontFamily: F.body }}>{item.name}{item.variation ? <span style={{ color: C.textMuted }}>{" (" + Object.values(item.variation).join(", ") + ")"}</span> : null}</div>
                 <div style={{ fontSize: 13, fontWeight: 600 }}>${(item.price * item.qty).toFixed(2)}</div>
               </div>
             ))}
@@ -1310,18 +1327,20 @@ export default function App() {
     }
   }, []);
 
+  const lineIdOf = (p) => String(p.id) + "|" + JSON.stringify(p.variation || null) + "|" + (p.customText || "");
   const addToCart = (product) => {
+    const lineId = lineIdOf(product);
     setCart(prev => {
-      const existing = prev.find(i => i.id === product.id);
-      if (existing) return prev.map(i => i.id === product.id ? { ...i, qty: i.qty + (product.qty || 1) } : i);
-      return [...prev, { ...product, qty: product.qty || 1 }];
+      const existing = prev.find(i => (i.lineId || lineIdOf(i)) === lineId);
+      if (existing) return prev.map(i => i === existing ? { ...i, qty: i.qty + (product.qty || 1) } : i);
+      return [...prev, { ...product, lineId, qty: product.qty || 1 }];
     });
     setCartOpen(true);
   };
 
   const updateQty = (id, qty) => {
-    if (qty <= 0) setCart(prev => prev.filter(i => i.id !== id));
-    else setCart(prev => prev.map(i => i.id === id ? { ...i, qty } : i));
+    if (qty <= 0) setCart(prev => prev.filter(i => (i.lineId || i.id) !== id));
+    else setCart(prev => prev.map(i => (i.lineId || i.id) === id ? { ...i, qty } : i));
   };
 
   const cartCount = cart.reduce((s, i) => s + i.qty, 0);
@@ -1404,7 +1423,7 @@ export default function App() {
           cart={cart}
           onClose={() => setCartOpen(false)}
           onUpdateQty={updateQty}
-          onRemove={id => setCart(prev => prev.filter(i => i.id !== id))}
+          onRemove={id => setCart(prev => prev.filter(i => (i.lineId || i.id) !== id))}
           onCheckout={() => { setCartOpen(false); setPage("checkout"); }}
         />
       )}
