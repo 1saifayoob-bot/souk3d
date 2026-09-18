@@ -166,7 +166,7 @@ const IMAGE_RATIOS = ["1:1", "3:4", "9:16", "16:9", "4:3", "auto"];
 function hfHeaders() {
   const cred = String(process.env.HF_CREDENTIALS || "").trim();
   if (!cred) throw new Error("HF_CREDENTIALS is not set in Vercel");
-  return { Authorization: "Key " + cred, "Content-Type": "application/json" };
+  return { Authorization: "Key " + cred, "Content-Type": "application/json", "User-Agent": "souk3d-admin/1.0 (+https://souk3d.com)" };
 }
 
 async function hfJson(res) {
@@ -200,6 +200,54 @@ async function copyToStorage(url, kind) {
   return admin.storage.from("product-images").getPublicUrl(path).data.publicUrl;
 }
 
+function imageInput(body) {
+  const images = (Array.isArray(body.image_urls) ? body.image_urls : []).filter(isOurImageUrl).slice(0, 4);
+  if (!images.length) { const e = new Error("Save the product photo first so it has a public link."); e.status = 400; throw e; }
+  const prompt = str(body.prompt, 4000);
+  if (!prompt) { const e = new Error("Describe the scene first."); e.status = 400; throw e; }
+  return {
+    prompt,
+    image_urls: images,
+    quality: body.quality === "low" ? "low" : "medium",
+    resolution: body.resolution === "2k" ? "2k" : "1k",
+    aspect_ratio: IMAGE_RATIOS.includes(body.aspect_ratio) ? body.aspect_ratio : "1:1",
+  };
+}
+
+function videoInput(body) {
+  if (!isOurImageUrl(body.image_url)) { const e = new Error("Pick a saved photo to animate."); e.status = 400; throw e; }
+  return {
+    image_url: body.image_url,
+    prompt: str(body.prompt, 2500),
+    duration: Math.min(10, Math.max(3, parseInt(body.duration, 10) || 5)),
+    sound: body.sound === "on" ? "on" : "off",
+  };
+}
+
+// Higgsfield does not document a balance endpoint, so try the likely ones
+// and return the first that answers with a number. Returns null otherwise.
+async function findBalance() {
+  const paths = ["/balance", "/account/balance", "/v1/balance", "/billing/balance", "/account", "/me"];
+  for (const path of paths) {
+    try {
+      const r = await fetch(HF_BASE + path, { headers: hfHeaders() });
+      if (!r.ok) continue;
+      const d = await r.json().catch(() => null);
+      if (!d || typeof d !== "object") continue;
+      const pick = (o) => {
+        for (const k of ["usd", "balance_usd", "balance", "amount", "credits_usd"]) {
+          const v = o && o[k];
+          if (v !== undefined && v !== null && isFinite(Number(v))) return { key: k, value: Number(v) };
+        }
+        return null;
+      };
+      const hit = pick(d) || pick(d.balance) || pick(d.data) || pick(d.account);
+      if (hit) return { usd: hit.key.includes("credit") ? null : hit.value, raw: hit, path };
+    } catch (_) {}
+  }
+  return null;
+}
+
 async function handleStudio(req, res, body) {
   const action = body.action;
   try {
@@ -209,32 +257,29 @@ async function handleStudio(req, res, body) {
       return res.status(200).json({ ok: r.status !== 401 && r.status !== 403, status: r.status });
     }
 
+    if (action === "studio-balance") {
+      const b = await findBalance();
+      return res.status(200).json(b ? { balance: b.usd, path: b.path } : { balance: null });
+    }
+
+    if (action === "studio-estimate") {
+      const isVideo = body.kind === "video";
+      const input = isVideo ? videoInput(body) : imageInput(body);
+      const model = isVideo ? HF_VIDEO_MODEL : HF_IMAGE_MODEL;
+      const r = await fetch(HF_BASE + "/estimate/" + model, { method: "POST", headers: hfHeaders(), body: JSON.stringify(input) });
+      const data = await hfJson(r);
+      return res.status(200).json({ usd: Number(data.usd), credits: Number(data.credits) });
+    }
+
     if (action === "studio-image") {
-      const images = (Array.isArray(body.image_urls) ? body.image_urls : []).filter(isOurImageUrl).slice(0, 4);
-      if (!images.length) return res.status(400).json({ error: "Save the product photo first so it has a public link." });
-      const prompt = str(body.prompt, 4000);
-      if (!prompt) return res.status(400).json({ error: "Describe the scene first." });
-      const input = {
-        prompt,
-        image_urls: images,
-        quality: body.quality === "low" ? "low" : "medium",
-        resolution: body.resolution === "2k" ? "2k" : "1k",
-        aspect_ratio: IMAGE_RATIOS.includes(body.aspect_ratio) ? body.aspect_ratio : "1:1",
-      };
+      const input = imageInput(body);
       const r = await fetch(HF_BASE + "/" + HF_IMAGE_MODEL, { method: "POST", headers: hfHeaders(), body: JSON.stringify(input) });
       const data = await hfJson(r);
       return res.status(200).json({ request_id: data.request_id, status: data.status || "queued" });
     }
 
     if (action === "studio-video") {
-      if (!isOurImageUrl(body.image_url)) return res.status(400).json({ error: "Pick a saved photo to animate." });
-      const duration = Math.min(10, Math.max(3, parseInt(body.duration, 10) || 5));
-      const input = {
-        image_url: body.image_url,
-        prompt: str(body.prompt, 2500),
-        duration,
-        sound: body.sound === "on" ? "on" : "off",
-      };
+      const input = videoInput(body);
       const r = await fetch(HF_BASE + "/" + HF_VIDEO_MODEL, { method: "POST", headers: hfHeaders(), body: JSON.stringify(input) });
       const data = await hfJson(r);
       return res.status(200).json({ request_id: data.request_id, status: data.status || "queued" });
