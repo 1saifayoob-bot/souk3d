@@ -342,14 +342,38 @@ const BG_STYLES = [
 // /api/generate-listing (studio-* actions, Higgsfield). Results are copied to
 // our storage by the API, then added to the product with one click.
 const STUDIO_SCENES = [
-  { id: "studio", label: "Clean studio", text: "on a seamless warm-white studio backdrop with a soft natural shadow and even diffused light, a minimal premium catalog look" },
-  { id: "coffee", label: "Arabic coffee corner", text: "in a cozy Arab coffee corner: a brass dallah, small finjan cups, a few cardamom pods and coffee beans on a rustic wooden shelf, warm afternoon light with a soft mashrabiya shadow pattern" },
-  { id: "shelf", label: "Home shelf", text: "styled on a warm wooden home shelf with a small plant and a couple of books, soft window light, lived-in and cozy" },
-  { id: "majlis", label: "Majlis", text: "in a welcoming Arab majlis with low floor cushions, a patterned rug, a brass tray and warm lantern light in the background" },
-  { id: "gift", label: "Gift moment", text: "on a table beside an open kraft gift box with tissue paper and a satin ribbon, soft daylight, ready to be given" },
-  { id: "ramadan", label: "Ramadan & Eid", text: "in a festive Ramadan evening setting with glowing brass lanterns, a small bowl of dates and soft warm lights in the background" },
-  { id: "fridge", label: "On the fridge", text: "stuck on a cream-colored refrigerator door in a sunlit home kitchen" },
+  { id: "studio", label: "Clean studio", text: "a seamless warm-white studio backdrop with a soft natural shadow and even diffused light, a minimal premium catalog look" },
+  { id: "coffee", label: "Arabic coffee corner", text: "a cozy Arab coffee corner with a brass dallah, small finjan cups, a few cardamom pods and coffee beans on rustic wood, warm afternoon light and a soft mashrabiya shadow pattern" },
+  { id: "kitchen", label: "Home kitchen", text: "a bright, warm home kitchen with a cream-colored refrigerator, soft morning light" },
+  { id: "shelf", label: "Home shelf", text: "a warm wooden home shelf with a small plant and a couple of books, soft window light, lived-in and cozy" },
+  { id: "majlis", label: "Majlis", text: "a welcoming Arab majlis with low floor cushions, a patterned rug, a brass tray and warm lantern light in the background" },
+  { id: "gift", label: "Gift moment", text: "a table with an open kraft gift box, tissue paper and a satin ribbon, soft daylight" },
+  { id: "ramadan", label: "Ramadan & Eid", text: "a festive Ramadan evening with glowing brass lanterns, a small bowl of dates and soft warm lights in the background" },
 ];
+// What the product physically is decides where it may go in any scene.
+const STUDIO_KINDS = [
+  { id: "magnet", label: "Fridge magnet", place: "It is a small, thin, flat fridge magnet. Show it stuck flat on a metal surface that fits the scene, such as a refrigerator door, the side of a metal coffee tin or a magnetic board. Never hang it on a wall, never stand it up on its own, and never put it on a stand, hook or easel." },
+  { id: "wall", label: "Wall piece", place: "It is a wall-hanging piece. Show it hanging flat on a wall in the scene." },
+  { id: "standing", label: "Stands on a surface", place: "It is a freestanding piece. Show it standing upright on a table, shelf or desk in the scene." },
+  { id: "small", label: "Small accessory", place: "It is a small handheld accessory, such as a keychain. Show it resting on a surface in the scene or held loosely in a hand." },
+];
+function studioText(form) {
+  return [form.name, form.desc, form.hint].concat(form.details || [], form.keywords || []).join(" ").toLowerCase();
+}
+function inferStudioKind(form) {
+  const t = studioText(form);
+  if (/magnet|مغناطيس/.test(t)) return "magnet";
+  if (/key ?chain|keyring|bookmark|pin\b/.test(t)) return "small";
+  if (/wall|plaque|hanging|frame|لوحة/.test(t)) return "wall";
+  return "standing";
+}
+function inferStudioSize(form) {
+  const t = [form.hint].concat(form.details || []).join(" ");
+  const m = t.match(/(\d+(?:\.\d+)?)\s*(?:x\s*\d+(?:\.\d+)?\s*)?(in\b|inch(?:es)?|"|cm)/i);
+  if (!m) return "";
+  const unit = /cm/i.test(m[2]) ? "cm" : "in";
+  return m[1] + " " + unit;
+}
 const STUDIO_MOTIONS = [
   { id: "pushin", label: "Slow push-in", text: "Slow, gentle camera push-in toward the product. Soft light drifts slightly across the scene." },
   { id: "light", label: "Light and shadow", text: "The camera stays still. Warm sunlight and shadows move slowly across the scene and tiny dust particles float in the light." },
@@ -361,14 +385,18 @@ const STUDIO_RATIOS = [
   { id: "9:16", label: "Vertical", hint: "Reels and TikTok" },
 ];
 
-function studioScenePrompt(form, sceneText, note) {
-  const details = (form.details || []).map(function (d) { return String(d || "").trim(); }).filter(Boolean);
+function studioScenePrompt(form, sceneText, note, kind, size) {
+  const k = STUDIO_KINDS.find(function (x) { return x.id === kind; }) || STUDIO_KINDS[2];
+  const sizeLine = size
+    ? "Its real size is about " + size + " across. Keep that exact real-world scale: a small coffee cup is about 3 in (7.5 cm) tall and a dallah is about 10 in (25 cm) tall, so the product must look the right size next to them" + (kind === "magnet" ? ", and small on a refrigerator door." : ".")
+    : "Show it at its true real-world size relative to the objects around it" + (kind === "magnet" ? "; a fridge magnet looks small on a refrigerator door." : ".");
   return [
-    form.name ? "Product: " + form.name + "." : "",
-    details.length ? "Facts: " + details.join("; ") + "." : "",
-    "Place this exact product naturally " + sceneText + ".",
+    "Use the product in the reference photo.",
+    k.place,
+    "Setting: " + sceneText + ".",
+    sizeLine,
     note ? note.trim().replace(/\.?$/, ".") : "",
-    "The product must stay exactly as in the reference photo: same shape, proportions, colors, pattern, lettering (including any Arabic text) and finish. Do not redraw, restyle or add details to it. Show it at its real size relative to the objects around it.",
+    "The product must stay exactly as in the reference photo: same shape, proportions, colors, pattern, lettering (including any Arabic text) and finish. Do not redraw, restyle or add details to it.",
     "Realistic lifestyle product photography, natural light, shallow depth of field.",
   ].filter(Boolean).join(" ");
 }
@@ -397,6 +425,11 @@ async function studioCall(payload) {
 function ProductStudio({ form, setForm }) {
   const [mode, setMode] = useState("photos");
   const [scene, setScene] = useState("coffee");
+  const [kind, setKind] = useState(function () { return inferStudioKind(form); });
+  const [size, setSize] = useState(function () { return inferStudioSize(form); });
+  const [quote, setQuote] = useState(null); // { usd, credits, payload, error }
+  const [balance, setBalance] = useState(undefined); // number, null (unknown) or undefined (loading)
+  const [spent, setSpent] = useState(0);
   const [motion, setMotion] = useState("pushin");
   const [ratio, setRatio] = useState("1:1");
   const [note, setNote] = useState("");
@@ -409,12 +442,19 @@ function ProductStudio({ form, setForm }) {
   const [err, setErr] = useState("");
   const alive = useRef(true);
   useEffect(function () { return function () { alive.current = false; }; }, []);
+  const loadBalance = async function () {
+    try {
+      const b = await studioCall({ action: "studio-balance" });
+      if (alive.current) setBalance(typeof b.balance === "number" ? b.balance : null);
+    } catch (_) { if (alive.current) setBalance(null); }
+  };
+  useEffect(function () { loadBalance(); }, []);
 
   const images = form.images || [];
   const src = images[Math.min(source, Math.max(0, images.length - 1))];
   const sceneObj = STUDIO_SCENES.find(function (s) { return s.id === scene; }) || STUDIO_SCENES[0];
   const motionObj = STUDIO_MOTIONS.find(function (m) { return m.id === motion; }) || STUDIO_MOTIONS[0];
-  const builtPrompt = mode === "photos" ? studioScenePrompt(form, sceneObj.text, note) : studioVideoPrompt(motionObj.text, note);
+  const builtPrompt = mode === "photos" ? studioScenePrompt(form, sceneObj.text, note, kind, size) : studioVideoPrompt(motionObj.text, note);
   const prompt = custom !== null ? custom : builtPrompt;
   const pending = jobs.filter(function (j) { return j.status === "queued" || j.status === "in_progress"; }).length;
 
@@ -437,7 +477,8 @@ function ProductStudio({ form, setForm }) {
         const s = await studioCall({ action: "studio-status", request_id: requestId });
         if (!alive.current) return;
         if (s.status === "completed") {
-          setJobs(function (js) { return js.map(function (j) { return j.id === jobId ? { ...j, status: "completed", images: s.images || [], video: s.video || "" } : j; }); });
+          setJobs(function (js) { return js.map(function (j) { if (j.id === jobId && j.cost) setSpent(function (x) { return x + j.cost; }); return j.id === jobId ? { ...j, status: "completed", images: s.images || [], video: s.video || "" } : j; }); });
+          loadBalance();
           return;
         }
         if (s.status === "failed" || s.status === "nsfw" || s.status === "canceled") {
@@ -454,17 +495,32 @@ function ProductStudio({ form, setForm }) {
     if (alive.current) setJobs(function (js) { return js.map(function (j) { return j.id === jobId && j.status !== "completed" ? { ...j, status: "failed", error: "Still not finished after several minutes. Check Requests in the Higgsfield console." } : j; }); });
   };
 
-  const start = async function () {
-    setErr("");
+  // Step 1: get the exact price for these settings. Step 2: confirm, then generate.
+  const priceCheck = async function () {
+    setErr(""); setQuote(null);
     if (!src) { setErr("Add a product photo first."); return; }
     setStarting(true);
+    let payload = null;
     try {
       const link = await ensureLink(src);
-      const payload = mode === "photos"
+      payload = mode === "photos"
         ? { action: "studio-image", image_urls: [link], prompt: prompt, aspect_ratio: ratio, quality: "medium" }
         : { action: "studio-video", image_url: link, prompt: prompt, duration: duration, sound: sound ? "on" : "off" };
-      const r = await studioCall(payload);
-      const job = { id: Date.now() + "-" + Math.random().toString(36).slice(2, 6), kind: mode === "photos" ? "image" : "video", status: r.status || "queued", label: mode === "photos" ? sceneObj.label : motionObj.label, images: [], video: "" };
+      const est = await studioCall({ ...payload, action: "studio-estimate", kind: mode === "photos" ? "image" : "video" });
+      setQuote({ usd: est.usd, credits: est.credits, payload: payload });
+    } catch (e) {
+      if (payload) setQuote({ usd: null, payload: payload, error: e.message });
+      else setErr(e.message);
+    }
+    setStarting(false);
+  };
+  const start = async function () {
+    if (!quote) return;
+    const q = quote;
+    setQuote(null); setStarting(true);
+    try {
+      const r = await studioCall(q.payload);
+      const job = { id: Date.now() + "-" + Math.random().toString(36).slice(2, 6), kind: mode === "photos" ? "image" : "video", status: r.status || "queued", label: mode === "photos" ? sceneObj.label : motionObj.label, images: [], video: "", cost: typeof q.usd === "number" && isFinite(q.usd) ? q.usd : 0 };
       setJobs(function (js) { return [job].concat(js); });
       poll(job.id, r.request_id, job.kind);
     } catch (e) {
@@ -472,6 +528,7 @@ function ProductStudio({ form, setForm }) {
     }
     setStarting(false);
   };
+  const money = function (v) { return "$" + (v < 1 ? v.toFixed(3).replace(/0$/, "") : v.toFixed(2)); };
 
   const addPhoto = function (url, asCover) {
     setForm(function (f) {
@@ -495,10 +552,20 @@ function ProductStudio({ form, setForm }) {
 
   return (
     <div className="s3d-studio">
-      <div style={{ display: "flex", gap: 6, marginBottom: 14 }} role="tablist">
-        {[["photos", "Scene photos"], ["video", "Video"]].map(function (m) { return (
-          <button key={m[0]} role="tab" aria-selected={mode === m[0]} onClick={function () { setMode(m[0]); setCustom(null); setNote(""); }} style={{ ...chip(mode === m[0]), padding: "8px 16px", fontWeight: 600 }}>{m[1]}</button>
-        ); })}
+      <div style={{ display: "flex", gap: 6, marginBottom: 14, alignItems: "center", flexWrap: "wrap" }}>
+        <div role="tablist" style={{ display: "flex", gap: 6 }}>
+          {[["photos", "Scene photos"], ["video", "Video"]].map(function (m) { return (
+            <button key={m[0]} role="tab" aria-selected={mode === m[0]} onClick={function () { setMode(m[0]); setCustom(null); setNote(""); setQuote(null); }} style={{ ...chip(mode === m[0]), padding: "8px 16px", fontWeight: 600 }}>{m[1]}</button>
+          ); })}
+        </div>
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 10, background: COLORS.cream, border: "1px solid " + COLORS.wheat, borderRadius: 999, padding: "6px 12px", fontSize: 12.5 }}>
+          {balance === undefined ? <span style={{ color: COLORS.textMuted }}>Checking balance…</span>
+            : typeof balance === "number" ? <span>Higgsfield balance <strong>${balance.toFixed(2)}</strong></span>
+            : <span>Spent this session <strong>{money(spent)}</strong></span>}
+          {typeof balance === "number"
+            ? <button onClick={loadBalance} className="s3d-btn-small" style={{ padding: "3px 8px" }}>Refresh</button>
+            : <a href="https://console.higgsfield.ai/dashboard" target="_blank" rel="noreferrer" className="s3d-btn-small" style={{ padding: "3px 8px" }}>See balance</a>}
+        </div>
       </div>
 
       {!images.length ? (
@@ -509,7 +576,7 @@ function ProductStudio({ form, setForm }) {
             <div className="s3d-label">{mode === "photos" ? "Photo to use" : "Photo to animate"}</div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
               {images.map(function (im, i) { return (
-                <button key={i} onClick={function () { setSource(i); }} aria-label={"Use photo " + (i + 1)} style={{ width: 56, height: 56, padding: 0, borderRadius: 8, overflow: "hidden", cursor: "pointer", border: i === source ? "2px solid " + COLORS.saffron : "1px solid " + COLORS.wheat, background: COLORS.cream2 }}>
+                <button key={i} onClick={function () { setSource(i); setQuote(null); }} aria-label={"Use photo " + (i + 1)} style={{ width: 56, height: 56, padding: 0, borderRadius: 8, overflow: "hidden", cursor: "pointer", border: i === source ? "2px solid " + COLORS.saffron : "1px solid " + COLORS.wheat, background: COLORS.cream2 }}>
                   <img src={im.thumbUrl || im.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 </button>
               ); })}
@@ -517,13 +584,19 @@ function ProductStudio({ form, setForm }) {
 
             {mode === "photos" ? (
               <>
+                <div className="s3d-label">What is it?</div>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 14 }}>
+                  {STUDIO_KINDS.map(function (k) { return <button key={k.id} onClick={function () { setKind(k.id); setCustom(null); setQuote(null); }} style={chip(kind === k.id)}>{k.label}</button>; })}
+                </div>
+                <div className="s3d-label">Real size <span style={{ fontWeight: 400, color: COLORS.textMuted }}>(keeps the scale right)</span></div>
+                <input value={size} onChange={function (e) { setSize(e.target.value); setCustom(null); setQuote(null); }} placeholder="e.g. 3 in, or 8 cm" className="s3d-input" style={{ maxWidth: 200, marginBottom: 16 }} />
                 <div className="s3d-label">Scene</div>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
-                  {STUDIO_SCENES.map(function (s) { return <button key={s.id} onClick={function () { setScene(s.id); setCustom(null); }} style={chip(scene === s.id)}>{s.label}</button>; })}
+                  {STUDIO_SCENES.map(function (s) { return <button key={s.id} onClick={function () { setScene(s.id); setCustom(null); setQuote(null); }} style={chip(scene === s.id)}>{s.label}</button>; })}
                 </div>
                 <div className="s3d-label">Shape</div>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
-                  {STUDIO_RATIOS.map(function (r) { return <button key={r.id} onClick={function () { setRatio(r.id); }} style={chip(ratio === r.id)} title={r.hint}>{r.label} <span style={{ opacity: 0.65 }}>{r.hint}</span></button>; })}
+                  {STUDIO_RATIOS.map(function (r) { return <button key={r.id} onClick={function () { setRatio(r.id); setQuote(null); }} style={chip(ratio === r.id)} title={r.hint}>{r.label} <span style={{ opacity: 0.65 }}>{r.hint}</span></button>; })}
                 </div>
               </>
             ) : (
@@ -536,11 +609,11 @@ function ProductStudio({ form, setForm }) {
                   <div>
                     <div className="s3d-label">Length</div>
                     <div style={{ display: "flex", gap: 6 }}>
-                      {[5, 10].map(function (d) { return <button key={d} onClick={function () { setDuration(d); }} style={chip(duration === d)}>{d} seconds</button>; })}
+                      {[5, 10].map(function (d) { return <button key={d} onClick={function () { setDuration(d); setQuote(null); }} style={chip(duration === d)}>{d} seconds</button>; })}
                     </div>
                   </div>
                   <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, cursor: "pointer", marginTop: 18 }}>
-                    <input type="checkbox" checked={sound} onChange={function (e) { setSound(e.target.checked); }} /> Add sound
+                    <input type="checkbox" checked={sound} onChange={function (e) { setSound(e.target.checked); setQuote(null); }} /> Add sound
                   </label>
                 </div>
                 <div style={{ ...small, marginTop: -8, marginBottom: 14 }}>The video keeps the shape of the photo you pick. For Reels, make a vertical scene photo first, then animate it.</div>
@@ -556,12 +629,30 @@ function ProductStudio({ form, setForm }) {
               {custom !== null && <button onClick={function () { setCustom(null); }} style={{ background: "none", border: "none", color: COLORS.textMuted, fontSize: 12, cursor: "pointer", padding: "4px 0" }}>Reset to the built prompt</button>}
             </details>
 
-            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-              <button onClick={start} disabled={starting} className="s3d-btn-primary">
-                {starting ? "Starting…" : mode === "photos" ? "Generate scene photo" : "Generate video"}
-              </button>
-              <span style={small}>{mode === "photos" ? "About 7¢ each, ready in under a minute" : "About " + (duration === 5 ? "30¢" : "55¢") + ", ready in 1 to 3 minutes"}</span>
-            </div>
+            {!quote ? (
+              <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                <button onClick={priceCheck} disabled={starting} className="s3d-btn-primary">
+                  {starting ? "Checking the price…" : mode === "photos" ? "Generate scene photo" : "Generate video"}
+                </button>
+                <span style={small}>You see the exact price before anything is charged.</span>
+              </div>
+            ) : (
+              <div role="alertdialog" aria-label="Confirm cost" style={{ border: "1.5px solid " + COLORS.saffron, background: "#FBEFD8", borderRadius: 12, padding: "12px 14px" }}>
+                {typeof quote.usd === "number" && isFinite(quote.usd) ? (
+                  <div style={{ fontSize: 14 }}>
+                    This {mode === "photos" ? "photo" : "video"} costs <strong>{money(quote.usd)}</strong>
+                    {typeof balance === "number" ? <span style={{ color: COLORS.textMuted }}> · balance after: ${Math.max(0, balance - quote.usd).toFixed(2)}</span> : null}
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 13.5 }}>Couldn't get the exact price ({quote.error}). It's usually about {mode === "photos" ? "7¢" : duration === 5 ? "30¢" : "55¢"}.</div>
+                )}
+                <div style={{ ...small, marginTop: 2 }}>{mode === "photos" ? "Ready in under a minute." : "Ready in 1 to 3 minutes."} Failed generations are not charged.</div>
+                <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                  <button onClick={start} disabled={starting} className="s3d-btn-primary">{typeof quote.usd === "number" && isFinite(quote.usd) ? "Generate for " + money(quote.usd) : "Generate anyway"}</button>
+                  <button onClick={function () { setQuote(null); }} className="s3d-btn-quiet">Cancel</button>
+                </div>
+              </div>
+            )}
             {err && <div role="alert" style={{ marginTop: 10, fontSize: 12.5, color: COLORS.terracotta }}>{err}</div>}
           </div>
 
