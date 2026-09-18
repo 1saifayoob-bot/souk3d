@@ -24,6 +24,10 @@ Live e-commerce store (souk3d.com) selling handmade / 3D-printed Arab-heritage g
 - All listing copy follows `LISTING_STYLE.md`. The AI generator's prompt (`SOUK3D_STYLE` in `api/generate-listing.js`) mirrors it; change both together.
 - Products have a `details` jsonb array (short facts shown in the storefront Details tab). Descriptions are a one-line hook, a blank line, then 2-4 short sentences.
 
+## AI studio (photos and video)
+- `api/generate-listing.js` also handles `studio-*` actions: scene photos (Higgsfield, Grok Imagine 2.0) and image-to-video (Kling 3.0). Credentials: `HF_CREDENTIALS` (KEY_ID:SECRET) in Vercel. Results are copied to the `product-images` bucket under `ai-studio/`.
+- Products have a `videos` jsonb array ([{ url }]) shown in the storefront gallery.
+
 ## Gotchas
 - **Arabic text:** watch for mojibake. Keep files UTF-8 and test any change that touches Arabic strings end to end.
 - **Schema changes:** run SQL in the Supabase dashboard SQL editor, then verify the table/column actually exists afterwards. Batches have silently rolled back before. Record every change in `supabase-schema.sql`.

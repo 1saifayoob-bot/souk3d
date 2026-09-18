@@ -130,3 +130,6 @@ alter table products add column if not exists variations jsonb not null default 
 
 -- Product details list (short scannable facts shown in the Details tab), added 2026-09-17.
 alter table products add column if not exists details jsonb not null default '[]'::jsonb;
+
+-- Product videos from the AI studio ([{ url }]), shown in the product gallery. Added 2026-09-18.
+alter table products add column if not exists videos jsonb not null default '[]'::jsonb;
