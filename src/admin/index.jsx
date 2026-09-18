@@ -2320,9 +2320,9 @@ function CustomOrdersPage() {
   });
 
   return (
-    <div style={{ animation: "fadeIn 0.3s ease", display: "flex", height: "calc(100vh - 48px)", margin: "-24px -32px" }}>
+    <div className={"s3d-co" + (selectedId && filtered.some((o) => o.id === selectedId) ? " has-sel" : "")} style={{ animation: "fadeIn 0.3s ease", display: "flex", height: "calc(100vh - 48px)", margin: "-24px -32px" }}>
       {/* Filter rail */}
-      <div style={{ width: 168, background: COLORS.cream2, borderRight: "0.5px solid " + COLORS.wheat, padding: "16px 12px", overflowY: "auto", flexShrink: 0 }}>
+      <div className="s3d-co-rail" style={{ width: 168, background: COLORS.cream2, borderRight: "0.5px solid " + COLORS.wheat, padding: "16px 12px", overflowY: "auto", flexShrink: 0 }}>
         <div style={railTitle}>STATUS</div>
         {[["all", "All Requests"], ["urgent", "Urgent"], ["soon", "Needs Reply"]].map(([v, l]) => (
           <div key={v} onClick={() => setStatusFilter(v)} style={railItem(statusFilter === v)}>{l}</div>
@@ -2340,7 +2340,7 @@ function CustomOrdersPage() {
       </div>
 
       {/* Request list */}
-      <div style={{ width: 300, borderRight: "0.5px solid " + COLORS.wheat, overflowY: "auto", flexShrink: 0 }}>
+      <div className="s3d-co-list" style={{ width: 300, borderRight: "0.5px solid " + COLORS.wheat, overflowY: "auto", flexShrink: 0 }}>
         <div style={{ padding: "16px 16px 10px", borderBottom: "0.5px solid " + COLORS.wheat }}>
           <div style={{ fontFamily: FONTS.display, fontSize: 20, fontWeight: 600, color: COLORS.charcoal }}>Custom Orders</div>
           <div style={{ fontSize: 11, color: COLORS.textMuted, fontFamily: FONTS.body }}>
@@ -2375,7 +2375,8 @@ function CustomOrdersPage() {
       </div>
 
       {/* Detail */}
-      <div style={{ flex: 1, overflowY: "auto", padding: 24 }}>
+      <div className="s3d-co-detail" style={{ flex: 1, overflowY: "auto", padding: 24 }}>
+        <button className="s3d-mobile-only" onClick={() => setSelectedId(null)} style={{ background: "none", border: "1px solid " + COLORS.wheat, borderRadius: 8, padding: "8px 12px", fontSize: 13, fontFamily: FONTS.body, color: COLORS.charcoal, cursor: "pointer", marginBottom: 14 }}>‹ All requests</button>
         {!selectedOrder ? (
           <div style={{ color: COLORS.textMuted, fontSize: 13, fontFamily: FONTS.body, textAlign: "center", marginTop: 60 }}>
             {loading ? "Loading requests..." : "Select a request to view"}
@@ -3016,6 +3017,8 @@ function UsersPage() {
 
 export default function AdminApp() {
   const [page, setPage] = useState("dashboard");
+  const [navOpen, setNavOpen] = useState(false);
+  const go = (id) => { setPage(id); setNavOpen(false); if (typeof window !== "undefined") window.scrollTo(0, 0); };
   const [session, setSession] = useState(undefined);
   const [role, setRole] = useState(null);
   useEffect(() => {
@@ -3039,7 +3042,7 @@ export default function AdminApp() {
   if (!session) return <AdminLogin />;
 
   const PAGE_MAP = {
-    dashboard: <Dashboard onNavigate={setPage} />,
+    dashboard: <Dashboard onNavigate={go} />,
     products: <ProductsPage />,
     orders: <OrdersPage />,
     customers: <CustomersPage />,
@@ -3052,8 +3055,42 @@ export default function AdminApp() {
   };
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: COLORS.cream }}>
+    <div className={"s3d-admin" + (navOpen ? " nav-open" : "")} style={{ display: "flex", minHeight: "100vh", background: COLORS.cream }}>
       <style>{`
+        .s3d-admin-top{display:none}
+        .s3d-admin-main{min-width:0}
+        @media (max-width: 860px){
+          .s3d-admin{flex-direction:column}
+          .s3d-admin-top{display:flex;position:sticky;top:0;z-index:50;align-items:center;gap:12px;padding:10px 14px;background:${COLORS.charcoal};color:#fff}
+          .s3d-admin-aside{position:fixed !important;left:0;top:0;bottom:0;z-index:60;height:100vh !important;width:260px !important;transform:translateX(-102%);transition:transform .22s ease;box-shadow:0 0 40px rgba(0,0,0,.35)}
+          .s3d-admin.nav-open .s3d-admin-aside{transform:none}
+          .s3d-admin-main{padding:16px 14px 40px !important;width:100%}
+        }
+        @media (prefers-reduced-motion: reduce){.s3d-admin-aside{transition:none}}
+        .s3d-mobile-only{display:none}
+        @media (max-width: 860px){
+          .s3d-mobile-only{display:inline-block}
+          /* Wide tables scroll sideways inside their card instead of being cut off */
+          .s3d-admin-main table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap;max-width:100%}
+          .s3d-admin-main table td,.s3d-admin-main table th{white-space:nowrap}
+          /* Fixed-width side columns stack */
+          .s3d-admin-main [style*="grid-template-columns: 1fr 320px"],
+          .s3d-admin-main [style*="grid-template-columns: 2fr 1fr"],
+          .s3d-admin-main [style*="grid-template-columns: 1fr 1fr 1fr 1fr"]{grid-template-columns:1fr 1fr !important}
+          .s3d-admin-main [style*="grid-template-columns: 1fr 320px"]{grid-template-columns:1fr !important}
+          .s3d-admin-main [style*="padding: 32px 40px"]{padding:0 !important}
+          /* Custom orders: filters as a scrolling chip row, then list, then detail */
+          .s3d-co{display:block !important;height:auto !important;margin:-16px -14px 0 !important}
+          .s3d-co-rail{width:auto !important;display:flex;flex-wrap:nowrap;overflow-x:auto;gap:4px;padding:10px 12px !important;border-right:none !important;border-bottom:0.5px solid ${COLORS.wheat}}
+          .s3d-co-rail > div{flex-shrink:0;white-space:nowrap;margin:0 !important}
+          .s3d-co-list{width:auto !important;border-right:none !important}
+          .s3d-co-detail{padding:16px 14px !important}
+          .s3d-co.has-sel .s3d-co-list,.s3d-co.has-sel .s3d-co-rail{display:none !important}
+          .s3d-co:not(.has-sel) .s3d-co-detail{display:none}
+          /* Buttons and inputs large enough for thumbs */
+          .s3d-admin-main button,.s3d-admin-main input,.s3d-admin-main select{min-height:36px}
+          .s3d-admin-main input,.s3d-admin-main select,.s3d-admin-main textarea{font-size:16px !important}
+        }
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Amiri:wght@400;700&display=swap');
         *, *::before, *::after { box-sizing: border-box; }
         body { margin: 0; }
@@ -3063,14 +3100,20 @@ export default function AdminApp() {
         ::-webkit-scrollbar-thumb { background: #E8D5A8; border-radius: 2px; }
       `}</style>
 
-      <aside style={{ width: 224, background: COLORS.charcoal, display: "flex", flexDirection: "column", position: "sticky", top: 0, height: "100vh", flexShrink: 0 }}>
+      <header className="s3d-admin-top">
+        <button data-s3d-menu onClick={() => setNavOpen(true)} aria-label="Open menu" aria-expanded={navOpen} style={{ background: "none", border: "1px solid rgba(255,255,255,.25)", color: "#fff", borderRadius: 8, width: 40, height: 38, fontSize: 18, cursor: "pointer" }}>☰</button>
+        <div style={{ fontFamily: FONTS.display, fontSize: 20, fontWeight: 700, color: COLORS.saffron }}>Souk3D</div>
+        <div style={{ fontFamily: FONTS.body, fontSize: 13, color: "rgba(255,255,255,.7)", marginLeft: "auto" }}>{(ADMIN_PAGES.concat([{ id: "users", label: "Users & Roles" }]).find((n) => n.id === page) || {}).label || ""}</div>
+      </header>
+      {navOpen && <div onClick={() => setNavOpen(false)} aria-hidden="true" style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.45)", zIndex: 55 }} />}
+      <aside className="s3d-admin-aside" style={{ width: 224, background: COLORS.charcoal, display: "flex", flexDirection: "column", position: "sticky", top: 0, height: "100vh", flexShrink: 0 }}>
         <div style={{ padding: "22px 20px 18px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
           <div style={{ fontFamily: FONTS.display, fontSize: 21, fontWeight: 700, color: COLORS.saffron }}>Souk3D</div>
           <div style={{ fontFamily: FONTS.body, fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 2, letterSpacing: "0.05em" }}>ADMIN PANEL</div>
         </div>
         <nav style={{ flex: 1, padding: "14px 10px", overflowY: "auto" }}>
           {ADMIN_PAGES.concat(role === "super_admin" ? [{ id: "users", label: "Users & Roles", icon: "👥" }] : []).filter(n => (role === "super_admin" ? true : role === "admin" ? n.id !== "users" : role === "lister" ? n.id === "products" : false)).map(n => (
-            <button key={n.id} onClick={() => setPage(n.id)}
+            <button key={n.id} onClick={() => go(n.id)}
               style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 12px", borderRadius: 8, border: "none", cursor: "pointer", marginBottom: 2, textAlign: "left", transition: "all 0.15s", background: page === n.id ? "rgba(212,165,69,0.15)" : "transparent", color: page === n.id ? COLORS.saffron : "rgba(255,255,255,0.55)", fontFamily: FONTS.body, fontSize: 13, fontWeight: page === n.id ? 600 : 400 }}>
               {n.label}
             </button>
@@ -3082,8 +3125,8 @@ export default function AdminApp() {
       <button onClick={() => supabase.auth.signOut()} style={{ margin: "0 10px 14px", padding: "10px 0", background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.7)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, cursor: "pointer", fontFamily: FONTS.body, fontSize: 13 }}>↩ Log out</button>
         </aside>
 
-      <main style={{ flex: 1, padding: "24px 32px", overflowY: "auto" }}>
-        {PAGE_MAP[page] ?? <Dashboard onNavigate={setPage} />}
+      <main className="s3d-admin-main" style={{ flex: 1, padding: "24px 32px", overflowY: "auto" }}>
+        {PAGE_MAP[page] ?? <Dashboard onNavigate={go} />}
       </main>
     </div>
   );
