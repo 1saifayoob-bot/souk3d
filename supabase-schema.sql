@@ -127,3 +127,6 @@ where not exists (select 1 from discounts where code ilike 'WELCOME10');
 -- "delta" is a dollar amount added to the base price; validated server-side in
 -- api/create-checkout-session.js so the browser can never influence pricing.
 alter table products add column if not exists variations jsonb not null default '[]'::jsonb;
+
+-- Product details list (short scannable facts shown in the Details tab), added 2026-09-17.
+alter table products add column if not exists details jsonb not null default '[]'::jsonb;
