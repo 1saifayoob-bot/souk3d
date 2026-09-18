@@ -300,8 +300,8 @@ function ProductDetail({product, onBack, onAddToCart, onBuyNow, user }) {
             <span style={{ fontFamily: F.body, fontSize: 28, fontWeight: 700, color: C.charcoal }}>${unitPrice.toFixed(2)}</span>
             {product.compareAt && <span style={{ fontSize: 16, color: C.textMuted, textDecoration: "line-through" }}>${product.compareAt}</span>}
           </div>
-          <p style={{ fontSize: 14, color: C.textMuted, fontFamily: F.body, lineHeight: 1.7, marginBottom: 20 }}>{product.desc}</p>
-          {product.desc_ar && <p dir="rtl" style={{ fontSize: 14, color: C.textMuted, fontFamily: F.arabic, lineHeight: 1.9, marginBottom: 20, textAlign: "right" }}>{product.desc_ar}</p>}
+          <p style={{ fontSize: 14, color: C.textMuted, fontFamily: F.body, lineHeight: 1.7, marginBottom: 20, whiteSpace: "pre-line" }}>{product.desc}</p>
+          {product.desc_ar && <p dir="rtl" style={{ fontSize: 14, color: C.textMuted, fontFamily: F.arabic, lineHeight: 1.9, marginBottom: 20, textAlign: "right", whiteSpace: "pre-line" }}>{product.desc_ar}</p>}
 
           {/* Customization card */}
           {product.customizable && (
@@ -358,13 +358,17 @@ function ProductDetail({product, onBack, onAddToCart, onBuyNow, user }) {
 
       {/* Tabs */}
       <div style={{ borderBottom: `0.5px solid ${C.wheat}`, marginBottom: 24, display: "flex", gap: 0 }}>
-        {["description", "specifications", "shipping", "faq"].map(t => (
+        {["description"].concat(product.details && product.details.length ? ["details"] : [], ["shipping", "faq"]).map(t => (
           <button key={t} onClick={() => setTab(t)} style={{ padding: "12px 20px", background: "none", border: "none", borderBottom: `2px solid ${tab === t ? C.saffron : "transparent"}`, fontSize: 13, fontWeight: tab === t ? 600 : 400, color: tab === t ? C.charcoal : C.textMuted, cursor: "pointer", fontFamily: F.body, textTransform: "capitalize" }}>{t}</button>
         ))}
       </div>
-      <div style={{ fontSize: 14, color: C.textMuted, fontFamily: F.body, lineHeight: 1.8, marginBottom: 40, maxWidth: 700 }}>
+      <div style={{ fontSize: 14, color: C.textMuted, fontFamily: F.body, lineHeight: 1.8, marginBottom: 40, maxWidth: 700, whiteSpace: "pre-line" }}>
         {tab === "description" && product.desc}
-        {tab === "specifications" && "Material: PLA+ filament · Dimensions: approx. 8\" × 6\" · Weight: 180g · Finish: Matte white (custom colors available) · Mounting: Keyhole slots on back (hardware included)"}
+        {tab === "details" && (
+          <ul style={{ margin: 0, paddingLeft: 18, whiteSpace: "normal" }}>
+            {(product.details || []).map((d, i) => <li key={i}>{d}</li>)}
+          </ul>
+        )}
         {tab === "shipping" && "Processing time: 3–5 business days · USA: Standard $5.99 (5–8 days), Express $12.99 (2–3 days) · Canada: $9.99 standard · International: From $14.99 · Free shipping on orders $75+"}
         {tab === "faq" && "Q: Can I request any Arabic text? A: Yes! Any name, verse, or phrase in any Arabic calligraphy style. Q: Do you ship internationally? A: Yes, we ship worldwide. Q: How long does a custom order take? A: 5–7 business days plus shipping."}
       </div>
