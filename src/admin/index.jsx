@@ -354,6 +354,7 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
     hint: "", buyUrl: "", membersOnly: false, publicAt: "",
     variations: [],
     keywords: [],
+    details: [],
   };
   const [form, setForm] = useState(product ? {
     ...product,
@@ -504,7 +505,9 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
           ...f,
           name: data.title_en || f.name,
           name_ar: data.title_ar || f.name_ar,
-          desc: data.desc_en || f.desc,
+          // Souk3D structure: one-line hook, blank line, 2-4 short sentences.
+          desc: data.desc_en ? (data.hook ? data.hook + "\n\n" + data.desc_en : data.desc_en) : f.desc,
+          details: data.details && data.details.length ? data.details : (f.details || []),
           desc_ar: data.desc_ar || f.desc_ar,
           category: data.category || f.category,
           // Never overwrite a heritage the seller already chose.
@@ -618,6 +621,7 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
       reviews: product?.reviews || 0,
       images: form.images || [],
       keywords: (form.keywords || []).map(function (k) { return String(k || "").trim(); }).filter(Boolean),
+      details: (form.details || []).map(function (d) { return String(d || "").trim(); }).filter(Boolean),
       variations: (form.variations || []).map(function (g) { return { name: String(g.name || "").trim(), options: (g.options || []).map(function (o) { return { label: String(o.label || "").trim(), delta: parseFloat(o.delta) || 0 }; }).filter(function (o) { return o.label; }) }; }).filter(function (g) { return g.name && g.options.length > 0; }),
     };
     try {
@@ -725,7 +729,7 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
                 <input type="text" value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="e.g. Damascus Name Plaque" style={{ ...inputStyle(false), flex: 1 }} />
                 <button onClick={handleGenerate} disabled={generating} style={{ background: generating ? COLORS.textMuted : COLORS.saffron, color: "#fff", border: "none", borderRadius: 8, padding: "0 14px", fontWeight: 600, fontSize: 12.5, fontFamily: FONTS.body, cursor: generating ? "not-allowed" : "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>{generating ? "⏳…" : "✨ Generate"}</button>
               </div>
-              <input type="text" value={form.hint} onChange={(e) => set("hint", e.target.value)} placeholder="Add hints for better SEO — e.g. 3D printed, Eid gift, metallic" style={{ ...inputStyle(false), fontSize: 11.5, marginBottom: 10 }} />
+              <input type="text" value={form.hint} onChange={(e) => set("hint", e.target.value)} placeholder="Facts for the AI — e.g. set of 2, approx 3 in each, magnetic back, 3D printed PLA" style={{ ...inputStyle(false), fontSize: 11.5, marginBottom: 10 }} />
               <label style={{ ...labelStyle, textAlign: "right" }}>اسم المنتج (Arabic)</label>
               <input type="text" dir="rtl" value={form.name_ar} onChange={(e) => set("name_ar", e.target.value)} placeholder="مثال: لوحة الاسم" style={inputStyle(true)} />
             </div>
@@ -765,7 +769,9 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
               <label style={labelStyle}>ENGLISH</label>
               <textarea value={form.desc} onChange={(e) => set("desc", e.target.value)} placeholder="Product description shown on the storefront…" rows={3} style={{ ...inputStyle(false), resize: "vertical", marginBottom: 10 }} />
               <label style={{ ...labelStyle, textAlign: "right" }}>العربية</label>
-              <textarea dir="rtl" value={form.desc_ar} onChange={(e) => set("desc_ar", e.target.value)} placeholder="وصف المنتج" rows={3} style={{ ...inputStyle(true), resize: "vertical" }} />
+              <textarea dir="rtl" value={form.desc_ar} onChange={(e) => set("desc_ar", e.target.value)} placeholder="وصف المنتج" rows={3} style={{ ...inputStyle(true), resize: "vertical", marginBottom: 10 }} />
+              <label style={labelStyle}>DETAILS <span style={{ fontWeight: 400 }}>(one per line — size, set of, material, how it's made)</span></label>
+              <textarea value={(form.details || []).join("\n")} onChange={(e) => set("details", e.target.value.split("\n"))} placeholder={"Set of 2\n3D printed\nApprox. 3 in each\nMagnetic backing\nColors may vary slightly between pieces"} rows={4} style={{ ...inputStyle(false), resize: "vertical", fontSize: 12 }} />
             </div>
           </div>
           <div>
