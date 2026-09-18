@@ -281,6 +281,7 @@ function Dashboard({ onNavigate }) {
 }
 
 // ─── COUNTRY → FLAG MAP ────────────────────────────────────────────────────────
+const PRODUCT_CATEGORIES = ["Home Decor", "Art", "Seasonal", "Kitchen", "Accessories", "Other"];
 const COUNTRY_FLAGS = {
   Syria: "🇸🇾", Lebanon: "🇱🇧", Palestine: "🇵🇸",
   "Pan-Arab": "🌍", Egypt: "🇪🇬", Iraq: "🇮🇶",
@@ -352,6 +353,7 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
     desc_ar: "",
     hint: "", buyUrl: "", membersOnly: false, publicAt: "",
     variations: [],
+    keywords: [],
   };
   const [form, setForm] = useState(product ? {
     ...product,
@@ -388,10 +390,24 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
     const remaining = 5 - form.images.length;
     const picked = Array.from(files).slice(0, remaining);
     if (picked.length === 0) return;
+    const added = [];
     for (const file of picked) {
       const url = await compressImg(file);
+      added.push({ url, original: url, bg: "cream", bgRemoved: false });
       setForm((f) => ({ ...f, images: [...f.images, { url, original: url, bg: "cream", bgRemoved: false }] }));
     }
+    // Photo-first: a brand-new product with no photos and no name yet gets
+    // its whole listing written as soon as the photos land.
+    if (!product && form.images.length === 0 && !String(form.name || "").trim() && added.length) {
+      handleGenerate(added);
+    }
+  };
+  const [dragOver, setDragOver] = useState(false);
+  const onDropFiles = (e) => {
+    e.preventDefault();
+    setDragOver(false);
+    const files = Array.from((e.dataTransfer && e.dataTransfer.files) || []).filter((f) => f.type && f.type.startsWith("image/"));
+    if (files.length) handleImageUpload(files);
   };
 
   const toggleRemoveBg = async (idx) => {
@@ -422,9 +438,32 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
   const [generating, setGenerating] = useState(false);
   const [imgBusy, setImgBusy] = useState(false);
   const [bgBusy, setBgBusy] = useState(null);
-  const handleGenerate = async () => {
-    if (!form.name.trim() && !(form.images && form.images[0] && form.images[0].url)) {
-      alert("Add a product name or image first.");
+  // Photos sent to the AI are shrunk to small JPEGs so five of them stay well
+  // under the serverless request size limit. Stored http(s) photos are passed
+  // by URL and fetched by the API directly.
+  const toAiImage = (url) =>
+    new Promise((resolve) => {
+      if (!url || !String(url).startsWith("data:")) { resolve(url || ""); return; }
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 768;
+        const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+        const c = document.createElement("canvas");
+        c.width = Math.round(img.width * scale);
+        c.height = Math.round(img.height * scale);
+        const ctx = c.getContext("2d");
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, c.width, c.height);
+        ctx.drawImage(img, 0, 0, c.width, c.height);
+        resolve(c.toDataURL("image/jpeg", 0.82));
+      };
+      img.onerror = () => resolve("");
+      img.src = url;
+    });
+  const handleGenerate = async (imagesOverride) => {
+    const imgs = Array.isArray(imagesOverride) ? imagesOverride : (form.images || []);
+    if (!String(form.name || "").trim() && !(imgs[0] && imgs[0].url)) {
+      alert("Add a product photo or name first.");
       return;
     }
     setGenerating(true);
@@ -437,22 +476,49 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
       const refineHints = draftBits.length
         ? ((form.hint || "") + " || Improve and refine this existing draft, keeping my wording and intent where I set it, fixing grammar and polishing, and return all fields consistent. " + draftBits.join(" | "))
         : (form.hint || "");
+      const aiImages = (await Promise.all(imgs.slice(0, 5).map((im) => toAiImage(im && (im.original || im.url))))).filter(Boolean);
+      const examples = (existingProducts || [])
+        .filter((p) => p && p.status === "active" && p.desc && p.sku !== sessionSku)
+        .slice(0, 3)
+        .map((p) => ({ name: p.name, desc: String(p.desc).slice(0, 300) }));
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess && sess.session ? sess.session.access_token : "";
       const res = await fetch("/api/generate-listing", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: form.name, category: form.category, country: form.country, hints: refineHints, image: (form.images && form.images[0] && form.images[0].url) || "" }),
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+        body: JSON.stringify({
+          name: form.name, category: form.category, country: form.country, hints: refineHints,
+          cost: form.cost, images: aiImages, categories: PRODUCT_CATEGORIES,
+          countries: Object.keys(COUNTRY_FLAGS), examples,
+        }),
       });
-      if (!res.ok) throw new Error("API error " + res.status);
+      if (!res.ok) {
+        let msg = "API error " + res.status;
+        try { const j = await res.json(); if (j && j.error) msg = j.error + (j.details ? " (" + j.details + ")" : ""); } catch (_) {}
+        throw new Error(msg);
+      }
       const data = await res.json();
-      setForm((f) => ({
-        ...f,
-        name: data.title_en || f.name,
-        name_ar: data.title_ar || f.name_ar,
-        desc: data.desc_en || f.desc,
-        desc_ar: data.desc_ar || f.desc_ar,
-        price: f.price || String(data.price_suggestion || ""),
-        badge: f.badge || data.badge || "",
-      }));
+      setForm((f) => {
+        const alts = Array.isArray(data.alt_texts) ? data.alt_texts : [];
+        return {
+          ...f,
+          name: data.title_en || f.name,
+          name_ar: data.title_ar || f.name_ar,
+          desc: data.desc_en || f.desc,
+          desc_ar: data.desc_ar || f.desc_ar,
+          category: data.category || f.category,
+          // Never overwrite a heritage the seller already chose.
+          country: f.country || data.country || "",
+          keywords: data.keywords && data.keywords.length ? data.keywords : (f.keywords || []),
+          customizable: f.customizable || !!data.customizable,
+          emoji: (!f.emoji || f.emoji === "🏺") && data.emoji ? data.emoji : f.emoji,
+          price: f.price || (data.price_suggestion ? String(data.price_suggestion) : ""),
+          badge: f.badge || data.badge || "",
+          // Suggested options only fill an empty variations editor.
+          variations: (f.variations || []).length ? f.variations : (data.variations || []),
+          images: (f.images || []).map((im, i) => (alts[i] && !im.alt ? { ...im, alt: alts[i] } : im)),
+        };
+      });
     } catch (e) {
       alert("Generation failed: " + e.message);
     }
@@ -551,6 +617,7 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
       stars: product?.stars || 0,
       reviews: product?.reviews || 0,
       images: form.images || [],
+      keywords: (form.keywords || []).map(function (k) { return String(k || "").trim(); }).filter(Boolean),
       variations: (form.variations || []).map(function (g) { return { name: String(g.name || "").trim(), options: (g.options || []).map(function (o) { return { label: String(o.label || "").trim(), delta: parseFloat(o.delta) || 0 }; }).filter(function (o) { return o.label; }) }; }).filter(function (g) { return g.name && g.options.length > 0; }),
     };
     try {
@@ -606,6 +673,27 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
           </div>
           <input value={form.buyUrl || ""} onChange={(e) => setForm((f) => ({ ...f, buyUrl: e.target.value }))} placeholder="Optional: external buy link (adds a Buy on... button on the product page)" style={{ width: "100%", padding: "9px 12px", border: "0.5px solid " + COLORS.wheat, borderRadius: 8, fontSize: 13, fontFamily: FONTS.body, boxSizing: "border-box" }} />
         </div>
+        {!product && form.images.length === 0 && !String(form.name || "").trim() && (
+          <div style={{ padding: "12px 16px 0" }}>
+            <div
+              onClick={() => fileRef.current && fileRef.current.click()}
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={onDropFiles}
+              style={{ border: "2px dashed " + (dragOver ? COLORS.saffron : "#E6C886"), background: dragOver ? "#FBEFD8" : "#fff", borderRadius: 14, padding: "30px 16px", textAlign: "center", cursor: "pointer", transition: "background 0.15s" }}
+            >
+              <div style={{ fontSize: 30, lineHeight: 1 }}>📸</div>
+              <div style={{ fontFamily: FONTS.display, fontSize: 20, fontWeight: 600, marginTop: 8 }}>Drop product photos here</div>
+              <div style={{ fontSize: 12.5, color: COLORS.textMuted, marginTop: 5, lineHeight: 1.5 }}>Up to 5 photos. The AI writes the English and Arabic listing, category, keywords, price and options. You just review and publish.</div>
+              <div style={{ display: "inline-block", marginTop: 12, background: COLORS.saffron, color: "#fff", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 600 }}>Choose photos</div>
+            </div>
+          </div>
+        )}
+        {generating && (
+          <div style={{ margin: "12px 16px 0", background: "#FBEFD8", border: "1px solid #E6C886", borderRadius: 10, padding: "10px 14px", fontSize: 12.5, color: COLORS.saffronDark, fontWeight: 600 }}>
+            ✨ Reading your photos and writing the listing…
+          </div>
+        )}
         <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: 14, padding: 16 }}>
           <div>
             {genPreview && (
@@ -662,7 +750,7 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
                   </div>
                 ))}
                 {form.images.length < 5 && (
-                  <div onClick={() => fileRef.current && fileRef.current.click()} style={{ width: 92, height: 92, borderRadius: 9, border: "1.5px dashed " + COLORS.wheat, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: COLORS.saffronDark, cursor: "pointer" }}>
+                  <div onClick={() => fileRef.current && fileRef.current.click()} onDragOver={(e) => e.preventDefault()} onDrop={onDropFiles} style={{ width: 92, height: 92, borderRadius: 9, border: "1.5px dashed " + COLORS.wheat, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: COLORS.saffronDark, cursor: "pointer" }}>
                     <span style={{ fontSize: 20 }}>+</span>
                     <span style={{ fontSize: 10.5, marginTop: 3 }}>Add photo</span>
                   </div>
@@ -754,13 +842,15 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
               <div style={{ fontSize: 11, letterSpacing: 0.5, textTransform: "uppercase", color: COLORS.saffronDark, fontWeight: 600, marginBottom: 11 }}>Organization</div>
               <label style={labelStyle}>CATEGORY</label>
               <select value={form.category} onChange={(e) => set("category", e.target.value)} style={{ ...inputStyle(false), cursor: "pointer", marginBottom: 10 }}>
-                {["Home Decor", "Art", "Seasonal", "Kitchen", "Accessories", "Other"].map((c) => <option key={c} value={c}>{c}</option>)}
+                {PRODUCT_CATEGORIES.concat(form.category && PRODUCT_CATEGORIES.indexOf(form.category) === -1 ? [form.category] : []).map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
               <label style={labelStyle}>COUNTRY / HERITAGE</label>
               <select value={form.country} onChange={(e) => set("country", e.target.value)} style={{ ...inputStyle(false), cursor: "pointer", marginBottom: 10 }}>
                 <option value="">None</option>
                 {Object.keys(COUNTRY_FLAGS).map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
+              <label style={labelStyle}>SEARCH KEYWORDS <span style={{ fontWeight: 400 }}>(comma separated)</span></label>
+              <textarea value={(form.keywords || []).join(", ")} onChange={(e) => set("keywords", e.target.value.split(",").map((k) => k.replace(/^\s+/, "")))} rows={2} placeholder="e.g. arabic name sign, eid gift, 3d printed decor" style={{ ...inputStyle(false), resize: "vertical", marginBottom: 10, fontSize: 12 }} />
               <div style={{ display: "flex", gap: 8 }}>
                 <div style={{ flex: 1 }}><label style={labelStyle}>BADGE</label><select value={form.badge} onChange={(e) => set("badge", e.target.value)} style={{ ...inputStyle(false), cursor: "pointer" }}><option value="">None</option><option>Best Seller</option><option>New</option><option>Sale</option><option>Limited</option></select></div>
                 <div style={{ width: 64 }}><label style={labelStyle}>ICON</label><input type="text" value={form.emoji} onChange={(e) => set("emoji", e.target.value)} style={{ ...inputStyle(false), textAlign: "center", fontSize: 16, padding: "6px 4px" }} /></div>
