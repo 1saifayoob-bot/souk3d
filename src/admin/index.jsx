@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { supabase, fetchProducts, saveProduct, deleteProductById, migrateLocalProducts, fetchOrders, setProductStatus, reoptimizeProductImages, fetchProductIds, fetchProductById, productNeedsOptimizing, fetchCustomOrders, setCustomOrderStage, fetchCustomers, fetchDiscounts, saveDiscount, setDiscountStatus, deleteDiscountById } from "../lib/supabase";
+import { supabase, optimizeAndUpload, fetchProducts, saveProduct, deleteProductById, migrateLocalProducts, fetchOrders, setProductStatus, reoptimizeProductImages, fetchProductIds, fetchProductById, productNeedsOptimizing, fetchCustomOrders, setCustomOrderStage, fetchCustomers, fetchDiscounts, saveDiscount, setDiscountStatus, deleteDiscountById } from "../lib/supabase";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart, PieChart, Pie, Cell, BarChart, Bar } from "recharts";
 
 // ─── BRAND CONSTANTS ───────────────────────────────────────────────────────────
@@ -337,6 +337,272 @@ const BG_STYLES = [
   { id: "white", label: "White", solid: "#F8F8F8", colors: ["#FFFFFF","#F0F0F0"] },
 ];
 
+// ─── AI STUDIO (inside the product form) ─────────────────────────────────────
+// Scene photos and short videos from the product's real photos, via
+// /api/generate-listing (studio-* actions, Higgsfield). Results are copied to
+// our storage by the API, then added to the product with one click.
+const STUDIO_SCENES = [
+  { id: "studio", label: "Clean studio", text: "on a seamless warm-white studio backdrop with a soft natural shadow and even diffused light, a minimal premium catalog look" },
+  { id: "coffee", label: "Arabic coffee corner", text: "in a cozy Arab coffee corner: a brass dallah, small finjan cups, a few cardamom pods and coffee beans on a rustic wooden shelf, warm afternoon light with a soft mashrabiya shadow pattern" },
+  { id: "shelf", label: "Home shelf", text: "styled on a warm wooden home shelf with a small plant and a couple of books, soft window light, lived-in and cozy" },
+  { id: "majlis", label: "Majlis", text: "in a welcoming Arab majlis with low floor cushions, a patterned rug, a brass tray and warm lantern light in the background" },
+  { id: "gift", label: "Gift moment", text: "on a table beside an open kraft gift box with tissue paper and a satin ribbon, soft daylight, ready to be given" },
+  { id: "ramadan", label: "Ramadan & Eid", text: "in a festive Ramadan evening setting with glowing brass lanterns, a small bowl of dates and soft warm lights in the background" },
+  { id: "fridge", label: "On the fridge", text: "stuck on a cream-colored refrigerator door in a sunlit home kitchen" },
+];
+const STUDIO_MOTIONS = [
+  { id: "pushin", label: "Slow push-in", text: "Slow, gentle camera push-in toward the product. Soft light drifts slightly across the scene." },
+  { id: "light", label: "Light and shadow", text: "The camera stays still. Warm sunlight and shadows move slowly across the scene and tiny dust particles float in the light." },
+  { id: "parallax", label: "Gentle parallax", text: "A slow, subtle sideways camera slide that gives a gentle sense of depth." },
+];
+const STUDIO_RATIOS = [
+  { id: "1:1", label: "Square", hint: "Product page" },
+  { id: "3:4", label: "Portrait", hint: "Instagram post" },
+  { id: "9:16", label: "Vertical", hint: "Reels and TikTok" },
+];
+
+function studioScenePrompt(form, sceneText, note) {
+  const details = (form.details || []).map(function (d) { return String(d || "").trim(); }).filter(Boolean);
+  return [
+    form.name ? "Product: " + form.name + "." : "",
+    details.length ? "Facts: " + details.join("; ") + "." : "",
+    "Place this exact product naturally " + sceneText + ".",
+    note ? note.trim().replace(/\.?$/, ".") : "",
+    "The product must stay exactly as in the reference photo: same shape, proportions, colors, pattern, lettering (including any Arabic text) and finish. Do not redraw, restyle or add details to it. Show it at its real size relative to the objects around it.",
+    "Realistic lifestyle product photography, natural light, shallow depth of field.",
+  ].filter(Boolean).join(" ");
+}
+function studioVideoPrompt(motionText, note) {
+  return [
+    motionText,
+    note ? note.trim().replace(/\.?$/, ".") : "",
+    "The product does not move, bend, morph or change: its shape, colors, pattern and any text stay exactly the same. Everything else stays calm. Realistic and cinematic.",
+  ].filter(Boolean).join(" ");
+}
+
+async function studioCall(payload) {
+  const { data: sess } = await supabase.auth.getSession();
+  const token = sess && sess.session ? sess.session.access_token : "";
+  const res = await fetch("/api/generate-listing", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+    body: JSON.stringify(payload),
+  });
+  let data = {};
+  try { data = await res.json(); } catch (_) {}
+  if (!res.ok) throw new Error((data && data.error) || "Request failed (" + res.status + ")");
+  return data;
+}
+
+function ProductStudio({ form, setForm }) {
+  const [mode, setMode] = useState("photos");
+  const [scene, setScene] = useState("coffee");
+  const [motion, setMotion] = useState("pushin");
+  const [ratio, setRatio] = useState("1:1");
+  const [note, setNote] = useState("");
+  const [custom, setCustom] = useState(null); // user-edited prompt, or null to use the built one
+  const [source, setSource] = useState(0);
+  const [duration, setDuration] = useState(5);
+  const [sound, setSound] = useState(false);
+  const [jobs, setJobs] = useState([]);
+  const [starting, setStarting] = useState(false);
+  const [err, setErr] = useState("");
+  const alive = useRef(true);
+  useEffect(function () { return function () { alive.current = false; }; }, []);
+
+  const images = form.images || [];
+  const src = images[Math.min(source, Math.max(0, images.length - 1))];
+  const sceneObj = STUDIO_SCENES.find(function (s) { return s.id === scene; }) || STUDIO_SCENES[0];
+  const motionObj = STUDIO_MOTIONS.find(function (m) { return m.id === motion; }) || STUDIO_MOTIONS[0];
+  const builtPrompt = mode === "photos" ? studioScenePrompt(form, sceneObj.text, note) : studioVideoPrompt(motionObj.text, note);
+  const prompt = custom !== null ? custom : builtPrompt;
+  const pending = jobs.filter(function (j) { return j.status === "queued" || j.status === "in_progress"; }).length;
+
+  // Inputs must be public links. Photos added in this session are still in
+  // the browser, so upload that one photo first and keep the link on it.
+  const ensureLink = async function (img) {
+    const u = img && img.url;
+    if (u && u.indexOf("/storage/v1/object/public/") !== -1) return u;
+    const r = await optimizeAndUpload(u, !(u || "").startsWith("data:"));
+    setForm(function (f) { return { ...f, images: (f.images || []).map(function (im) { return im === img ? { ...im, url: r.url, thumbUrl: r.thumbUrl } : im; }) }; });
+    return r.url;
+  };
+
+  const poll = async function (jobId, requestId, kind) {
+    const started = Date.now();
+    const limit = kind === "video" ? 8 * 60 * 1000 : 4 * 60 * 1000;
+    while (alive.current && Date.now() - started < limit) {
+      await new Promise(function (r) { setTimeout(r, kind === "video" ? 6000 : 4000); });
+      try {
+        const s = await studioCall({ action: "studio-status", request_id: requestId });
+        if (!alive.current) return;
+        if (s.status === "completed") {
+          setJobs(function (js) { return js.map(function (j) { return j.id === jobId ? { ...j, status: "completed", images: s.images || [], video: s.video || "" } : j; }); });
+          return;
+        }
+        if (s.status === "failed" || s.status === "nsfw" || s.status === "canceled") {
+          const why = s.status === "nsfw" ? "The content filter rejected this one. Try a different scene or photo." : (s.error ? String(s.error) : "Generation failed. Try again.");
+          setJobs(function (js) { return js.map(function (j) { return j.id === jobId ? { ...j, status: "failed", error: why } : j; }); });
+          return;
+        }
+        setJobs(function (js) { return js.map(function (j) { return j.id === jobId ? { ...j, status: s.status || j.status } : j; }); });
+      } catch (e) {
+        setJobs(function (js) { return js.map(function (j) { return j.id === jobId ? { ...j, status: "failed", error: e.message } : j; }); });
+        return;
+      }
+    }
+    if (alive.current) setJobs(function (js) { return js.map(function (j) { return j.id === jobId && j.status !== "completed" ? { ...j, status: "failed", error: "Still not finished after several minutes. Check Requests in the Higgsfield console." } : j; }); });
+  };
+
+  const start = async function () {
+    setErr("");
+    if (!src) { setErr("Add a product photo first."); return; }
+    setStarting(true);
+    try {
+      const link = await ensureLink(src);
+      const payload = mode === "photos"
+        ? { action: "studio-image", image_urls: [link], prompt: prompt, aspect_ratio: ratio, quality: "medium" }
+        : { action: "studio-video", image_url: link, prompt: prompt, duration: duration, sound: sound ? "on" : "off" };
+      const r = await studioCall(payload);
+      const job = { id: Date.now() + "-" + Math.random().toString(36).slice(2, 6), kind: mode === "photos" ? "image" : "video", status: r.status || "queued", label: mode === "photos" ? sceneObj.label : motionObj.label, images: [], video: "" };
+      setJobs(function (js) { return [job].concat(js); });
+      poll(job.id, r.request_id, job.kind);
+    } catch (e) {
+      setErr(e.message);
+    }
+    setStarting(false);
+  };
+
+  const addPhoto = function (url, asCover) {
+    setForm(function (f) {
+      const list = (f.images || []).filter(function (im) { return im.url !== url; });
+      if (list.length >= 5 && !asCover) return f;
+      const entry = { url: url, bg: "white", bgRemoved: false, ai: true };
+      const next = asCover ? [entry].concat(list).slice(0, 5) : list.concat([entry]);
+      return { ...f, images: next };
+    });
+  };
+  const addVideo = function (url) {
+    setForm(function (f) { return (f.videos || []).some(function (v) { return v.url === url; }) ? f : { ...f, videos: (f.videos || []).concat([{ url: url }]) }; });
+  };
+  const inPhotos = function (url) { return images.some(function (im) { return im.url === url; }); };
+  const inVideos = function (url) { return (form.videos || []).some(function (v) { return v.url === url; }); };
+
+  const chip = function (active) {
+    return { padding: "7px 12px", borderRadius: 999, fontSize: 12.5, fontFamily: FONTS.body, cursor: "pointer", border: "1px solid " + (active ? COLORS.charcoal : COLORS.wheat), background: active ? COLORS.charcoal : "#fff", color: active ? "#fff" : COLORS.charcoal };
+  };
+  const small = { fontSize: 12, color: COLORS.textMuted, lineHeight: 1.5 };
+
+  return (
+    <div className="s3d-studio">
+      <div style={{ display: "flex", gap: 6, marginBottom: 14 }} role="tablist">
+        {[["photos", "Scene photos"], ["video", "Video"]].map(function (m) { return (
+          <button key={m[0]} role="tab" aria-selected={mode === m[0]} onClick={function () { setMode(m[0]); setCustom(null); setNote(""); }} style={{ ...chip(mode === m[0]), padding: "8px 16px", fontWeight: 600 }}>{m[1]}</button>
+        ); })}
+      </div>
+
+      {!images.length ? (
+        <div style={{ ...small, padding: "14px 0" }}>Add a product photo above. The studio uses your real photo, so the product stays accurate.</div>
+      ) : (
+        <div className="s3d-studio-grid">
+          <div>
+            <div className="s3d-label">{mode === "photos" ? "Photo to use" : "Photo to animate"}</div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+              {images.map(function (im, i) { return (
+                <button key={i} onClick={function () { setSource(i); }} aria-label={"Use photo " + (i + 1)} style={{ width: 56, height: 56, padding: 0, borderRadius: 8, overflow: "hidden", cursor: "pointer", border: i === source ? "2px solid " + COLORS.saffron : "1px solid " + COLORS.wheat, background: COLORS.cream2 }}>
+                  <img src={im.thumbUrl || im.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                </button>
+              ); })}
+            </div>
+
+            {mode === "photos" ? (
+              <>
+                <div className="s3d-label">Scene</div>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
+                  {STUDIO_SCENES.map(function (s) { return <button key={s.id} onClick={function () { setScene(s.id); setCustom(null); }} style={chip(scene === s.id)}>{s.label}</button>; })}
+                </div>
+                <div className="s3d-label">Shape</div>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
+                  {STUDIO_RATIOS.map(function (r) { return <button key={r.id} onClick={function () { setRatio(r.id); }} style={chip(ratio === r.id)} title={r.hint}>{r.label} <span style={{ opacity: 0.65 }}>{r.hint}</span></button>; })}
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="s3d-label">Camera</div>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
+                  {STUDIO_MOTIONS.map(function (m) { return <button key={m.id} onClick={function () { setMotion(m.id); setCustom(null); }} style={chip(motion === m.id)}>{m.label}</button>; })}
+                </div>
+                <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap", marginBottom: 16 }}>
+                  <div>
+                    <div className="s3d-label">Length</div>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      {[5, 10].map(function (d) { return <button key={d} onClick={function () { setDuration(d); }} style={chip(duration === d)}>{d} seconds</button>; })}
+                    </div>
+                  </div>
+                  <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, cursor: "pointer", marginTop: 18 }}>
+                    <input type="checkbox" checked={sound} onChange={function (e) { setSound(e.target.checked); }} /> Add sound
+                  </label>
+                </div>
+                <div style={{ ...small, marginTop: -8, marginBottom: 14 }}>The video keeps the shape of the photo you pick. For Reels, make a vertical scene photo first, then animate it.</div>
+              </>
+            )}
+
+            <div className="s3d-label">Anything to add? <span style={{ fontWeight: 400, color: COLORS.textMuted }}>(optional)</span></div>
+            <input value={note} onChange={function (e) { setNote(e.target.value); setCustom(null); }} placeholder={mode === "photos" ? "e.g. place it on a desk next to a laptop" : "e.g. steam rises from a coffee cup"} className="s3d-input" style={{ marginBottom: 12 }} />
+
+            <details style={{ marginBottom: 14 }}>
+              <summary style={{ fontSize: 12.5, color: COLORS.saffronDark, cursor: "pointer", fontWeight: 600 }}>See or edit the full prompt</summary>
+              <textarea value={prompt} onChange={function (e) { setCustom(e.target.value); }} rows={5} className="s3d-input" style={{ marginTop: 8, fontSize: 12, resize: "vertical" }} />
+              {custom !== null && <button onClick={function () { setCustom(null); }} style={{ background: "none", border: "none", color: COLORS.textMuted, fontSize: 12, cursor: "pointer", padding: "4px 0" }}>Reset to the built prompt</button>}
+            </details>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              <button onClick={start} disabled={starting} className="s3d-btn-primary">
+                {starting ? "Starting…" : mode === "photos" ? "Generate scene photo" : "Generate video"}
+              </button>
+              <span style={small}>{mode === "photos" ? "About 7¢ each, ready in under a minute" : "About " + (duration === 5 ? "30¢" : "55¢") + ", ready in 1 to 3 minutes"}</span>
+            </div>
+            {err && <div role="alert" style={{ marginTop: 10, fontSize: 12.5, color: COLORS.terracotta }}>{err}</div>}
+          </div>
+
+          <div>
+            <div className="s3d-label">Results {pending ? <span style={{ fontWeight: 400, color: COLORS.textMuted }}>({pending} in progress)</span> : null}</div>
+            {!jobs.length && <div style={{ ...small, border: "1px dashed " + COLORS.wheat, borderRadius: 10, padding: 18, textAlign: "center" }}>Your generated photos and videos appear here. Pick the good ones to add them to the product.</div>}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 10 }}>
+              {jobs.map(function (j) {
+                if (j.status === "failed") return (
+                  <div key={j.id} style={{ border: "1px solid " + COLORS.wheat, borderRadius: 10, padding: 10, fontSize: 12, color: COLORS.terracotta, background: "#fff" }}>{j.label}: {j.error}</div>
+                );
+                if (j.status !== "completed") return (
+                  <div key={j.id} className="s3d-pending" style={{ aspectRatio: "1", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center", fontSize: 12, color: COLORS.saffronDark, padding: 10 }}>{j.kind === "video" ? "Making video…" : "Making photo…"}<br />{j.label}</div>
+                );
+                if (j.kind === "video") return (
+                  <div key={j.id} style={{ border: "1px solid " + COLORS.wheat, borderRadius: 10, overflow: "hidden", background: "#fff" }}>
+                    <video src={j.video} controls muted loop playsInline style={{ width: "100%", display: "block", background: "#000" }} />
+                    <div style={{ display: "flex", gap: 6, padding: 8, flexWrap: "wrap" }}>
+                      <button onClick={function () { addVideo(j.video); }} disabled={inVideos(j.video)} className="s3d-btn-small">{inVideos(j.video) ? "Added" : "Add to product"}</button>
+                      <a href={j.video} target="_blank" rel="noreferrer" download className="s3d-btn-small">Download</a>
+                    </div>
+                  </div>
+                );
+                return (j.images || []).map(function (u, k) { return (
+                  <div key={j.id + k} style={{ border: "1px solid " + COLORS.wheat, borderRadius: 10, overflow: "hidden", background: "#fff" }}>
+                    <a href={u} target="_blank" rel="noreferrer"><img src={u} alt={"Generated " + j.label} style={{ width: "100%", display: "block" }} /></a>
+                    <div style={{ display: "flex", gap: 6, padding: 8, flexWrap: "wrap" }}>
+                      <button onClick={function () { addPhoto(u, false); }} disabled={inPhotos(u) || images.length >= 5} className="s3d-btn-small" title={images.length >= 5 ? "5 photos maximum. Remove one first or use as cover." : ""}>{inPhotos(u) ? "Added" : "Add"}</button>
+                      <button onClick={function () { addPhoto(u, true); }} className="s3d-btn-small">Make cover</button>
+                    </div>
+                  </div>
+                ); });
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ProductFormModal({ product, onSave, onClose, existingProducts }) {
   // One sku per form session. This used to be minted inside handleSave, so a
   // slow save that the user clicked twice produced two different skus and
@@ -355,6 +621,7 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
     variations: [],
     keywords: [],
     details: [],
+    videos: [],
   };
   const [form, setForm] = useState(product ? {
     ...product,
@@ -364,6 +631,9 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
     stock: String(product.stock || ""),
     badge: product.badge || "",
     images: product.images || (product.imageUrl ? [{url:product.imageUrl,bg:product.imageBg||"cream"}] : []),
+    videos: product.videos || [],
+    details: product.details || [],
+    keywords: product.keywords || [],
   } : empty);
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
@@ -631,243 +901,373 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
     }
   };
 
+  const labelStyle = { display: "block", fontSize: 12.5, fontWeight: 600, color: COLORS.charcoal, marginBottom: 6, fontFamily: FONTS.body };
   const inputStyle = (isArabic) => ({
-    width: "100%", padding: "8px 12px", border: `0.5px solid ${COLORS.wheat}`,
-    borderRadius: 8, fontSize: 13, outline: "none", background: "#fff", boxSizing: "border-box",
+    width: "100%", padding: "10px 12px", border: "1px solid " + COLORS.wheat,
+    borderRadius: 8, fontSize: 14, outline: "none", background: "#fff", boxSizing: "border-box", color: COLORS.charcoal,
     fontFamily: isArabic ? FONTS.arabic : FONTS.body, direction: isArabic ? "rtl" : "ltr",
   });
-  const labelStyle = {
-    display: "block", fontSize: 10, fontWeight: 600, color: COLORS.textMuted,
-    letterSpacing: 0.5, marginBottom: 4,
+  const hint = { fontSize: 12, color: COLORS.textMuted, lineHeight: 1.5, marginTop: 5 };
+  const wordCount = (t) => String(t || "").trim().split(/\s+/).filter(Boolean).length;
+  const descWords = wordCount(form.desc);
+  const detailsList = (form.details || []).map((d) => String(d || "").trim()).filter(Boolean);
+  const keywordsList = (form.keywords || []).map((k) => String(k || "").trim()).filter(Boolean);
+  const checks = [
+    { id: "photos", label: "At least one photo", ok: (form.images || []).length > 0 },
+    { id: "listing", label: "English title", ok: !!String(form.name || "").trim() },
+    { id: "listing", label: "Description, 40 to 80 words", ok: descWords >= 35 && descWords <= 90, note: descWords ? descWords + " words" : "" },
+    { id: "listing", label: "Arabic title and description", ok: !!String(form.name_ar || "").trim() && !!String(form.desc_ar || "").trim() },
+    { id: "listing", label: "Details list", ok: detailsList.length > 0 },
+    { id: "pricing", label: "Price", ok: parseFloat(form.price) > 0 },
+    { id: "organize", label: "Search keywords", ok: keywordsList.length >= 3 },
+  ];
+  const readyCount = checks.filter((c) => c.ok).length;
+  const scrollRef = useRef(null);
+  const goTo = (id) => {
+    const el = document.getElementById("pf-" + id);
+    if (el && scrollRef.current) scrollRef.current.scrollTo({ top: Math.max(0, el.offsetTop - 12), behavior: window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
   };
-  const field = (label, key, type = "text", placeholder = "", isArabic = false) => (
-    <div style={{ marginBottom: 14 }}>
-      <label style={labelStyle}>{label}</label>
-      <input type={type} value={form[key]} onChange={e => set(key, e.target.value)}
-        placeholder={placeholder} style={inputStyle(isArabic)} />
-    </div>
-  );
-  const selectField = (label, key, options) => (
-    <div style={{ marginBottom: 14 }}>
-      <label style={labelStyle}>{label}</label>
-      <select value={form[key]} onChange={e => set(key, e.target.value)}
-        style={{ ...inputStyle(false), cursor: "pointer" }}>
-        {options.map(o => typeof o === "string"
-          ? <option key={o} value={o}>{o}</option>
-          : <option key={o.value} value={o.value}>{o.label}</option>
-        )}
-      </select>
-    </div>
-  );
+  const cover = (form.images || [])[0];
+  const NAV = [["photos", "Photos"], ["studio", "AI studio"], ["listing", "Listing"], ["pricing", "Price and options"], ["organize", "Organize"], ["visibility", "Visibility"]];
+  const statusLabel = { active: "Live", draft: "Draft", out_of_stock: "Out of stock", archived: "Archived" }[form.status] || form.status;
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(40,31,24,0.5)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "24px 12px", overflowY: "auto", zIndex: 1000 }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 720, background: COLORS.cream, borderRadius: 14, border: "1px solid " + COLORS.wheat, overflow: "hidden", fontFamily: FONTS.body, color: COLORS.charcoal }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", borderBottom: "1px solid " + COLORS.wheat, background: "#fff" }}>
-          <div>
-            <div style={{ fontFamily: FONTS.display, fontSize: 23, fontWeight: 600, lineHeight: 1 }}>{product ? "Edit product" : "New product"}</div>
-            <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 3 }}>Create a professional storefront listing</div>
+    <div className="s3d-pf-overlay" role="dialog" aria-modal="true" aria-label={product ? "Edit product" : "New product"}>
+      <style>{`
+        .s3d-pf-overlay{position:fixed;inset:0;background:rgba(42,31,24,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:1000;font-family:${FONTS.body};color:${COLORS.charcoal}}
+        .s3d-pf{width:100%;max-width:1180px;height:calc(100vh - 32px);background:${COLORS.cream};border-radius:16px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 30px 80px rgba(42,31,24,.35)}
+        .s3d-pf-head{display:flex;align-items:center;gap:14px;padding:14px 22px;background:#fff;border-bottom:1px solid ${COLORS.wheat};flex-wrap:wrap}
+        .s3d-pf-nav{display:flex;gap:4px;padding:10px 22px;background:#fff;border-bottom:1px solid ${COLORS.wheat};overflow-x:auto}
+        .s3d-pf-nav button{background:none;border:none;padding:7px 12px;border-radius:999px;font-size:13px;color:${COLORS.textMuted};cursor:pointer;white-space:nowrap;font-family:${FONTS.body}}
+        .s3d-pf-nav button:hover{background:${COLORS.cream2};color:${COLORS.charcoal}}
+        .s3d-pf-body{flex:1;overflow-y:auto;position:relative}
+        .s3d-pf-grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:22px;padding:22px;align-items:start}
+        .s3d-pf-aside{position:sticky;top:0}
+        .s3d-sec{background:#fff;border:1px solid ${COLORS.wheat};border-radius:14px;padding:20px 22px;margin-bottom:18px}
+        .s3d-sec h3{font-family:${FONTS.display};font-size:24px;font-weight:600;margin:0 0 2px;line-height:1.15}
+        .s3d-sec .s3d-sub{font-size:13px;color:${COLORS.textMuted};margin:0 0 16px;line-height:1.5}
+        .s3d-two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+        .s3d-three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+        .s3d-label{font-size:12.5px;font-weight:600;color:${COLORS.charcoal};margin-bottom:6px}
+        .s3d-input{width:100%;padding:10px 12px;border:1px solid ${COLORS.wheat};border-radius:8px;font-size:14px;background:#fff;box-sizing:border-box;font-family:${FONTS.body};color:${COLORS.charcoal}}
+        .s3d-pf input:focus,.s3d-pf textarea:focus,.s3d-pf select:focus{outline:2px solid ${COLORS.saffron};outline-offset:0;border-color:${COLORS.saffron}}
+        .s3d-pf button:focus-visible,.s3d-pf a:focus-visible,.s3d-pf summary:focus-visible{outline:2px solid ${COLORS.saffron};outline-offset:2px}
+        .s3d-btn-primary{background:${COLORS.saffron};color:#fff;border:none;border-radius:9px;padding:11px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:${FONTS.body}}
+        .s3d-btn-primary:disabled{opacity:.6;cursor:wait}
+        .s3d-btn-quiet{background:#fff;color:${COLORS.charcoal};border:1px solid ${COLORS.wheat};border-radius:9px;padding:10px 16px;font-size:14px;cursor:pointer;font-family:${FONTS.body}}
+        .s3d-btn-small{background:#fff;color:${COLORS.charcoal};border:1px solid ${COLORS.wheat};border-radius:7px;padding:5px 10px;font-size:12px;cursor:pointer;text-decoration:none;font-family:${FONTS.body}}
+        .s3d-btn-small:disabled{opacity:.55;cursor:default}
+        .s3d-seg{display:inline-flex;background:${COLORS.cream2};border-radius:10px;padding:3px;gap:2px}
+        .s3d-seg button{border:none;background:none;padding:8px 14px;border-radius:8px;font-size:13px;cursor:pointer;color:${COLORS.textMuted};font-family:${FONTS.body}}
+        .s3d-seg button[aria-pressed="true"]{background:#fff;color:${COLORS.charcoal};font-weight:600;box-shadow:0 1px 2px rgba(42,31,24,.12)}
+        .s3d-toggle{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:12px 0;border-top:1px solid ${COLORS.cream2};cursor:pointer}
+        .s3d-toggle:first-of-type{border-top:none}
+        .s3d-studio-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px}
+        @keyframes s3dPulse{0%,100%{background:${COLORS.cream2}}50%{background:#FBEFD8}}
+        .s3d-pending{animation:s3dPulse 1.6s ease-in-out infinite;border:1px solid ${COLORS.wheat}}
+        @media (prefers-reduced-motion: reduce){.s3d-pending{animation:none}}
+        @media (max-width: 900px){.s3d-pf-grid{grid-template-columns:1fr}.s3d-pf-aside{position:static}.s3d-studio-grid{grid-template-columns:1fr}}
+        @media (max-width: 560px){.s3d-two,.s3d-three{grid-template-columns:1fr}.s3d-pf-overlay{padding:0}.s3d-pf{height:100vh;border-radius:0}}
+      `}</style>
+      <div className="s3d-pf" onClick={(e) => e.stopPropagation()}>
+        <div className="s3d-pf-head">
+          <div style={{ flex: 1, minWidth: 200 }}>
+            <div style={{ fontFamily: FONTS.display, fontSize: 26, fontWeight: 600, lineHeight: 1.05 }}>{product ? (form.name || "Edit product") : (form.name || "New product")}</div>
+            <div style={{ fontSize: 12.5, color: COLORS.textMuted, marginTop: 3 }}>{sessionSku} · {statusLabel}{generating ? " · the AI is writing the listing…" : ""}</div>
           </div>
-          <button onClick={handleCancel} style={{ background: "none", border: "none", fontSize: 22, color: COLORS.textMuted, cursor: "pointer", lineHeight: 1 }}>×</button>
+          <button onClick={onClose} className="s3d-btn-quiet" style={{ border: "none", color: COLORS.textMuted }}>Discard</button>
+          <button onClick={handleCancel} disabled={saving} className="s3d-btn-quiet">{product ? "Close" : "Save as draft"}</button>
+          <button onClick={handleSave} disabled={saving} className="s3d-btn-primary">{saving ? "Saving…" : form.status === "active" ? "Save and publish" : "Save"}</button>
         </div>
-        <div style={{ padding: "12px 16px 0" }}>
-          <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
-            <input value={importUrl} onChange={(e) => setImportUrl(e.target.value)} placeholder="Paste a product link (Amazon, Etsy, eBay...) to auto-fill" style={{ flex: 1, padding: "9px 12px", border: "0.5px solid " + COLORS.wheat, borderRadius: 8, fontSize: 13, fontFamily: FONTS.body, boxSizing: "border-box" }} />
-            <button onClick={importFromLink} disabled={importing} style={{ padding: "9px 16px", background: COLORS.charcoal, color: "#fff", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>{importing ? "Reading..." : "Import"}</button>
-          </div>
-          <input value={form.buyUrl || ""} onChange={(e) => setForm((f) => ({ ...f, buyUrl: e.target.value }))} placeholder="Optional: external buy link (adds a Buy on... button on the product page)" style={{ width: "100%", padding: "9px 12px", border: "0.5px solid " + COLORS.wheat, borderRadius: 8, fontSize: 13, fontFamily: FONTS.body, boxSizing: "border-box" }} />
-        </div>
-        {!product && form.images.length === 0 && !String(form.name || "").trim() && (
-          <div style={{ padding: "12px 16px 0" }}>
-            <div
-              onClick={() => fileRef.current && fileRef.current.click()}
-              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={onDropFiles}
-              style={{ border: "2px dashed " + (dragOver ? COLORS.saffron : "#E6C886"), background: dragOver ? "#FBEFD8" : "#fff", borderRadius: 14, padding: "30px 16px", textAlign: "center", cursor: "pointer", transition: "background 0.15s" }}
-            >
-              <div style={{ fontSize: 30, lineHeight: 1 }}>📸</div>
-              <div style={{ fontFamily: FONTS.display, fontSize: 20, fontWeight: 600, marginTop: 8 }}>Drop product photos here</div>
-              <div style={{ fontSize: 12.5, color: COLORS.textMuted, marginTop: 5, lineHeight: 1.5 }}>Up to 5 photos. The AI writes the English and Arabic listing, category, keywords, price and options. You just review and publish.</div>
-              <div style={{ display: "inline-block", marginTop: 12, background: COLORS.saffron, color: "#fff", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 600 }}>Choose photos</div>
+        <nav className="s3d-pf-nav" aria-label="Form sections">
+          {NAV.map((n) => <button key={n[0]} onClick={() => goTo(n[0])}>{n[1]}</button>)}
+        </nav>
+
+        <div className="s3d-pf-body" ref={scrollRef}>
+          {generating && (
+            <div role="status" style={{ margin: "16px 22px 0", background: "#FBEFD8", border: "1px solid #E6C886", borderRadius: 10, padding: "10px 14px", fontSize: 13, color: COLORS.saffronDark, fontWeight: 600 }}>
+              Reading your photos and writing the listing in the Souk3D style…
             </div>
-          </div>
-        )}
-        {generating && (
-          <div style={{ margin: "12px 16px 0", background: "#FBEFD8", border: "1px solid #E6C886", borderRadius: 10, padding: "10px 14px", fontSize: 12.5, color: COLORS.saffronDark, fontWeight: 600 }}>
-            ✨ Reading your photos and writing the listing…
-          </div>
-        )}
-        <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: 14, padding: 16 }}>
-          <div>
-            {genPreview && (
-              <div style={{ background: "#fff", border: "1.5px solid " + COLORS.saffron, borderRadius: 12, padding: 14, marginBottom: 14 }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.saffronDark, letterSpacing: 0.5, marginBottom: 10, textTransform: "uppercase" }}>✨ AI preview — edit, then accept or regenerate</div>
-                <label style={labelStyle}>ENGLISH NAME</label>
-                <input value={genPreview.title_en || ""} onChange={(e) => setGenPreview((p) => ({ ...p, title_en: e.target.value }))} style={{ ...inputStyle(false), marginBottom: 8 }} />
-                <label style={{ ...labelStyle, textAlign: "right" }}>ARABIC NAME</label>
-                <input dir="rtl" value={genPreview.name_ar || ""} onChange={(e) => setGenPreview((p) => ({ ...p, name_ar: e.target.value }))} style={{ ...inputStyle(true), marginBottom: 8 }} />
-                <label style={labelStyle}>DESCRIPTION (EN)</label>
-                <textarea value={genPreview.desc || ""} onChange={(e) => setGenPreview((p) => ({ ...p, desc: e.target.value }))} rows={3} style={{ ...inputStyle(false), resize: "vertical", marginBottom: 8 }} />
-                <label style={{ ...labelStyle, textAlign: "right" }}>DESCRIPTION (AR)</label>
-                <textarea dir="rtl" value={genPreview.desc_ar || ""} onChange={(e) => setGenPreview((p) => ({ ...p, desc_ar: e.target.value }))} rows={3} style={{ ...inputStyle(true), resize: "vertical", marginBottom: 8 }} />
-                <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-                  <div style={{ flex: 1 }}><label style={labelStyle}>PRICE</label><input value={genPreview.price || ""} onChange={(e) => setGenPreview((p) => ({ ...p, price: e.target.value }))} style={inputStyle(false)} /></div>
-                  <div style={{ flex: 1 }}><label style={labelStyle}>BADGE</label><input value={genPreview.badge || ""} onChange={(e) => setGenPreview((p) => ({ ...p, badge: e.target.value }))} style={inputStyle(false)} /></div>
-                </div>
-                <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={acceptGenerate} style={{ flex: 1, padding: "8px 0", background: COLORS.saffron, color: "#fff", border: "none", borderRadius: 7, cursor: "pointer", fontFamily: FONTS.body, fontSize: 13, fontWeight: 600 }}>✓ Accept</button>
-                  <button onClick={handleGenerate} disabled={generating} style={{ flex: 1, padding: "8px 0", background: "#fff", color: COLORS.saffron, border: "1px solid " + COLORS.saffron, borderRadius: 7, cursor: generating ? "not-allowed" : "pointer", fontFamily: FONTS.body, fontSize: 13, fontWeight: 600 }}>{generating ? "⏳ Regenerating…" : "🔄 Regenerate"}</button>
-                  <button onClick={() => setGenPreview(null)} style={{ flex: "0 0 80px", padding: "8px 0", background: "#fff", color: COLORS.textMuted, border: "1px solid " + COLORS.wheat, borderRadius: 7, cursor: "pointer", fontFamily: FONTS.body, fontSize: 13 }}>Dismiss</button>
-                </div>
-              </div>
-            )}
-            <div style={{ background: "#fff", border: "1px solid " + COLORS.wheat, borderRadius: 12, padding: "14px 15px", marginBottom: 14 }}>
-              <div style={{ fontSize: 11, letterSpacing: 0.5, textTransform: "uppercase", color: COLORS.saffronDark, fontWeight: 600, marginBottom: 11 }}>Product details</div>
-              <label style={labelStyle}>PRODUCT NAME (English)</label>
-              <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-                <input type="text" value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="e.g. Damascus Name Plaque" style={{ ...inputStyle(false), flex: 1 }} />
-                <button onClick={handleGenerate} disabled={generating} style={{ background: generating ? COLORS.textMuted : COLORS.saffron, color: "#fff", border: "none", borderRadius: 8, padding: "0 14px", fontWeight: 600, fontSize: 12.5, fontFamily: FONTS.body, cursor: generating ? "not-allowed" : "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>{generating ? "⏳…" : "✨ Generate"}</button>
-              </div>
-              <input type="text" value={form.hint} onChange={(e) => set("hint", e.target.value)} placeholder="Facts for the AI — e.g. set of 2, approx 3 in each, magnetic back, 3D printed PLA" style={{ ...inputStyle(false), fontSize: 11.5, marginBottom: 10 }} />
-              <label style={{ ...labelStyle, textAlign: "right" }}>اسم المنتج (Arabic)</label>
-              <input type="text" dir="rtl" value={form.name_ar} onChange={(e) => set("name_ar", e.target.value)} placeholder="مثال: لوحة الاسم" style={inputStyle(true)} />
-            </div>
-            <div style={{ background: "#fff", border: "1px solid " + COLORS.wheat, borderRadius: 12, padding: "14px 15px", marginBottom: 14 }}>
-              <div style={{ fontSize: 11, letterSpacing: 0.5, textTransform: "uppercase", color: COLORS.saffronDark, fontWeight: 600, marginBottom: 11 }}>Product images <span style={{ color: COLORS.textMuted, fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(up to 5)</span></div>
-              <input ref={fileRef} type="file" accept="image/*" multiple style={{ display: "none" }} onChange={(e) => handleImageUpload(e.target.files)} />
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                {form.images.map((img, idx) => (
-                  <div key={idx} style={{ width: 92 }}>
-                    <div style={{ position: "relative", width: 92, height: 92, borderRadius: 9, overflow: "hidden", background: getBgGrad(img.bg) }}>
-                      <img src={img.url} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-                      <button onClick={() => removeImage(idx)} style={{ position: "absolute", top: 3, right: 3, width: 18, height: 18, borderRadius: "50%", background: COLORS.terracotta, color: "#fff", border: "none", fontSize: 11, cursor: "pointer", lineHeight: 1 }}>×</button>
-                      {idx === 0 && <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: COLORS.saffron, color: "#fff", fontSize: 8, fontWeight: 600, textAlign: "center", letterSpacing: 0.5, padding: "2px 0" }}>COVER</div>}
-                    </div>
-                    <label style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 6, background: "#FBF4E4", border: "1px solid " + COLORS.wheat, borderRadius: 7, padding: "4px 6px", cursor: "pointer", fontSize: 10 }}>
-                      <input type="checkbox" checked={!!img.bgRemoved} onChange={() => toggleRemoveBg(idx)} disabled={bgBusy === idx} style={{ margin: 0 }} />
-                      <span style={{ color: COLORS.textMuted, flex: 1 }}>{bgBusy === idx ? "Removing…" : "Remove bg"}</span>
-                    </label>
-                    <select value={img.bg} onChange={(e) => updateImageBg(idx, e.target.value)} style={{ ...inputStyle(false), marginTop: 5, fontSize: 10.5, padding: "4px 6px", cursor: "pointer" }}>
-                      {BG_STYLES.map((b) => <option key={b.id} value={b.id}>{b.label} bg</option>)}
-                    </select>
+          )}
+          <div className="s3d-pf-grid">
+            <div>
+              {/* Photos */}
+              <section id="pf-photos" className="s3d-sec">
+                <h3>Photos</h3>
+                <p className="s3d-sub">{(form.images || []).length ? "The first photo is the cover. Up to 5 photos." : "Start here. Drop your photos and the AI writes the whole listing from them."}</p>
+                <input ref={fileRef} type="file" accept="image/*" multiple style={{ display: "none" }} onChange={(e) => handleImageUpload(e.target.files)} />
+                {!(form.images || []).length ? (
+                  <div
+                    onClick={() => fileRef.current && fileRef.current.click()}
+                    onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                    onDragLeave={() => setDragOver(false)}
+                    onDrop={onDropFiles}
+                    role="button" tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileRef.current && fileRef.current.click(); } }}
+                    style={{ border: "2px dashed " + (dragOver ? COLORS.saffron : "#E6C886"), background: dragOver ? "#FBEFD8" : COLORS.cream, borderRadius: 14, padding: "38px 16px", textAlign: "center", cursor: "pointer" }}
+                  >
+                    <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600 }}>Drop product photos here</div>
+                    <div style={{ fontSize: 13, color: COLORS.textMuted, marginTop: 6 }}>or</div>
+                    <div className="s3d-btn-primary" style={{ display: "inline-block", marginTop: 8 }}>Choose photos</div>
                   </div>
-                ))}
-                {form.images.length < 5 && (
-                  <div onClick={() => fileRef.current && fileRef.current.click()} onDragOver={(e) => e.preventDefault()} onDrop={onDropFiles} style={{ width: 92, height: 92, borderRadius: 9, border: "1.5px dashed " + COLORS.wheat, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: COLORS.saffronDark, cursor: "pointer" }}>
-                    <span style={{ fontSize: 20 }}>+</span>
-                    <span style={{ fontSize: 10.5, marginTop: 3 }}>Add photo</span>
+                ) : (
+                  <div onDragOver={(e) => e.preventDefault()} onDrop={onDropFiles} style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                    {form.images.map((img, idx) => (
+                      <div key={idx} style={{ width: 118 }}>
+                        <div style={{ position: "relative", width: 118, height: 118, borderRadius: 10, overflow: "hidden", background: getBgGrad(img.bg), border: idx === 0 ? "2px solid " + COLORS.saffron : "1px solid " + COLORS.wheat }}>
+                          <img src={img.thumbUrl || img.url} alt={img.alt || ""} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                          {idx === 0 && <div style={{ position: "absolute", top: 6, left: 6, background: COLORS.saffron, color: "#fff", fontSize: 10.5, fontWeight: 600, padding: "2px 7px", borderRadius: 999 }}>Cover</div>}
+                          {img.ai && <div style={{ position: "absolute", bottom: 6, left: 6, background: "rgba(42,31,24,.75)", color: "#fff", fontSize: 10, padding: "2px 6px", borderRadius: 999 }}>AI scene</div>}
+                          <button onClick={() => removeImage(idx)} aria-label="Remove photo" style={{ position: "absolute", top: 5, right: 5, width: 24, height: 24, borderRadius: "50%", background: "rgba(255,255,255,.95)", color: COLORS.terracotta, border: "1px solid " + COLORS.wheat, fontSize: 14, cursor: "pointer", lineHeight: 1 }}>×</button>
+                        </div>
+                        <div style={{ display: "flex", gap: 4, marginTop: 6 }}>
+                          <button onClick={() => moveImage(idx, -1)} disabled={idx === 0} aria-label="Move left" className="s3d-btn-small" style={{ flex: 1, padding: "4px 0" }}>‹</button>
+                          <button onClick={() => moveImage(idx, 1)} disabled={idx === form.images.length - 1} aria-label="Move right" className="s3d-btn-small" style={{ flex: 1, padding: "4px 0" }}>›</button>
+                        </div>
+                        {!img.ai && (
+                          <label style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6, fontSize: 11.5, color: COLORS.textMuted, cursor: "pointer" }}>
+                            <input type="checkbox" checked={!!img.bgRemoved} onChange={() => toggleRemoveBg(idx)} disabled={bgBusy === idx} style={{ margin: 0 }} />
+                            {bgBusy === idx ? "Removing…" : "Remove background"}
+                          </label>
+                        )}
+                        <select value={img.bg} onChange={(e) => updateImageBg(idx, e.target.value)} aria-label="Card background" style={{ ...inputStyle(false), marginTop: 6, fontSize: 11.5, padding: "5px 6px" }}>
+                          {BG_STYLES.map((b) => <option key={b.id} value={b.id}>{b.label} card</option>)}
+                        </select>
+                      </div>
+                    ))}
+                    {form.images.length < 5 && (
+                      <button onClick={() => fileRef.current && fileRef.current.click()} style={{ width: 118, height: 118, borderRadius: 10, border: "1.5px dashed " + COLORS.wheat, background: COLORS.cream, color: COLORS.saffronDark, cursor: "pointer", fontSize: 13, fontFamily: FONTS.body }}>+ Add photo</button>
+                    )}
                   </div>
                 )}
-              </div>
-              <button onClick={handleGenerate} disabled={generating || !(form.images && form.images[0] && form.images[0].url)} style={{ width: "100%", marginTop: 12, background: "#FBEFD8", color: COLORS.saffronDark, border: "1px solid #E6C886", borderRadius: 8, padding: "9px 0", fontWeight: 600, fontSize: 12.5, fontFamily: FONTS.body, cursor: (form.images && form.images[0] && form.images[0].url) ? "pointer" : "not-allowed", opacity: (form.images && form.images[0] && form.images[0].url) ? 1 : 0.55 }}>{generating ? "⏳ Generating from photo…" : "📷 Generate listing from this photo"}</button>
-              <button disabled style={{ width: "100%", marginTop: 8, background: "#F3ECDB", color: "#9A8B73", border: "1px dashed " + COLORS.wheat, borderRadius: 8, padding: "8px 0", fontWeight: 600, fontSize: 12, fontFamily: FONTS.body, cursor: "not-allowed" }}>✨ Generate product image (AI) — coming soon</button>
-              <div style={{ fontSize: 10.5, color: COLORS.textMuted, marginTop: 8, lineHeight: 1.45 }}>The AI reads your photo to write the whole listing. Background removal is off by default — toggle it per image for a clean cut-out.</div>
-            </div>
-            <div style={{ background: "#fff", border: "1px solid " + COLORS.wheat, borderRadius: 12, padding: "14px 15px" }}>
-              <div style={{ fontSize: 11, letterSpacing: 0.5, textTransform: "uppercase", color: COLORS.saffronDark, fontWeight: 600, marginBottom: 11 }}>Description</div>
-              <label style={labelStyle}>ENGLISH</label>
-              <textarea value={form.desc} onChange={(e) => set("desc", e.target.value)} placeholder="Product description shown on the storefront…" rows={3} style={{ ...inputStyle(false), resize: "vertical", marginBottom: 10 }} />
-              <label style={{ ...labelStyle, textAlign: "right" }}>العربية</label>
-              <textarea dir="rtl" value={form.desc_ar} onChange={(e) => set("desc_ar", e.target.value)} placeholder="وصف المنتج" rows={3} style={{ ...inputStyle(true), resize: "vertical", marginBottom: 10 }} />
-              <label style={labelStyle}>DETAILS <span style={{ fontWeight: 400 }}>(one per line — size, set of, material, how it's made)</span></label>
-              <textarea value={(form.details || []).join("\n")} onChange={(e) => set("details", e.target.value.split("\n"))} placeholder={"Set of 2\n3D printed\nApprox. 3 in each\nMagnetic backing\nColors may vary slightly between pieces"} rows={4} style={{ ...inputStyle(false), resize: "vertical", fontSize: 12 }} />
-            </div>
-          </div>
-          <div>
-            <div style={{ background: "#fff", border: "1px solid " + COLORS.wheat, borderRadius: 12, padding: "14px 15px", marginBottom: 14 }}>
-              <div style={{ fontSize: 11, letterSpacing: 0.5, textTransform: "uppercase", color: COLORS.saffronDark, fontWeight: 600, marginBottom: 11 }}>Status</div>
-              <select value={form.status} onChange={(e) => set("status", e.target.value)} style={{ ...inputStyle(false), cursor: "pointer", marginBottom: 11 }}>
-                <option value="active">Active</option>
-                <option value="draft">Draft</option>
-                <option value="out_of_stock">Out of stock</option>
-              </select>
-              <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 9, fontSize: 12, cursor: "pointer" }}>Featured on homepage<input type="checkbox" checked={!!form.featured} onChange={(e) => set("featured", e.target.checked)} /></label>
-              <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 12, cursor: "pointer" }}>Accepts custom text<input type="checkbox" checked={!!form.customizable} onChange={(e) => set("customizable", e.target.checked)} /></label>
-          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, fontFamily: FONTS.body, color: COLORS.charcoal, cursor: "pointer" }}>Members only<input type="checkbox" checked={!!form.membersOnly} onChange={(e) => set("membersOnly", e.target.checked)} /></label>
-          <div style={{ gridColumn: "1 / -1", marginTop: 6 }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.textMuted, marginBottom: 4, letterSpacing: 0.5 }}>EARLY ACCESS — PUBLIC FROM</div>
-            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-              <input
-                type="datetime-local"
-                value={form.publicAt ? String(form.publicAt).slice(0, 16) : ""}
-                onChange={(e) => set("publicAt", e.target.value ? new Date(e.target.value).toISOString() : "")}
-                style={{ padding: "8px 12px", border: "0.5px solid " + COLORS.wheat, borderRadius: 8, fontSize: 12, fontFamily: FONTS.body, outline: "none" }}
-              />
-              <GhostBtn type="button" onClick={() => set("publicAt", new Date(Date.now() + 48 * 3600 * 1000).toISOString())} style={{ fontSize: 11 }}>Members first for 48h</GhostBtn>
-              {form.publicAt && (
-                <GhostBtn type="button" onClick={() => set("publicAt", "")} style={{ fontSize: 11 }}>Clear</GhostBtn>
-              )}
-            </div>
-            <div style={{ fontSize: 11, color: COLORS.textMuted, fontFamily: FONTS.body, marginTop: 4 }}>
-              {form.publicAt
-                ? "Members only until " + new Date(form.publicAt).toLocaleString() + ", then public."
-                : "Leave empty to go public immediately."}
-            </div>
-          </div>
-            </div>
-            <div style={{ background: "#fff", border: "1px solid " + COLORS.wheat, borderRadius: 12, padding: "14px 15px", marginBottom: 14 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                <div style={{ fontSize: 11, letterSpacing: 0.5, textTransform: "uppercase", color: COLORS.saffronDark, fontWeight: 600 }}>Pricing</div>
-                {form.price && form.cost ? <span style={{ fontSize: 10, background: "#EAF3DE", color: "#3B6D11", borderRadius: 6, padding: "2px 7px", fontWeight: 600 }}>Margin {Math.max(0, Math.round((1 - parseFloat(form.cost) / parseFloat(form.price)) * 100))}%</span> : null}
-              </div>
-              <label style={labelStyle}>PRICE</label>
-              <input type="number" value={form.price} onChange={(e) => set("price", e.target.value)} placeholder="0.00" style={{ ...inputStyle(false), marginBottom: 10 }} />
-              <div style={{ display: "flex", gap: 8 }}>
-                <div style={{ flex: 1 }}><label style={labelStyle}>COMPARE-AT</label><input type="number" value={form.compareAt} onChange={(e) => set("compareAt", e.target.value)} placeholder="0.00" style={inputStyle(false)} /></div>
-                <div style={{ flex: 1 }}><label style={labelStyle}>COST</label><input type="number" value={form.cost} onChange={(e) => set("cost", e.target.value)} placeholder="0.00" style={inputStyle(false)} /></div>
-              </div>
-            </div>
-            <div style={{ background: "#fff", border: "1px solid " + COLORS.wheat, borderRadius: 12, padding: "14px 15px", marginBottom: 14 }}>
-              <div style={{ fontSize: 11, letterSpacing: 0.5, textTransform: "uppercase", color: COLORS.saffronDark, fontWeight: 600, marginBottom: 11 }}>Inventory</div>
-              <label style={labelStyle}>STOCK</label>
-              <input type="number" value={form.stock} onChange={(e) => set("stock", e.target.value)} placeholder="0" style={inputStyle(false)} />
-            </div>
-            <div style={{ background: "#fff", border: "1px solid " + COLORS.wheat, borderRadius: 12, padding: "14px 15px", marginBottom: 14 }}>
-              <div style={{ fontSize: 11, letterSpacing: 0.5, textTransform: "uppercase", color: COLORS.saffronDark, fontWeight: 600, marginBottom: 4 }}>Variations (optional)</div>
-              <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 11, lineHeight: 1.5 }}>e.g. Size or Color. Price adjustment is added to the base price: 2 means +$2.00, -1.5 means $1.50 less, 0 or blank means same price.</div>
-              {(form.variations || []).map(function (g, gi) { return (
-                <div key={gi} style={{ border: "1px solid " + COLORS.wheat, borderRadius: 8, padding: 10, marginBottom: 10 }}>
-                  <div style={{ display: "flex", gap: 8, marginBottom: 8, alignItems: "center" }}>
-                    <input value={g.name || ""} onChange={function (e) { var v = (form.variations || []).slice(); v[gi] = { ...v[gi], name: e.target.value }; set("variations", v); }} placeholder="Variation name (e.g. Size)" style={{ ...inputStyle(false), flex: 1 }} />
-                    <button onClick={function () { var v = (form.variations || []).slice(); v.splice(gi, 1); set("variations", v); }} title="Remove variation" style={{ background: "none", border: "none", color: "#B33", cursor: "pointer", fontSize: 15, padding: 4 }}>✕</button>
+                {(form.videos || []).length > 0 && (
+                  <div style={{ marginTop: 18 }}>
+                    <div className="s3d-label">Videos <span style={{ fontWeight: 400, color: COLORS.textMuted }}>(shown in the product gallery)</span></div>
+                    <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                      {form.videos.map((v, i) => (
+                        <div key={i} style={{ width: 160 }}>
+                          <video src={v.url} muted loop playsInline controls style={{ width: "100%", borderRadius: 10, background: "#000", display: "block" }} />
+                          <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
+                            <a href={v.url} target="_blank" rel="noreferrer" download className="s3d-btn-small">Download</a>
+                            <button onClick={() => set("videos", form.videos.filter((_, k) => k !== i))} className="s3d-btn-small" style={{ color: COLORS.terracotta }}>Remove</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  {(g.options || []).map(function (o, oi) { return (
-                    <div key={oi} style={{ display: "flex", gap: 8, marginBottom: 6, alignItems: "center" }}>
-                      <input value={o.label || ""} onChange={function (e) { var v = (form.variations || []).slice(); var opts = (v[gi].options || []).slice(); opts[oi] = { ...opts[oi], label: e.target.value }; v[gi] = { ...v[gi], options: opts }; set("variations", v); }} placeholder="Option (e.g. Small)" style={{ ...inputStyle(false), flex: 2 }} />
-                      <input type="number" step="0.5" value={o.delta === 0 || o.delta ? o.delta : ""} onChange={function (e) { var v = (form.variations || []).slice(); var opts = (v[gi].options || []).slice(); opts[oi] = { ...opts[oi], delta: e.target.value }; v[gi] = { ...v[gi], options: opts }; set("variations", v); }} placeholder="+/- $" style={{ ...inputStyle(false), flex: 1 }} />
-                      <button onClick={function () { var v = (form.variations || []).slice(); var opts = (v[gi].options || []).slice(); opts.splice(oi, 1); v[gi] = { ...v[gi], options: opts }; set("variations", v); }} title="Remove option" style={{ background: "none", border: "none", color: COLORS.textMuted, cursor: "pointer", fontSize: 13, padding: 4 }}>✕</button>
+                )}
+              </section>
+
+              {/* AI studio */}
+              <section id="pf-studio" className="s3d-sec">
+                <h3>AI studio</h3>
+                <p className="s3d-sub">Turn your real photo into styled scenes and short videos. Your product stays exactly as it is; only the setting changes.</p>
+                <ProductStudio form={form} setForm={setForm} />
+              </section>
+
+              {/* Listing */}
+              <section id="pf-listing" className="s3d-sec">
+                <h3>Listing</h3>
+                <p className="s3d-sub">Written in the Souk3D voice: a one-line hook, then 2 to 4 short sentences. Facts go in Details, not in the description.</p>
+                <div className="s3d-label">Facts for the AI</div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  <input type="text" value={form.hint} onChange={(e) => set("hint", e.target.value)} placeholder="e.g. set of 2, about 3 in each, magnetic back, 3D printed PLA" className="s3d-input" style={{ flex: "1 1 260px" }} />
+                  <button onClick={handleGenerate} disabled={generating} className="s3d-btn-primary" style={{ whiteSpace: "nowrap" }}>{generating ? "Writing…" : (form.name || form.desc) ? "Rewrite with AI" : "Write with AI"}</button>
+                </div>
+                <div style={hint}>The AI only uses sizes, counts and materials you type here, so nothing gets invented. It reads all your photos.</div>
+
+                <div className="s3d-two" style={{ marginTop: 18 }}>
+                  <div>
+                    <label style={labelStyle} htmlFor="pf-name">Title</label>
+                    <input id="pf-name" type="text" value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="e.g. Arabic Coffee Cup Magnet Set" style={inputStyle(false)} />
+                    <div style={hint}>{String(form.name || "").length}/60 characters. Clear name first, personality second.</div>
+                  </div>
+                  <div>
+                    <label style={{ ...labelStyle, textAlign: "right" }} htmlFor="pf-name-ar">العنوان بالعربي</label>
+                    <input id="pf-name-ar" type="text" dir="rtl" value={form.name_ar} onChange={(e) => set("name_ar", e.target.value)} placeholder="مثال: طقم مغناطيس فناجين قهوة" style={inputStyle(true)} />
+                  </div>
+                </div>
+
+                <div className="s3d-two" style={{ marginTop: 16 }}>
+                  <div>
+                    <label style={labelStyle} htmlFor="pf-desc">Description</label>
+                    <textarea id="pf-desc" value={form.desc} onChange={(e) => set("desc", e.target.value)} placeholder={"One-line hook\n\nThen 2 to 4 short sentences."} rows={7} style={{ ...inputStyle(false), resize: "vertical", lineHeight: 1.55 }} />
+                    <div style={{ ...hint, color: descWords > 90 ? COLORS.terracotta : COLORS.textMuted }}>{descWords} words. Aim for 40 to 80.</div>
+                  </div>
+                  <div>
+                    <label style={{ ...labelStyle, textAlign: "right" }} htmlFor="pf-desc-ar">الوصف</label>
+                    <textarea id="pf-desc-ar" dir="rtl" value={form.desc_ar} onChange={(e) => set("desc_ar", e.target.value)} placeholder="وصف قصير بنفس الإحساس، مو ترجمة حرفية" rows={7} style={{ ...inputStyle(true), resize: "vertical", lineHeight: 1.8 }} />
+                  </div>
+                </div>
+
+                <div style={{ marginTop: 16 }}>
+                  <label style={labelStyle} htmlFor="pf-details">Details <span style={{ fontWeight: 400, color: COLORS.textMuted }}>(one per line)</span></label>
+                  <textarea id="pf-details" value={(form.details || []).join("\n")} onChange={(e) => set("details", e.target.value.split("\n"))} placeholder={"Set of 2\n3D printed\nApprox. 3 in each\nMagnetic backing\nColors may vary slightly between pieces"} rows={5} style={{ ...inputStyle(false), resize: "vertical", lineHeight: 1.6 }} />
+                  <div style={hint}>Shown in the Details tab on the product page. Only facts that are true for this product.</div>
+                </div>
+              </section>
+
+              {/* Pricing */}
+              <section id="pf-pricing" className="s3d-sec">
+                <h3>Price and options</h3>
+                <p className="s3d-sub">Customers see the price and compare-at price. Cost stays private and gives you the margin.</p>
+                <div className="s3d-three">
+                  <div>
+                    <label style={labelStyle} htmlFor="pf-price">Price</label>
+                    <input id="pf-price" type="number" min="0" step="0.01" value={form.price} onChange={(e) => set("price", e.target.value)} placeholder="0.00" style={inputStyle(false)} />
+                  </div>
+                  <div>
+                    <label style={labelStyle} htmlFor="pf-compare">Compare-at price</label>
+                    <input id="pf-compare" type="number" min="0" step="0.01" value={form.compareAt} onChange={(e) => set("compareAt", e.target.value)} placeholder="Optional" style={inputStyle(false)} />
+                  </div>
+                  <div>
+                    <label style={labelStyle} htmlFor="pf-cost">Your cost</label>
+                    <input id="pf-cost" type="number" min="0" step="0.01" value={form.cost} onChange={(e) => set("cost", e.target.value)} placeholder="0.00" style={inputStyle(false)} />
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 16, alignItems: "flex-end", flexWrap: "wrap", marginTop: 14 }}>
+                  <div style={{ width: 160 }}>
+                    <label style={labelStyle} htmlFor="pf-stock">Stock</label>
+                    <input id="pf-stock" type="number" min="0" value={form.stock} onChange={(e) => set("stock", e.target.value)} placeholder="0" style={inputStyle(false)} />
+                  </div>
+                  {form.price && form.cost ? (
+                    <div style={{ fontSize: 13, color: COLORS.olive, paddingBottom: 10 }}>
+                      Margin {Math.max(0, Math.round((1 - parseFloat(form.cost) / parseFloat(form.price)) * 100))}% · profit ${Math.max(0, parseFloat(form.price) - parseFloat(form.cost)).toFixed(2)} per sale
+                    </div>
+                  ) : null}
+                </div>
+
+                <div style={{ marginTop: 22 }}>
+                  <div className="s3d-label">Options <span style={{ fontWeight: 400, color: COLORS.textMuted }}>(optional, e.g. Size or Color)</span></div>
+                  <div style={{ ...hint, marginTop: 0, marginBottom: 10 }}>The price change is added to the base price: 2 means +$2.00, -1.5 means $1.50 less, empty means same price.</div>
+                  {(form.variations || []).map(function (g, gi) { return (
+                    <div key={gi} style={{ border: "1px solid " + COLORS.wheat, borderRadius: 10, padding: 12, marginBottom: 10, background: COLORS.cream }}>
+                      <div style={{ display: "flex", gap: 8, marginBottom: 8, alignItems: "center" }}>
+                        <input value={g.name || ""} onChange={function (e) { var v = (form.variations || []).slice(); v[gi] = { ...v[gi], name: e.target.value }; set("variations", v); }} placeholder="Option name, e.g. Size" aria-label="Option name" style={{ ...inputStyle(false), flex: 1, fontWeight: 600 }} />
+                        <button onClick={function () { var v = (form.variations || []).slice(); v.splice(gi, 1); set("variations", v); }} className="s3d-btn-small" style={{ color: COLORS.terracotta }}>Remove</button>
+                      </div>
+                      {(g.options || []).map(function (o, oi) { return (
+                        <div key={oi} style={{ display: "flex", gap: 8, marginBottom: 6, alignItems: "center" }}>
+                          <input value={o.label || ""} onChange={function (e) { var v = (form.variations || []).slice(); var opts = (v[gi].options || []).slice(); opts[oi] = { ...opts[oi], label: e.target.value }; v[gi] = { ...v[gi], options: opts }; set("variations", v); }} placeholder="Choice, e.g. Small" aria-label="Choice" style={{ ...inputStyle(false), flex: 2 }} />
+                          <input type="number" step="0.5" value={o.delta === 0 || o.delta ? o.delta : ""} onChange={function (e) { var v = (form.variations || []).slice(); var opts = (v[gi].options || []).slice(); opts[oi] = { ...opts[oi], delta: e.target.value }; v[gi] = { ...v[gi], options: opts }; set("variations", v); }} placeholder="± $" aria-label="Price change" style={{ ...inputStyle(false), flex: 1 }} />
+                          <button onClick={function () { var v = (form.variations || []).slice(); var opts = (v[gi].options || []).slice(); opts.splice(oi, 1); v[gi] = { ...v[gi], options: opts }; set("variations", v); }} aria-label="Remove choice" className="s3d-btn-small">×</button>
+                        </div>
+                      ); })}
+                      <button onClick={function () { var v = (form.variations || []).slice(); v[gi] = { ...v[gi], options: (v[gi].options || []).concat([{ label: "", delta: "" }]) }; set("variations", v); }} className="s3d-btn-small">+ Add choice</button>
                     </div>
                   ); })}
-                  <button onClick={function () { var v = (form.variations || []).slice(); v[gi] = { ...v[gi], options: (v[gi].options || []).concat([{ label: "", delta: "" }]) }; set("variations", v); }} style={{ background: "none", border: "1px dashed " + COLORS.wheat, borderRadius: 6, padding: "6px 10px", fontSize: 12, color: COLORS.charcoal, cursor: "pointer" }}>+ Add option</button>
+                  <button onClick={function () { set("variations", (form.variations || []).concat([{ name: "", options: [{ label: "", delta: "" }] }])); }} className="s3d-btn-quiet" style={{ fontSize: 13 }}>+ Add an option</button>
                 </div>
-              ); })}
-              <button onClick={function () { set("variations", (form.variations || []).concat([{ name: "", options: [{ label: "", delta: "" }] }])); }} style={{ background: "none", border: "1px dashed " + COLORS.saffronDark, borderRadius: 6, padding: "7px 12px", fontSize: 12, color: COLORS.saffronDark, fontWeight: 600, cursor: "pointer" }}>+ Add variation</button>
+              </section>
+
+              {/* Organize */}
+              <section id="pf-organize" className="s3d-sec">
+                <h3>Organize</h3>
+                <p className="s3d-sub">Where the product appears in the store and how shoppers find it.</p>
+                <div className="s3d-two">
+                  <div>
+                    <label style={labelStyle} htmlFor="pf-cat">Category</label>
+                    <select id="pf-cat" value={form.category} onChange={(e) => set("category", e.target.value)} style={{ ...inputStyle(false), cursor: "pointer" }}>
+                      {PRODUCT_CATEGORIES.concat(form.category && PRODUCT_CATEGORIES.indexOf(form.category) === -1 ? [form.category] : []).map((c) => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={labelStyle} htmlFor="pf-country">Country or heritage</label>
+                    <select id="pf-country" value={form.country} onChange={(e) => set("country", e.target.value)} style={{ ...inputStyle(false), cursor: "pointer" }}>
+                      <option value="">None</option>
+                      {Object.keys(COUNTRY_FLAGS).map((c) => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={labelStyle} htmlFor="pf-badge">Badge</label>
+                    <select id="pf-badge" value={form.badge} onChange={(e) => set("badge", e.target.value)} style={{ ...inputStyle(false), cursor: "pointer" }}>
+                      <option value="">None</option><option>Best Seller</option><option>New</option><option>Sale</option><option>Limited</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={labelStyle} htmlFor="pf-icon">Icon <span style={{ fontWeight: 400, color: COLORS.textMuted }}>(shown when there is no photo)</span></label>
+                    <input id="pf-icon" type="text" value={form.emoji} onChange={(e) => set("emoji", e.target.value)} style={{ ...inputStyle(false), width: 80, textAlign: "center", fontSize: 18 }} />
+                  </div>
+                </div>
+                <div style={{ marginTop: 14 }}>
+                  <label style={labelStyle} htmlFor="pf-keywords">Search keywords <span style={{ fontWeight: 400, color: COLORS.textMuted }}>(comma separated)</span></label>
+                  <textarea id="pf-keywords" value={(form.keywords || []).join(", ")} onChange={(e) => set("keywords", e.target.value.split(",").map((k) => k.replace(/^\s+/, "")))} rows={2} placeholder="e.g. arabic coffee gift, finjan magnet, middle eastern kitchen decor" style={{ ...inputStyle(false), resize: "vertical" }} />
+                  <div style={hint}>SEO terms live here so the title and description stay clean.</div>
+                </div>
+              </section>
+
+              {/* Visibility */}
+              <section id="pf-visibility" className="s3d-sec">
+                <h3>Visibility</h3>
+                <p className="s3d-sub">Who can see and buy this product.</p>
+                <div className="s3d-seg" role="group" aria-label="Status" style={{ marginBottom: 14 }}>
+                  {[["active", "Live"], ["draft", "Draft"], ["out_of_stock", "Out of stock"]].map((s) => (
+                    <button key={s[0]} aria-pressed={form.status === s[0]} onClick={() => set("status", s[0])}>{s[1]}</button>
+                  ))}
+                </div>
+                <label className="s3d-toggle"><span><strong style={{ fontWeight: 600 }}>Feature on the homepage</strong><br /><span style={{ fontSize: 12.5, color: COLORS.textMuted }}>Shows in the featured row.</span></span><input type="checkbox" checked={!!form.featured} onChange={(e) => set("featured", e.target.checked)} /></label>
+                <label className="s3d-toggle"><span><strong style={{ fontWeight: 600 }}>Accepts custom text</strong><br /><span style={{ fontSize: 12.5, color: COLORS.textMuted }}>Customers can type a name or phrase, often in Arabic.</span></span><input type="checkbox" checked={!!form.customizable} onChange={(e) => set("customizable", e.target.checked)} /></label>
+                <label className="s3d-toggle"><span><strong style={{ fontWeight: 600 }}>Members only</strong><br /><span style={{ fontSize: 12.5, color: COLORS.textMuted }}>Only signed-in members can buy it.</span></span><input type="checkbox" checked={!!form.membersOnly} onChange={(e) => set("membersOnly", e.target.checked)} /></label>
+                <div style={{ paddingTop: 12, borderTop: "1px solid " + COLORS.cream2 }}>
+                  <label style={labelStyle} htmlFor="pf-public">Members get early access until</label>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                    <input id="pf-public" type="datetime-local" value={form.publicAt ? String(form.publicAt).slice(0, 16) : ""} onChange={(e) => set("publicAt", e.target.value ? new Date(e.target.value).toISOString() : "")} style={{ ...inputStyle(false), width: "auto" }} />
+                    <button onClick={() => set("publicAt", new Date(Date.now() + 48 * 3600 * 1000).toISOString())} className="s3d-btn-small">Members first for 48 hours</button>
+                    {form.publicAt && <button onClick={() => set("publicAt", "")} className="s3d-btn-small">Clear</button>}
+                  </div>
+                  <div style={hint}>{form.publicAt ? "Members only until " + new Date(form.publicAt).toLocaleString() + ", then public." : "Empty means public right away."}</div>
+                </div>
+              </section>
+
+              {/* Import and external link */}
+              <details className="s3d-sec" style={{ padding: "16px 22px" }}>
+                <summary style={{ cursor: "pointer", fontFamily: FONTS.display, fontSize: 20, fontWeight: 600 }}>Import from another store, or add an external buy link</summary>
+                <div style={{ marginTop: 14 }}>
+                  <label style={labelStyle} htmlFor="pf-import">Product link (Amazon, Etsy, eBay…)</label>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <input id="pf-import" value={importUrl} onChange={(e) => setImportUrl(e.target.value)} placeholder="https://" className="s3d-input" style={{ flex: "1 1 260px" }} />
+                    <button onClick={importFromLink} disabled={importing} className="s3d-btn-quiet">{importing ? "Reading…" : "Import"}</button>
+                  </div>
+                  <label style={{ ...labelStyle, marginTop: 14 }} htmlFor="pf-buy">External buy link</label>
+                  <input id="pf-buy" value={form.buyUrl || ""} onChange={(e) => set("buyUrl", e.target.value)} placeholder="Adds a 'Buy on…' button to the product page" className="s3d-input" />
+                </div>
+              </details>
             </div>
-            <div style={{ background: "#fff", border: "1px solid " + COLORS.wheat, borderRadius: 12, padding: "14px 15px" }}>
-              <div style={{ fontSize: 11, letterSpacing: 0.5, textTransform: "uppercase", color: COLORS.saffronDark, fontWeight: 600, marginBottom: 11 }}>Organization</div>
-              <label style={labelStyle}>CATEGORY</label>
-              <select value={form.category} onChange={(e) => set("category", e.target.value)} style={{ ...inputStyle(false), cursor: "pointer", marginBottom: 10 }}>
-                {PRODUCT_CATEGORIES.concat(form.category && PRODUCT_CATEGORIES.indexOf(form.category) === -1 ? [form.category] : []).map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
-              <label style={labelStyle}>COUNTRY / HERITAGE</label>
-              <select value={form.country} onChange={(e) => set("country", e.target.value)} style={{ ...inputStyle(false), cursor: "pointer", marginBottom: 10 }}>
-                <option value="">None</option>
-                {Object.keys(COUNTRY_FLAGS).map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
-              <label style={labelStyle}>SEARCH KEYWORDS <span style={{ fontWeight: 400 }}>(comma separated)</span></label>
-              <textarea value={(form.keywords || []).join(", ")} onChange={(e) => set("keywords", e.target.value.split(",").map((k) => k.replace(/^\s+/, "")))} rows={2} placeholder="e.g. arabic name sign, eid gift, 3d printed decor" style={{ ...inputStyle(false), resize: "vertical", marginBottom: 10, fontSize: 12 }} />
-              <div style={{ display: "flex", gap: 8 }}>
-                <div style={{ flex: 1 }}><label style={labelStyle}>BADGE</label><select value={form.badge} onChange={(e) => set("badge", e.target.value)} style={{ ...inputStyle(false), cursor: "pointer" }}><option value="">None</option><option>Best Seller</option><option>New</option><option>Sale</option><option>Limited</option></select></div>
-                <div style={{ width: 64 }}><label style={labelStyle}>ICON</label><input type="text" value={form.emoji} onChange={(e) => set("emoji", e.target.value)} style={{ ...inputStyle(false), textAlign: "center", fontSize: 16, padding: "6px 4px" }} /></div>
+
+            {/* Sidebar: preview and readiness */}
+            <aside className="s3d-pf-aside" aria-label="Preview and checklist">
+              <div className="s3d-sec" style={{ padding: 16 }}>
+                <div className="s3d-label" style={{ marginBottom: 10 }}>How it looks in the store</div>
+                <div style={{ aspectRatio: "1", borderRadius: 12, background: cover ? getBgGrad(cover.bg) : COLORS.cream2, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", position: "relative", fontSize: 64 }}>
+                  {cover ? <img src={cover.thumbUrl || cover.url} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} /> : form.emoji}
+                  {form.badge && <div style={{ position: "absolute", top: 10, left: 10, background: COLORS.saffron, color: "#fff", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 999 }}>{form.badge}</div>}
+                </div>
+                <div style={{ fontFamily: FONTS.display, fontSize: 20, fontWeight: 600, marginTop: 10, lineHeight: 1.15 }}>{form.name || "Product title"}</div>
+                {form.name_ar && <div dir="rtl" style={{ fontFamily: FONTS.arabic, fontSize: 16, color: COLORS.saffronDark, marginTop: 2 }}>{form.name_ar}</div>}
+                <div style={{ marginTop: 6, fontSize: 16, fontWeight: 700 }}>
+                  {form.price ? "$" + parseFloat(form.price).toFixed(2) : "$0.00"}
+                  {form.compareAt ? <span style={{ marginLeft: 8, fontSize: 13, fontWeight: 400, color: COLORS.textMuted, textDecoration: "line-through" }}>${parseFloat(form.compareAt).toFixed(2)}</span> : null}
+                </div>
               </div>
-            </div>
+
+              <div className="s3d-sec" style={{ padding: 16 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+                  <div className="s3d-label" style={{ margin: 0 }}>Ready to publish</div>
+                  <div style={{ fontSize: 12.5, color: readyCount === checks.length ? COLORS.olive : COLORS.textMuted }}>{readyCount} of {checks.length}</div>
+                </div>
+                <div style={{ height: 6, borderRadius: 999, background: COLORS.cream2, overflow: "hidden", marginBottom: 10 }}>
+                  <div style={{ height: "100%", width: (readyCount / checks.length * 100) + "%", background: readyCount === checks.length ? COLORS.olive : COLORS.saffron }} />
+                </div>
+                {checks.map((c, i) => (
+                  <button key={i} onClick={() => goTo(c.id)} style={{ display: "flex", width: "100%", gap: 8, alignItems: "center", background: "none", border: "none", padding: "5px 0", cursor: "pointer", textAlign: "left", fontFamily: FONTS.body, fontSize: 13, color: c.ok ? COLORS.charcoal : COLORS.textMuted }}>
+                    <span aria-hidden="true" style={{ width: 18, height: 18, borderRadius: "50%", flexShrink: 0, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 11, background: c.ok ? COLORS.olive : "transparent", color: "#fff", border: c.ok ? "none" : "1.5px solid " + COLORS.wheat }}>{c.ok ? "✓" : ""}</span>
+                    <span style={{ flex: 1 }}>{c.label}</span>
+                    {c.note ? <span style={{ fontSize: 11.5, color: COLORS.textMuted }}>{c.note}</span> : null}
+                  </button>
+                ))}
+              </div>
+            </aside>
           </div>
-        </div>
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, padding: "14px 20px", borderTop: "1px solid " + COLORS.wheat, background: "#fff" }}>
-          <button onClick={onClose} style={{ background: "none", border: "none", color: COLORS.textMuted, fontSize: 12, cursor: "pointer", marginRight: "auto", fontFamily: FONTS.body }}>Discard</button>
-          <button onClick={handleCancel} disabled={saving} style={{ background: "#fff", border: "1px solid " + COLORS.wheat, color: COLORS.textMuted, borderRadius: 8, padding: "9px 20px", fontSize: 13, fontWeight: 500, fontFamily: FONTS.body, cursor: saving ? "not-allowed" : "pointer" }}>Cancel</button>
-          <button onClick={handleSave} disabled={saving} style={{ background: saving ? COLORS.wheat : COLORS.saffron, border: "none", color: "#fff", borderRadius: 8, padding: "9px 24px", fontSize: 13, fontWeight: 600, fontFamily: FONTS.body, cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.8 : 1 }}>{saving ? "Saving..." : (product ? "Save changes" : "Add product")}</button>
         </div>
       </div>
     </div>
