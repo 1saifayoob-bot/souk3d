@@ -151,6 +151,123 @@ function clean(data, categories, countries, imageCount) {
   return out;
 }
 
+
+// ─── AI STUDIO (Higgsfield) ────────────────────────────────────────────────
+// Scene photos (Grok Imagine 2.0) and short videos (Kling 3.0) from real
+// product photos. Generation is asynchronous: the admin submits, then polls
+// "studio-status". Finished media is copied into our own Supabase storage
+// because Higgsfield only keeps outputs for about seven days.
+const HF_BASE = "https://api.higgsfield.ai";
+const HF_IMAGE_MODEL = "xai/grok-imagine-image-2.0";
+const HF_VIDEO_MODEL = "kling-video/v3.0/std/image-to-video";
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const IMAGE_RATIOS = ["1:1", "3:4", "9:16", "16:9", "4:3", "auto"];
+
+function hfHeaders() {
+  const cred = String(process.env.HF_CREDENTIALS || "").trim();
+  if (!cred) throw new Error("HF_CREDENTIALS is not set in Vercel");
+  return { Authorization: "Key " + cred, "Content-Type": "application/json" };
+}
+
+async function hfJson(res) {
+  const text = await res.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch (_) { data = { raw: text.slice(0, 300) }; }
+  if (!res.ok) {
+    const msg = (data && (data.detail || data.error || data.message)) || res.statusText;
+    const err = new Error("Higgsfield " + res.status + ": " + (typeof msg === "string" ? msg : JSON.stringify(msg)));
+    err.status = res.status;
+    throw err;
+  }
+  return data;
+}
+
+// Only our own public storage URLs may be sent as inputs.
+function isOurImageUrl(u) {
+  const base = String(process.env.VITE_SUPABASE_URL || "").replace(/\/$/, "");
+  return typeof u === "string" && base && u.startsWith(base + "/storage/v1/object/public/");
+}
+
+async function copyToStorage(url, kind) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error("Could not download the generated file (" + r.status + ")");
+  const type = r.headers.get("content-type") || (kind === "video" ? "video/mp4" : "image/jpeg");
+  const ext = kind === "video" ? "mp4" : (type.includes("png") ? "png" : type.includes("webp") ? "webp" : "jpg");
+  const buf = Buffer.from(await r.arrayBuffer());
+  const path = "ai-studio/" + Date.now() + "-" + Math.random().toString(36).slice(2, 8) + "." + ext;
+  const { error } = await admin.storage.from("product-images").upload(path, buf, { contentType: type, upsert: false });
+  if (error) throw new Error("Storage upload failed: " + error.message);
+  return admin.storage.from("product-images").getPublicUrl(path).data.publicUrl;
+}
+
+async function handleStudio(req, res, body) {
+  const action = body.action;
+  try {
+    if (action === "studio-check") {
+      // Uses a random id: 404 means the key works, 401 means it does not. Costs nothing.
+      const r = await fetch(HF_BASE + "/requests/00000000-0000-4000-8000-000000000000/status", { headers: hfHeaders() });
+      return res.status(200).json({ ok: r.status !== 401 && r.status !== 403, status: r.status });
+    }
+
+    if (action === "studio-image") {
+      const images = (Array.isArray(body.image_urls) ? body.image_urls : []).filter(isOurImageUrl).slice(0, 4);
+      if (!images.length) return res.status(400).json({ error: "Save the product photo first so it has a public link." });
+      const prompt = str(body.prompt, 4000);
+      if (!prompt) return res.status(400).json({ error: "Describe the scene first." });
+      const input = {
+        prompt,
+        image_urls: images,
+        quality: body.quality === "low" ? "low" : "medium",
+        resolution: body.resolution === "2k" ? "2k" : "1k",
+        aspect_ratio: IMAGE_RATIOS.includes(body.aspect_ratio) ? body.aspect_ratio : "1:1",
+      };
+      const r = await fetch(HF_BASE + "/" + HF_IMAGE_MODEL, { method: "POST", headers: hfHeaders(), body: JSON.stringify(input) });
+      const data = await hfJson(r);
+      return res.status(200).json({ request_id: data.request_id, status: data.status || "queued" });
+    }
+
+    if (action === "studio-video") {
+      if (!isOurImageUrl(body.image_url)) return res.status(400).json({ error: "Pick a saved photo to animate." });
+      const duration = Math.min(10, Math.max(3, parseInt(body.duration, 10) || 5));
+      const input = {
+        image_url: body.image_url,
+        prompt: str(body.prompt, 2500),
+        duration,
+        sound: body.sound === "on" ? "on" : "off",
+      };
+      const r = await fetch(HF_BASE + "/" + HF_VIDEO_MODEL, { method: "POST", headers: hfHeaders(), body: JSON.stringify(input) });
+      const data = await hfJson(r);
+      return res.status(200).json({ request_id: data.request_id, status: data.status || "queued" });
+    }
+
+    if (action === "studio-status") {
+      const id = String(body.request_id || "");
+      if (!UUID_RE.test(id)) return res.status(400).json({ error: "Bad request id" });
+      const r = await fetch(HF_BASE + "/requests/" + id + "/status", { headers: hfHeaders() });
+      const data = await hfJson(r);
+      const status = data.status;
+      if (status !== "completed") {
+        return res.status(200).json({ status, error: data.error || null });
+      }
+      const out = { status };
+      if (Array.isArray(data.images) && data.images.length) {
+        out.images = [];
+        for (const im of data.images.slice(0, 4)) if (im && im.url) out.images.push(await copyToStorage(im.url, "image"));
+      }
+      if (data.video && data.video.url) out.video = await copyToStorage(data.video.url, "video");
+      return res.status(200).json(out);
+    }
+
+    return res.status(400).json({ error: "Unknown studio action" });
+  } catch (e) {
+    console.error("Studio error:", e);
+    return res.status(e.status && e.status < 500 ? 400 : 500).json({ error: e.message || "Studio request failed" });
+  }
+}
+
+// Video copies can take a few seconds; give the function room.
+export const config = { maxDuration: 60 };
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -159,6 +276,9 @@ export default async function handler(req, res) {
   if (!user) return res.status(403).json({ error: "Not authorized" });
 
   const body = req.body || {};
+  if (typeof body.action === "string" && body.action.startsWith("studio-")) {
+    return handleStudio(req, res, body);
+  }
   const { name, category, country, hints, cost, style } = body;
   // Accept the new `images` array, or the old single `image` field.
   const rawImages = Array.isArray(body.images) ? body.images : body.image ? [body.image] : [];
