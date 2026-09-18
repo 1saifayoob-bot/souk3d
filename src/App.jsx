@@ -242,6 +242,8 @@ function ProductDetail({product, onBack, onAddToCart, onBuyNow, user }) {
   const [activeImg, setActiveImg] = useState(0);
   const galleryObjs = (product.images && product.images.length ? product.images.filter((im) => im && im.url) : (product.imageUrl ? [{ url: product.imageUrl }] : [])).filter((im, i, arr) => arr.findIndex((x) => x.url === im.url) === i);
   const galleryImgs = galleryObjs.map((im) => im.url);
+  const galleryVideos = (Array.isArray(product.videos) ? product.videos : []).filter((v) => v && v.url);
+  const activeVideo = activeImg >= galleryImgs.length ? galleryVideos[activeImg - galleryImgs.length] : null;
   const mainSrc = galleryImgs[activeImg] || galleryImgs[0] || product.imageUrl || "";
   const [qty, setQty] = useState(1);
   const [customText, setCustomText] = useState("");
@@ -273,14 +275,20 @@ function ProductDetail({product, onBack, onAddToCart, onBuyNow, user }) {
         {/* Gallery */}
         <div>
           <div style={{ aspectRatio: "1", background: `linear-gradient(135deg, ${C.cream2} 0%, ${C.wheat}55 100%)`, borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 120, position: "relative", marginBottom: 12 }}>
-            {(mainSrc) ? <img src={mainSrc || ""} alt={product.name || ""} style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: "inherit" }} /> : product.emoji}
+            {activeVideo ? <video key={activeVideo.url} src={activeVideo.url} autoPlay muted loop playsInline controls style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: "inherit", background: "#000" }} /> : (mainSrc) ? <img src={mainSrc || ""} alt={product.name || ""} style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: "inherit" }} /> : product.emoji}
             {product.badge && <div style={{ position: "absolute", top: 16, left: 16, background: C.saffron, color: "#FFF", fontSize: 11, fontWeight: 700, padding: "4px 12px", borderRadius: 12, fontFamily: F.body }}>{product.badge}</div>}
           </div>
-          {galleryImgs.length > 1 && (
+          {galleryImgs.length + galleryVideos.length > 1 && (
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {galleryImgs.map((thumbUrl, i) => (
               <div key={i} onClick={() => setActiveImg(i)} style={{ width: 64, height: 64, borderRadius: 8, overflow: "hidden", cursor: "pointer", border: i === activeImg ? "2px solid " + C.saffron : "0.5px solid " + C.wheat, background: C.cream2 }}>
                 <img src={(galleryObjs[i] && galleryObjs[i].thumbUrl) || thumbUrl} alt={product.name} loading="lazy" decoding="async" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              </div>
+            ))}
+            {galleryVideos.map((v, k) => (
+              <div key={"v" + k} onClick={() => setActiveImg(galleryImgs.length + k)} role="button" aria-label="Play video" style={{ width: 64, height: 64, borderRadius: 8, overflow: "hidden", cursor: "pointer", position: "relative", border: activeImg === galleryImgs.length + k ? "2px solid " + C.saffron : "0.5px solid " + C.wheat, background: "#000" }}>
+                <video src={v.url} muted playsInline preload="metadata" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.85 }} />
+                <span style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 20, textShadow: "0 1px 4px rgba(0,0,0,.6)" }}>▶</span>
               </div>
             ))}
           </div>
