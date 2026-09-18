@@ -729,24 +729,63 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
   const fileRef = useRef(null);
-  const compressImg = (file) =>
+  // Keep photos sharp: up to 2000px. Photos stay JPEG (small); images that
+  // may have transparency (PNG/WebP, cut-outs) stay PNG so the alpha survives.
+  const compressImg = (file, keepAlpha) =>
     new Promise((res) => {
+      const alpha = keepAlpha || /png|webp/i.test((file && file.type) || "");
       const reader = new FileReader();
       reader.onload = (e) => {
         const img = new Image();
         img.onload = () => {
-          const MAX = 800;
+          const MAX = 2000;
           const scale = Math.min(1, MAX / Math.max(img.width, img.height));
           const c = document.createElement("canvas");
           c.width = Math.round(img.width * scale);
           c.height = Math.round(img.height * scale);
           const ctx = c.getContext("2d");
+          ctx.imageSmoothingQuality = "high";
           ctx.drawImage(img, 0, 0, c.width, c.height);
-          res(c.toDataURL("image/png"));
+          res(alpha ? c.toDataURL("image/png") : c.toDataURL("image/jpeg", 0.92));
         };
         img.src = e.target.result;
       };
       reader.readAsDataURL(file);
+    });
+  // After background removal: drop the faint halo left around edges and crop
+  // to the product with a small margin so it fills the card.
+  const tidyCutout = (blob) =>
+    new Promise((res, rej) => {
+      const u = URL.createObjectURL(blob);
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement("canvas");
+        c.width = img.naturalWidth; c.height = img.naturalHeight;
+        const ctx = c.getContext("2d");
+        ctx.drawImage(img, 0, 0);
+        const d = ctx.getImageData(0, 0, c.width, c.height);
+        const px = d.data;
+        let minX = c.width, minY = c.height, maxX = -1, maxY = -1;
+        for (let y = 0; y < c.height; y++) {
+          for (let x = 0; x < c.width; x++) {
+            const i = (y * c.width + x) * 4 + 3;
+            if (px[i] < 24) { px[i] = 0; continue; }
+            if (x < minX) minX = x; if (x > maxX) maxX = x;
+            if (y < minY) minY = y; if (y > maxY) maxY = y;
+          }
+        }
+        URL.revokeObjectURL(u);
+        if (maxX < 0) { rej(new Error("Nothing was left after removing the background.")); return; }
+        ctx.putImageData(d, 0, 0);
+        const w = maxX - minX + 1, h = maxY - minY + 1;
+        const pad = Math.round(Math.max(w, h) * 0.06);
+        const out = document.createElement("canvas");
+        out.width = w + pad * 2; out.height = h + pad * 2;
+        out.getContext("2d").drawImage(c, minX, minY, w, h, pad, pad, w, h);
+        res(out.toDataURL("image/png"));
+      };
+      img.onerror = () => { URL.revokeObjectURL(u); rej(new Error("Could not read the result.")); };
+      img.src = u;
     });
   const handleImageUpload = async (files) => {
     const remaining = 5 - form.images.length;
@@ -780,16 +819,27 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
       return;
     }
     setBgBusy(idx);
+    setBgProgress("Loading the AI model…");
     try {
       const { removeBackground } = await import("@imgly/background-removal");
-      const blob = await removeBackground(target.original || target.url);
-      const url = await compressImg(blob);
-      setForm((f) => { const a = [...f.images]; a[idx] = { ...a[idx], url, bgRemoved: true }; return { ...f, images: a }; });
+      // Phones get the lighter model; computers get the most accurate one.
+      const small = typeof window !== "undefined" && (window.matchMedia("(max-width: 860px)").matches || (navigator.deviceMemory && navigator.deviceMemory < 4));
+      const blob = await removeBackground(target.original || target.url, {
+        model: small ? "isnet_fp16" : "isnet",
+        output: { format: "image/png" },
+        progress: (key, current, total) => {
+          if (String(key).indexOf("fetch") === 0 && total) setBgProgress("Downloading the AI model " + Math.round((current / total) * 100) + "% (first time only)");
+          else if (String(key).indexOf("compute") === 0) setBgProgress("Removing background…");
+        },
+      });
+      const url = await tidyCutout(blob);
+      setForm((f) => { const a = [...f.images]; a[idx] = { ...a[idx], url, thumbUrl: undefined, bgRemoved: true, bg: a[idx].bg === "cream" ? "white" : a[idx].bg }; return { ...f, images: a }; });
     } catch (err) {
       console.warn("Background removal failed", err);
-      alert("Background removal failed - please try again.");
+      alert("Background removal failed: " + ((err && err.message) || "please try again") + ".");
     } finally {
       setBgBusy(null);
+      setBgProgress("");
     }
   };
   const removeImage = (idx) => setForm(f => ({ ...f, images: f.images.filter((_,i) => i!==idx) }));
@@ -800,6 +850,7 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
   const [generating, setGenerating] = useState(false);
   const [imgBusy, setImgBusy] = useState(false);
   const [bgBusy, setBgBusy] = useState(null);
+  const [bgProgress, setBgProgress] = useState("");
   // Photos sent to the AI are shrunk to small JPEGs so five of them stay well
   // under the serverless request size limit. Stored http(s) photos are passed
   // by URL and fetched by the API directly.
@@ -1118,7 +1169,7 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
                         {!img.ai && (
                           <label style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6, fontSize: 11.5, color: COLORS.textMuted, cursor: "pointer" }}>
                             <input type="checkbox" checked={!!img.bgRemoved} onChange={() => toggleRemoveBg(idx)} disabled={bgBusy === idx} style={{ margin: 0 }} />
-                            {bgBusy === idx ? "Removing…" : "Remove background"}
+                            {bgBusy === idx ? "Working…" : "Remove background"}
                           </label>
                         )}
                         <select value={img.bg} onChange={(e) => updateImageBg(idx, e.target.value)} aria-label="Card background" style={{ ...inputStyle(false), marginTop: 6, fontSize: 11.5, padding: "5px 6px" }}>
@@ -1130,6 +1181,9 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
                       <button onClick={() => fileRef.current && fileRef.current.click()} style={{ width: 118, height: 118, borderRadius: 10, border: "1.5px dashed " + COLORS.wheat, background: COLORS.cream, color: COLORS.saffronDark, cursor: "pointer", fontSize: 13, fontFamily: FONTS.body }}>+ Add photo</button>
                     )}
                   </div>
+                )}
+                {bgBusy !== null && bgProgress && (
+                  <div role="status" style={{ marginTop: 12, fontSize: 12.5, color: COLORS.saffronDark, fontWeight: 600 }}>{bgProgress}</div>
                 )}
                 {(form.videos || []).length > 0 && (
                   <div style={{ marginTop: 18 }}>
