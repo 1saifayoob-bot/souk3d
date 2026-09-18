@@ -188,6 +188,7 @@ export function rowToProduct(r) {
     customizable: !!r.customizable,
     variations: Array.isArray(r.variations) ? r.variations : [],
     details: Array.isArray(r.details) ? r.details : [],
+    videos: Array.isArray(r.videos) ? r.videos : [],
   };
 }
 
@@ -219,6 +220,7 @@ export function productToRow(p) {
     customizable: !!p.customizable,
     variations: Array.isArray(p.variations) ? p.variations : [],
     details: Array.isArray(p.details) ? p.details.map((d) => String(d || "").trim()).filter(Boolean) : [],
+    videos: Array.isArray(p.videos) ? p.videos.filter((v) => v && typeof v.url === "string" && v.url.startsWith("http")).map((v) => ({ url: v.url })) : [],
     image_bg: p.imageBg || (images[0] && images[0].bg) || "cream",
   };
 }
