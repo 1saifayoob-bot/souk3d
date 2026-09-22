@@ -13,7 +13,7 @@ const F = { display: "'Cormorant Garamond', serif", body: "'Outfit', sans-serif"
 
 // ─── STOREFRONT MOCK DATA ──────────────────────────────────────────────────────
 const DEFAULT_STORE_PRODUCTS = [
-  { id: 1, name: "Damascus Name Plaque", name_ar: "لوحة الاسم الدمبقية", category: "Home Decor", country: "Syria", flag: "🇸🇾", price: 44.99, compareAt: 59.99, badge: "Best Seller", stars: 4.9, reviews: 47, emoji: "🏺", desc: "Beautifully 3D-printed wall plaque featuring your family name in Diwani calligraphy. Each piece is hand-finished in Detroit and ships worldwide.", customizable: true },
+  { id: 1, name: "Damascus Name Plaque", name_ar: "لوحة الاسم الدمبقية", category: "Home Decor", country: "Syria", flag: "🇸🇾", price: 44.99, compareAt: 59.99, badge: "Best Seller", stars: 4.9, reviews: 47, emoji: "🏺", desc: "Beautifully 3D-printed wall plaque featuring your family name in Diwani calligraphy. Each piece is hand-finished in Los Angeles and ships worldwide.", customizable: true },
   { id: 2, name: "Eid Mubarak Lantern", name_ar: "فانوس عيد مبارك", category: "Seasonal", country: "Pan-Arab", flag: "🌍", price: 34.99, compareAt: null, badge: "New", stars: 4.8, reviews: 38, emoji: "🪔", desc: "Intricate geometric lantern celebrating Eid al-Fitr and Eid al-Adha. Perfect as a centerpiece or gift.", customizable: false },
   { id: 3, name: "Palestinian Olive Tree", name_ar: "شجرة الزيتون الفلسطينية", category: "Art", country: "Palestine", flag: "🇵🇸", price: 54.99, compareAt: null, badge: null, stars: 5.0, reviews: 29, emoji: "🫒", desc: "A symbol of steadfastness and heritage. This sculptural olive tree captures the spirit of Palestinian connection to the land.", customizable: false },
   { id: 4, name: "Kufic Calligraphy Frame", name_ar: "إطار الخط الكوفي", category: "Art", country: "Pan-Arab", flag: "🌍", price: 64.99, compareAt: 79.99, badge: "Sale", stars: 4.7, reviews: 18, emoji: "✦", desc: "Custom Quranic verse or family name rendered in the ancient Kufic script, mounted in a sleek matte frame.", customizable: true },
@@ -62,7 +62,7 @@ const HERITAGE_ITEMS = [
 ];
 
 const REVIEWS = [
-  { name: "Layla H.", flag: "🇺🇸", location: "Detroit, MI", text: "Nala's work is absolutely stunning. The Damascus name plaque hangs above our fireplace and gets compliments every single day. Ordered a second one as a gift!", stars: 5, product: "Damascus Name Plaque", arabic: "ممتاز جداً" },
+  { name: "Layla H.", flag: "🇺🇸", location: "Detroit, MI", text: "Miami's work is absolutely stunning. The Damascus name plaque hangs above our fireplace and gets compliments every single day. Ordered a second one as a gift!", stars: 5, product: "Damascus Name Plaque", arabic: "ممتاز جداً" },
   { name: "Omar K.", flag: "🇨🇦", location: "Toronto, ON", text: "Finally someone who understands the diaspora experience. Every piece tells a story. Fast shipping to Canada too.", stars: 5, product: "Eid Mubarak Lantern", arabic: "" },
   { name: "Yara M.", flag: "🇬🇧", location: "London, UK", text: "The Palestinian olive tree sculpture is breathtaking. My mother cried when she saw it. It means so much to our family.", stars: 5, product: "Palestinian Olive Tree", arabic: "شكراً جزيلاً" },
 ];
@@ -476,7 +476,7 @@ function CheckoutPage({ cart, onBack, promo, user }) {
         <div style={{ fontSize: 64, marginBottom: 20 }}>🎉</div>
         <div style={{ fontFamily: F.display, fontSize: 36, fontWeight: 600, color: C.charcoal, marginBottom: 8 }}>Order Confirmed!</div>
         <div style={{ fontFamily: F.arabic, fontSize: 22, color: C.saffron, marginBottom: 16 }}>مبروك طلبك!</div>
-        <p style={{ fontSize: 14, color: C.textMuted, fontFamily: F.body, lineHeight: 1.7, marginBottom: 24 }}>Your order has been received. Nala will begin crafting your pieces within 1–2 business days. You'll receive an email confirmation shortly.</p>
+        <p style={{ fontSize: 14, color: C.textMuted, fontFamily: F.body, lineHeight: 1.7, marginBottom: 24 }}>Your order has been received. Miami will begin crafting your pieces within 1–2 business days. You'll receive an email confirmation shortly.</p>
         <button onClick={onBack} style={{ padding: "13px 32px", background: C.charcoal, color: "#FFF", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 600, fontFamily: F.body, cursor: "pointer" }}>Continue Shopping</button>
       </div>
     );
@@ -655,7 +655,7 @@ function CustomOrderForm({ onBack }) {
         {reference && (
           <div style={{ display: "inline-block", background: C.cream2, border: "0.5px solid " + C.wheat, borderRadius: 8, padding: "6px 14px", fontSize: 12, fontFamily: F.body, color: C.textMuted, marginBottom: 16 }}>Reference {reference}</div>
         )}
-        <p style={{ fontSize: 14, color: C.textMuted, fontFamily: F.body, lineHeight: 1.7, marginBottom: 24 }}>Nala will review your request and send you a personalized quote within 24 hours. Check your email and WhatsApp!</p>
+        <p style={{ fontSize: 14, color: C.textMuted, fontFamily: F.body, lineHeight: 1.7, marginBottom: 24 }}>Miami will review your request and send you a personalized quote within 24 hours. Check your email and WhatsApp!</p>
         <button onClick={onBack} style={{ padding: "13px 32px", background: C.saffron, color: "#FFF", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 600, fontFamily: F.body, cursor: "pointer" }}>Back to Shop</button>
       </div>
     );
@@ -772,7 +772,7 @@ function CustomOrderForm({ onBack }) {
           {/* What happens next */}
           <div style={{ background: C.cream2, border: `0.5px solid ${C.wheat}`, borderRadius: 12, padding: "16px 18px", marginBottom: 20 }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: C.charcoal, marginBottom: 10, fontFamily: F.body }}>What happens next?</div>
-            {["Nala reviews your request (within 24h)", "You receive a custom quote by email", "Approve the quote — no payment until you approve", "Nala crafts your piece (3–5 days)", "Ships directly to you worldwide 🚀"].map((s, i) => (
+            {["Miami reviews your request (within 24h)", "You receive a custom quote by email", "Approve the quote — no payment until you approve", "Miami crafts your piece (3–5 days)", "Ships directly to you worldwide 🚀"].map((s, i) => (
               <div key={i} style={{ display: "flex", gap: 10, marginBottom: 6, alignItems: "flex-start" }}>
                 <div style={{ width: 20, height: 20, borderRadius: "50%", background: C.saffron, color: "#FFF", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
                 <div style={{ fontSize: 12, color: C.charcoal, fontFamily: F.body, lineHeight: 1.5 }}>{s}</div>
@@ -874,7 +874,7 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder }) {
           <div>
             <div style={{ fontFamily: F.arabic, fontSize: 28, color: C.saffron, marginBottom: 12 }}>أهلاً وسهلاً</div>
             <div style={{ fontFamily: F.display, fontSize: 56, fontWeight: 600, color: "#FFF", lineHeight: 1.1, marginBottom: 16 }}>Gifts that carry your story home.</div>
-            <p style={{ fontSize: 16, color: "#C9B99A", fontFamily: F.body, lineHeight: 1.7, marginBottom: 32, maxWidth: 440 }}>Handmade 3D-printed gifts celebrating Arab heritage, crafted with love in Detroit by Nala. Every piece tells a diaspora story.</p>
+            <p style={{ fontSize: 16, color: "#C9B99A", fontFamily: F.body, lineHeight: 1.7, marginBottom: 32, maxWidth: 440 }}>Handmade 3D-printed gifts celebrating Arab heritage, crafted with love in Burbank, Los Angeles by Miami Abdulal. Every piece tells a diaspora story.</p>
             <div style={{ display: "flex", gap: 14 }}>
               <button onClick={() => window.scrollTo({ top: 600, behavior: "smooth" })} style={{ padding: "15px 32px", background: C.saffron, color: "#FFF", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, fontFamily: F.body, cursor: "pointer" }}>Shop Now</button>
               <button onClick={onCustomOrder} style={{ padding: "15px 32px", background: "transparent", color: "#FFF", border: `1.5px solid rgba(255,255,255,0.3)`, borderRadius: 10, fontSize: 14, fontWeight: 600, fontFamily: F.body, cursor: "pointer" }}>Custom Order ✦</button>
@@ -896,7 +896,7 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder }) {
       {/* Trust badges */}
       <div style={{ background: C.charcoal, padding: "14px 5%" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", justifyContent: "center", gap: 40, flexWrap: "wrap" }}>
-          {["✦ Handmade in Detroit", "🌍 Ships Worldwide", "💬 Arabic Customer Support", "🔄 Easy Returns"].map(t => (
+          {["✦ Handmade in Los Angeles", "🌍 Ships Worldwide", "💬 Arabic Customer Support", "🔄 Easy Returns"].map(t => (
             <span key={t} style={{ fontSize: 12, color: C.wheat, fontFamily: F.body }}>{t}</span>
           ))}
         </div>
@@ -937,13 +937,13 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder }) {
           </div>
         </div>
 
-        {/* Nala's story */}
+        {/* Our story, signed by the owner */}
         <div id="about-section" style={{ background: C.charcoal, borderRadius: 20, padding: "48px", marginBottom: 56, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40, alignItems: "center" }}>
           <div>
-            <div style={{ fontFamily: F.arabic, fontSize: 20, color: C.saffron, marginBottom: 12 }}>من مالا بكل حب</div>
+            <div style={{ fontFamily: F.arabic, fontSize: 20, color: C.saffron, marginBottom: 12 }}>منّا لكم بكل حب</div>
             <div style={{ fontFamily: F.display, fontSize: 30, fontWeight: 600, color: "#FFF", lineHeight: 1.2, marginBottom: 16 }}>A piece of home in every print.</div>
-            <p style={{ fontSize: 14, color: "#C9B99A", fontFamily: F.body, lineHeight: 1.8, marginBottom: 20 }}>Growing up in the Arab diaspora, I always searched for gifts that felt like home — pieces that held our language, our patterns, our stories. When I couldn't find them, I decided to make them. Every Souk3D piece is printed, finished, and packed by my own hands in Detroit.</p>
-            <div style={{ fontFamily: F.display, fontSize: 22, color: C.saffron, fontStyle: "italic" }}>— Nala ✦</div>
+            <p style={{ fontSize: 14, color: "#C9B99A", fontFamily: F.body, lineHeight: 1.8, marginBottom: 20 }}>Growing up in the Arab diaspora, we always searched for gifts that felt like home — pieces that held our language, our patterns, our stories. When we couldn't find them, we decided to make them. Every Souk3D piece is printed, finished, and packed by hand in our studio in Burbank, Los Angeles.</p>
+            <div style={{ fontFamily: F.display, fontSize: 22, color: C.saffron, fontStyle: "italic" }}>— Miami Abdulal ✦</div>
           </div>
           <div style={{ textAlign: "center" }}>
             <div style={{ width: 160, height: 160, borderRadius: "50%", background: `linear-gradient(135deg, ${C.saffron}44 0%, ${C.terracotta}44 100%)`, margin: "0 auto 16px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 72 }}>🏺</div>
@@ -1005,7 +1005,7 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder }) {
             <div>
               <div style={{ fontFamily: F.display, fontSize: 24, fontWeight: 600, color: "#FFF", marginBottom: 4 }}>Souk3D</div>
               <div style={{ fontFamily: F.arabic, fontSize: 16, color: C.saffron, marginBottom: 12 }}>سوق تري دي</div>
-              <p style={{ fontSize: 12, color: "#9A8878", fontFamily: F.body, lineHeight: 1.7 }}>Handmade 3D-printed gifts for the Arab diaspora, crafted with love in Detroit, MI.</p>
+              <p style={{ fontSize: 12, color: "#9A8878", fontFamily: F.body, lineHeight: 1.7 }}>Handmade 3D-printed gifts for the Arab diaspora, crafted with love in Burbank, Los Angeles.</p>
             </div>
             {[
               { title: "Shop", links: ["All Products", "Syria", "Lebanon", "Palestine", "Custom Orders"] },
@@ -1021,8 +1021,8 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder }) {
             ))}
           </div>
           <div style={{ borderTop: `0.5px solid ${C.inkBrown}`, paddingTop: 20, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
-            <div style={{ fontSize: 12, color: "#6A5848", fontFamily: F.body }}>© 2025 Souk3D by Nala. All rights reserved.</div>
-            <div style={{ fontSize: 12, color: "#6A5848", fontFamily: F.body }}>Made with ❤️ in Detroit, MI</div>
+            <div style={{ fontSize: 12, color: "#6A5848", fontFamily: F.body }}>© {new Date().getFullYear()} Souk3D by Miami Abdulal. All rights reserved.</div>
+            <div style={{ fontSize: 12, color: "#6A5848", fontFamily: F.body }}>Made with ❤️ in Burbank, Los Angeles</div>
           </div>
         </div>
       </div>
