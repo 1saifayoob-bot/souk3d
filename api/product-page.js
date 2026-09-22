@@ -51,7 +51,7 @@ export default async function handler(req, res) {
     const img = (first && (first.url || first.thumbUrl)) || "";
     const title = p.name + " - Souk3D";
     const desc = String(
-      p.description || "Handmade 3D-printed gifts celebrating Arab heritage, made by hand in Detroit."
+      p.description || "Handmade 3D-printed gifts celebrating Arab heritage, made by hand in Los Angeles."
     ).slice(0, 200);
     const url = origin + "/p/" + encodeURIComponent(p.sku);
 

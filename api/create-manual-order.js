@@ -9,7 +9,8 @@ const admin = createClient(
 
 const RESEND_KEY = process.env.RESEND_API_KEY;
 const FROM_EMAIL = "Souk3D <order@souk3d.com>";
-const REPLY_TO = "1saif.ayoob@gmail.com";
+// Customer replies go to the store owner, Miami Abdulal.
+const REPLY_TO = "3dmediaselling@gmail.com";
 
 async function requireAdmin(req) {
   const authHeader = req.headers.authorization || "";

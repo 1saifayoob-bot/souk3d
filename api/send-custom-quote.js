@@ -7,7 +7,8 @@ const admin = createClient(
 
 const RESEND_KEY = process.env.RESEND_API_KEY;
 const FROM_EMAIL = "Souk3D <order@souk3d.com>";
-const REPLY_TO = "1saif.ayoob@gmail.com";
+// Customer replies go to the store owner, Miami Abdulal.
+const REPLY_TO = "3dmediaselling@gmail.com";
 
 async function requireAdmin(req) {
   const authHeader = req.headers.authorization || "";
@@ -80,7 +81,7 @@ function quoteHtml(name, ref, amount, message, req) {
         "</div>"
       : "") +
     '<p style="font-size:14px;color:#555;line-height:1.7;">Just reply to this email to accept, ask a question, or change anything. Nothing is charged until you say yes.</p>' +
-    '<p style="font-size:13px;color:#8A7A6A;margin-top:22px;">— Nala and the Souk3D family<br/><span style="font-size:15px;">شكراً لك</span></p>' +
+    '<p style="font-size:13px;color:#8A7A6A;margin-top:22px;">— Miami and the Souk3D family<br/><span style="font-size:15px;">شكراً لك</span></p>' +
     "</div>"
   );
 }
