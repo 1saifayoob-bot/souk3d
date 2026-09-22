@@ -425,6 +425,10 @@ async function studioCall(payload) {
 function ProductStudio({ form, setForm }) {
   const [mode, setMode] = useState("photos");
   const [scene, setScene] = useState("coffee");
+  const [otherScene, setOtherScene] = useState("");
+  const [templates, setTemplates] = useState([]);
+  const [tplMsg, setTplMsg] = useState("");
+  const [naming, setNaming] = useState(null); // { jobId, name }
   const [kind, setKind] = useState(function () { return inferStudioKind(form); });
   const [size, setSize] = useState(function () { return inferStudioSize(form); });
   const [quote, setQuote] = useState(null); // { usd, credits, payload, error }
@@ -449,10 +453,36 @@ function ProductStudio({ form, setForm }) {
     } catch (_) { if (alive.current) setBalance(null); }
   };
   useEffect(function () { loadBalance(); }, []);
+  const loadTemplates = async function () {
+    const { data, error } = await supabase.from("studio_templates").select("*").order("created_at", { ascending: true });
+    if (error) { setTplMsg("Couldn't load your saved scenes: " + error.message); return; }
+    if (alive.current) setTemplates(data || []);
+  };
+  useEffect(function () { loadTemplates(); }, []);
+  const saveTemplate = async function (text, name) {
+    const clean = String(name || "").trim();
+    if (!clean) { setTplMsg("Give the template a name first."); return; }
+    const { error } = await supabase.from("studio_templates").insert({ name: clean.slice(0, 40), kind: "scene", text: String(text).slice(0, 1500) });
+    if (error) { setTplMsg("Couldn't save the template: " + error.message); return; }
+    setNaming(null);
+    setTplMsg("Saved as a scene template: " + clean + ". It's now in the Scene list for every product.");
+    await loadTemplates();
+  };
+  const deleteTemplate = async function (t) {
+    if (!window.confirm("Delete the scene template \"" + t.name + "\"?")) return;
+    const { error } = await supabase.from("studio_templates").delete().eq("id", t.id);
+    if (error) { setTplMsg("Couldn't delete it: " + error.message); return; }
+    if (scene === "tpl:" + t.id) setScene("coffee");
+    await loadTemplates();
+  };
 
   const images = form.images || [];
   const src = images[Math.min(source, Math.max(0, images.length - 1))];
-  const sceneObj = STUDIO_SCENES.find(function (s) { return s.id === scene; }) || STUDIO_SCENES[0];
+  const tplObj = scene.indexOf("tpl:") === 0 ? templates.find(function (t) { return "tpl:" + t.id === scene; }) : null;
+  const sceneObj = scene === "other"
+    ? { id: "other", label: "Other", text: otherScene.trim() || "a setting that suits the product" }
+    : tplObj ? { id: scene, label: tplObj.name, text: tplObj.text }
+    : (STUDIO_SCENES.find(function (s) { return s.id === scene; }) || STUDIO_SCENES[0]);
   const motionObj = STUDIO_MOTIONS.find(function (m) { return m.id === motion; }) || STUDIO_MOTIONS[0];
   const builtPrompt = mode === "photos" ? studioScenePrompt(form, sceneObj.text, note, kind, size) : studioVideoPrompt(motionObj.text, note);
   const prompt = custom !== null ? custom : builtPrompt;
@@ -499,6 +529,7 @@ function ProductStudio({ form, setForm }) {
   const priceCheck = async function () {
     setErr(""); setQuote(null);
     if (!src) { setErr("Add a product photo first."); return; }
+    if (mode === "photos" && scene === "other" && !otherScene.trim() && custom === null) { setErr("Describe your scene in the Other box first."); return; }
     setStarting(true);
     let payload = null;
     try {
@@ -520,7 +551,7 @@ function ProductStudio({ form, setForm }) {
     setQuote(null); setStarting(true);
     try {
       const r = await studioCall(q.payload);
-      const job = { id: Date.now() + "-" + Math.random().toString(36).slice(2, 6), kind: mode === "photos" ? "image" : "video", status: r.status || "queued", label: mode === "photos" ? sceneObj.label : motionObj.label, images: [], video: "", cost: typeof q.usd === "number" && isFinite(q.usd) ? q.usd : 0 };
+      const job = { id: Date.now() + "-" + Math.random().toString(36).slice(2, 6), kind: mode === "photos" ? "image" : "video", status: r.status || "queued", label: mode === "photos" ? sceneObj.label : motionObj.label, sceneText: mode === "photos" && scene === "other" ? otherScene.trim() : "", images: [], video: "", cost: typeof q.usd === "number" && isFinite(q.usd) ? q.usd : 0 };
       setJobs(function (js) { return [job].concat(js); });
       poll(job.id, r.request_id, job.kind);
     } catch (e) {
@@ -555,7 +586,7 @@ function ProductStudio({ form, setForm }) {
       <div style={{ display: "flex", gap: 6, marginBottom: 14, alignItems: "center", flexWrap: "wrap" }}>
         <div role="tablist" style={{ display: "flex", gap: 6 }}>
           {[["photos", "Scene photos"], ["video", "Video"]].map(function (m) { return (
-            <button key={m[0]} role="tab" aria-selected={mode === m[0]} onClick={function () { setMode(m[0]); setCustom(null); setNote(""); setQuote(null); }} style={{ ...chip(mode === m[0]), padding: "8px 16px", fontWeight: 600 }}>{m[1]}</button>
+            <button key={m[0]} role="tab" aria-selected={mode === m[0]} onClick={function () { setMode(m[0]); setCustom(null); setNote(""); setQuote(null); setScene(scene === "other" && m[0] === "video" ? "coffee" : scene); }} style={{ ...chip(mode === m[0]), padding: "8px 16px", fontWeight: 600 }}>{m[1]}</button>
           ); })}
         </div>
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 10, background: COLORS.cream, border: "1px solid " + COLORS.wheat, borderRadius: 999, padding: "6px 12px", fontSize: 12.5 }}>
@@ -586,14 +617,27 @@ function ProductStudio({ form, setForm }) {
               <>
                 <div className="s3d-label">What is it?</div>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 14 }}>
-                  {STUDIO_KINDS.map(function (k) { return <button key={k.id} onClick={function () { setKind(k.id); setCustom(null); setQuote(null); }} style={chip(kind === k.id)}>{k.label}</button>; })}
+                  {STUDIO_KINDS.map(function (k) { return <button key={k.id} onClick={function () { setKind(k.id); setQuote(null); }} style={chip(kind === k.id)}>{k.label}</button>; })}
                 </div>
                 <div className="s3d-label">Real size <span style={{ fontWeight: 400, color: COLORS.textMuted }}>(keeps the scale right)</span></div>
-                <input value={size} onChange={function (e) { setSize(e.target.value); setCustom(null); setQuote(null); }} placeholder="e.g. 3 in, or 8 cm" className="s3d-input" style={{ maxWidth: 200, marginBottom: 16 }} />
+                <input value={size} onChange={function (e) { setSize(e.target.value); setQuote(null); }} placeholder="e.g. 3 in, or 8 cm" className="s3d-input" style={{ maxWidth: 200, marginBottom: 16 }} />
                 <div className="s3d-label">Scene</div>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
-                  {STUDIO_SCENES.map(function (s) { return <button key={s.id} onClick={function () { setScene(s.id); setCustom(null); setQuote(null); }} style={chip(scene === s.id)}>{s.label}</button>; })}
+                  {STUDIO_SCENES.map(function (s) { return <button key={s.id} onClick={function () { setScene(s.id); setQuote(null); }} style={chip(scene === s.id)}>{s.label}</button>; })}
+                  {templates.map(function (t) { return (
+                    <span key={t.id} style={{ display: "inline-flex", alignItems: "center" }}>
+                      <button onClick={function () { setScene("tpl:" + t.id); setQuote(null); }} style={{ ...chip(scene === "tpl:" + t.id), borderTopRightRadius: 0, borderBottomRightRadius: 0 }} title={t.text}>★ {t.name}</button>
+                      <button onClick={function () { deleteTemplate(t); }} aria-label={"Delete template " + t.name} style={{ ...chip(false), borderTopLeftRadius: 0, borderBottomLeftRadius: 0, borderLeft: "none", padding: "7px 9px", color: COLORS.textMuted }}>×</button>
+                    </span>
+                  ); })}
+                  <button onClick={function () { setScene("other"); setQuote(null); }} style={chip(scene === "other")}>Other…</button>
                 </div>
+                {scene === "other" && (
+                  <div style={{ marginTop: -8, marginBottom: 16 }}>
+                    <textarea value={otherScene} onChange={function (e) { setOtherScene(e.target.value); setQuote(null); }} rows={3} className="s3d-input" style={{ resize: "vertical" }} placeholder="Describe the scene, e.g. a sunny Damascus courtyard with a small fountain, jasmine on the wall and a wooden bench" />
+                    <div style={{ ...small, marginTop: 4 }}>If you like the result, you can save this scene as a named template.</div>
+                  </div>
+                )}
                 <div className="s3d-label">Shape</div>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
                   {STUDIO_RATIOS.map(function (r) { return <button key={r.id} onClick={function () { setRatio(r.id); setQuote(null); }} style={chip(ratio === r.id)} title={r.hint}>{r.label} <span style={{ opacity: 0.65 }}>{r.hint}</span></button>; })}
@@ -603,7 +647,7 @@ function ProductStudio({ form, setForm }) {
               <>
                 <div className="s3d-label">Camera</div>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
-                  {STUDIO_MOTIONS.map(function (m) { return <button key={m.id} onClick={function () { setMotion(m.id); setCustom(null); }} style={chip(motion === m.id)}>{m.label}</button>; })}
+                  {STUDIO_MOTIONS.map(function (m) { return <button key={m.id} onClick={function () { setMotion(m.id); }} style={chip(motion === m.id)}>{m.label}</button>; })}
                 </div>
                 <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap", marginBottom: 16 }}>
                   <div>
@@ -621,12 +665,17 @@ function ProductStudio({ form, setForm }) {
             )}
 
             <div className="s3d-label">Anything to add? <span style={{ fontWeight: 400, color: COLORS.textMuted }}>(optional)</span></div>
-            <input value={note} onChange={function (e) { setNote(e.target.value); setCustom(null); }} placeholder={mode === "photos" ? "e.g. place it on a desk next to a laptop" : "e.g. steam rises from a coffee cup"} className="s3d-input" style={{ marginBottom: 12 }} />
+            <input value={note} onChange={function (e) { setNote(e.target.value); }} placeholder={mode === "photos" ? "e.g. place it on a desk next to a laptop" : "e.g. steam rises from a coffee cup"} className="s3d-input" style={{ marginBottom: 12 }} />
 
             <details style={{ marginBottom: 14 }}>
               <summary style={{ fontSize: 12.5, color: COLORS.saffronDark, cursor: "pointer", fontWeight: 600 }}>See or edit the full prompt</summary>
-              <textarea value={prompt} onChange={function (e) { setCustom(e.target.value); }} rows={5} className="s3d-input" style={{ marginTop: 8, fontSize: 12, resize: "vertical" }} />
-              {custom !== null && <button onClick={function () { setCustom(null); }} style={{ background: "none", border: "none", color: COLORS.textMuted, fontSize: 12, cursor: "pointer", padding: "4px 0" }}>Reset to the built prompt</button>}
+              <textarea value={prompt} onChange={function (e) { setCustom(e.target.value); setQuote(null); }} rows={8} className="s3d-input" style={{ marginTop: 8, fontSize: 12, resize: "vertical" }} />
+              {custom !== null && (
+                <div style={{ ...small, marginTop: 4 }}>
+                  You edited the prompt, so it's used exactly as written and the options above won't change it.{" "}
+                  <button onClick={function () { setCustom(null); setQuote(null); }} style={{ background: "none", border: "none", color: COLORS.saffronDark, fontSize: 12, cursor: "pointer", padding: 0, textDecoration: "underline" }}>Go back to the built prompt</button>
+                </div>
+              )}
             </details>
 
             {!quote ? (
@@ -657,6 +706,7 @@ function ProductStudio({ form, setForm }) {
           </div>
 
           <div>
+            {tplMsg && <div role="status" style={{ fontSize: 12.5, color: COLORS.saffronDark, background: "#FBEFD8", border: "1px solid #E6C886", borderRadius: 8, padding: "8px 10px", marginBottom: 10, display: "flex", gap: 8 }}><span style={{ flex: 1 }}>{tplMsg}</span><button onClick={function () { setTplMsg(""); }} aria-label="Dismiss" style={{ background: "none", border: "none", cursor: "pointer", color: COLORS.saffronDark }}>×</button></div>}
             <div className="s3d-label">Results {pending ? <span style={{ fontWeight: 400, color: COLORS.textMuted }}>({pending} in progress)</span> : null}</div>
             {!jobs.length && <div style={{ ...small, border: "1px dashed " + COLORS.wheat, borderRadius: 10, padding: 18, textAlign: "center" }}>Your generated photos and videos appear here. Pick the good ones to add them to the product.</div>}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 10 }}>
@@ -679,6 +729,18 @@ function ProductStudio({ form, setForm }) {
                 return (j.images || []).map(function (u, k) { return (
                   <div key={j.id + k} style={{ border: "1px solid " + COLORS.wheat, borderRadius: 10, overflow: "hidden", background: "#fff" }}>
                     <a href={u} target="_blank" rel="noreferrer"><img src={u} alt={"Generated " + j.label} style={{ width: "100%", display: "block" }} /></a>
+                    {j.sceneText && k === 0 ? (
+                      naming && naming.jobId === j.id ? (
+                        <div style={{ padding: "8px 8px 0", display: "flex", gap: 6 }}>
+                          <input autoFocus value={naming.name} onChange={function (e) { setNaming({ jobId: j.id, name: e.target.value }); }} onKeyDown={function (e) { if (e.key === "Enter") saveTemplate(j.sceneText, naming.name); }} placeholder="Template name" className="s3d-input" style={{ padding: "5px 8px", fontSize: 12 }} />
+                          <button onClick={function () { saveTemplate(j.sceneText, naming.name); }} className="s3d-btn-small">Save</button>
+                        </div>
+                      ) : (
+                        <div style={{ padding: "8px 8px 0" }}>
+                          <button onClick={function () { setNaming({ jobId: j.id, name: "" }); }} className="s3d-btn-small" style={{ width: "100%", borderColor: COLORS.saffron, color: COLORS.saffronDark }}>★ Like it? Save scene as template</button>
+                        </div>
+                      )
+                    ) : null}
                     <div style={{ display: "flex", gap: 6, padding: 8, flexWrap: "wrap" }}>
                       <button onClick={function () { addPhoto(u, false); }} disabled={inPhotos(u) || images.length >= 5} className="s3d-btn-small" title={images.length >= 5 ? "5 photos maximum. Remove one first or use as cover." : ""}>{inPhotos(u) ? "Added" : "Add"}</button>
                       <button onClick={function () { addPhoto(u, true); }} className="s3d-btn-small">Make cover</button>
@@ -732,11 +794,13 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
   // Keep photos sharp: up to 2000px. Photos stay JPEG (small); images that
   // may have transparency (PNG/WebP, cut-outs) stay PNG so the alpha survives.
   const compressImg = (file, keepAlpha) =>
-    new Promise((res) => {
+    new Promise((res, rej) => {
       const alpha = keepAlpha || /png|webp/i.test((file && file.type) || "");
       const reader = new FileReader();
+      reader.onerror = () => rej(new Error("the file could not be read"));
       reader.onload = (e) => {
         const img = new Image();
+        img.onerror = () => rej(new Error("this image format can't be opened in the browser. Save it as JPEG or PNG and try again"));
         img.onload = () => {
           const MAX = 2000;
           const scale = Math.min(1, MAX / Math.max(img.width, img.height));
@@ -791,17 +855,26 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
     const remaining = 5 - form.images.length;
     const picked = Array.from(files).slice(0, remaining);
     if (picked.length === 0) return;
-    const added = [];
-    for (const file of picked) {
-      const url = await compressImg(file);
-      added.push({ url, original: url, bg: "cream", bgRemoved: false });
-      setForm((f) => ({ ...f, images: [...f.images, { url, original: url, bg: "cream", bgRemoved: false }] }));
+    setFormError("");
+    setUploading(true);
+    const failed = [];
+    for (const original of picked) {
+      let file = original;
+      try {
+        // iPhone photos are often HEIC, which Chrome and most browsers can't open.
+        if (/hei[cf]/i.test(file.type || "") || /\.hei[cf]$/i.test(file.name || "")) {
+          const heic2any = (await import("heic2any")).default;
+          const out = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.92 });
+          file = Array.isArray(out) ? out[0] : out;
+        }
+        const url = await compressImg(file);
+        setForm((f) => ({ ...f, images: [...f.images, { url, original: url, bg: "cream", bgRemoved: false }] }));
+      } catch (e) {
+        failed.push((original.name || "A photo") + ": " + ((e && e.message) || "could not be added"));
+      }
     }
-    // Photo-first: a brand-new product with no photos and no name yet gets
-    // its whole listing written as soon as the photos land.
-    if (!product && form.images.length === 0 && !String(form.name || "").trim() && added.length) {
-      handleGenerate(added);
-    }
+    setUploading(false);
+    if (failed.length) setFormError("Some photos weren't added. " + failed.join(" · "));
   };
   const [dragOver, setDragOver] = useState(false);
   const onDropFiles = (e) => {
@@ -836,7 +909,7 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
       setForm((f) => { const a = [...f.images]; a[idx] = { ...a[idx], url, thumbUrl: undefined, bgRemoved: true, bg: a[idx].bg === "cream" ? "white" : a[idx].bg }; return { ...f, images: a }; });
     } catch (err) {
       console.warn("Background removal failed", err);
-      alert("Background removal failed: " + ((err && err.message) || "please try again") + ".");
+      setFormError("Background removal failed: " + ((err && err.message) || "please try again") + ".");
     } finally {
       setBgBusy(null);
       setBgProgress("");
@@ -850,6 +923,11 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
   const [generating, setGenerating] = useState(false);
   const [imgBusy, setImgBusy] = useState(false);
   const [bgBusy, setBgBusy] = useState(null);
+  const [formError, setFormError] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [draftState, setDraftState] = useState({ savedAt: null, error: "", saving: false });
+  const draftRow = useRef(null);      // the autosaved draft's database row, if any
+  const lastDraftJson = useRef("");
   const [bgProgress, setBgProgress] = useState("");
   // Photos sent to the AI are shrunk to small JPEGs so five of them stay well
   // under the serverless request size limit. Stored http(s) photos are passed
@@ -876,9 +954,10 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
   const handleGenerate = async (imagesOverride) => {
     const imgs = Array.isArray(imagesOverride) ? imagesOverride : (form.images || []);
     if (!String(form.name || "").trim() && !(imgs[0] && imgs[0].url)) {
-      alert("Add a product photo or name first.");
+      setFormError("Add a product photo or a title first, then click Write with AI.");
       return;
     }
+    setFormError("");
     setGenerating(true);
     try {
       const draftBits = [];
@@ -935,7 +1014,7 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
         };
       });
     } catch (e) {
-      alert("Generation failed: " + e.message);
+      setFormError("The AI couldn't write the listing: " + e.message);
     }
     setGenerating(false);
   };
@@ -976,10 +1055,64 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
   const handleCancel = () => {
     if (!product && hasDraftContent()) { saveAsDraft(); } else { onClose(); }
   };
+  // New products save themselves as a Draft a few seconds after each change,
+  // so a refresh or a closed tab never loses work.
+  const autosaveDraft = async () => {
+    if (product || saving || !hasDraftContent()) return;
+    const record = {
+      ...form,
+      id: (draftRow.current && draftRow.current.id) || Date.now(),
+      sku: sessionSku,
+      flag: COUNTRY_FLAGS[form.country] || "",
+      price: parseFloat(form.price) || 0,
+      cost: parseFloat(form.cost) || 0,
+      stock: parseInt(form.stock) || 0,
+      compareAt: form.compareAt ? parseFloat(form.compareAt) : null,
+      badge: form.badge || null,
+      status: "draft",
+      name: form.name && String(form.name).trim() ? form.name : "Untitled draft",
+    };
+    const json = JSON.stringify(record);
+    if (json === lastDraftJson.current) return;
+    setDraftState((d) => ({ ...d, saving: true, error: "" }));
+    try {
+      const row = await saveProduct(record);
+      draftRow.current = row;
+      lastDraftJson.current = json;
+      // Swap in the uploaded photo links so photos aren't uploaded again next time.
+      if (row && Array.isArray(row.images)) {
+        setForm((f) => {
+          if ((f.images || []).length !== row.images.length) return f;
+          let changed = false;
+          const imgs = f.images.map((im, i) => {
+            const up = row.images[i];
+            if (up && String(im.url || "").startsWith("data:") && up.url && !String(up.url).startsWith("data:")) { changed = true; return { ...im, url: up.url, thumbUrl: up.thumbUrl }; }
+            return im;
+          });
+          return changed ? { ...f, images: imgs } : f;
+        });
+      }
+      setDraftState({ savedAt: new Date(), error: "", saving: false });
+    } catch (e) {
+      setDraftState({ savedAt: null, error: (e && e.message) || "unknown error", saving: false });
+    }
+  };
+  useEffect(() => {
+    if (product) return;
+    const t = setTimeout(autosaveDraft, 4000);
+    return () => clearTimeout(t);
+  }, [form]);
+  const discard = async () => {
+    if (!product && draftRow.current) {
+      if (!window.confirm("Delete this draft? It has been autosaved in your Products list.")) return;
+      try { await deleteProductById(draftRow.current.id); } catch (e) { setFormError("Couldn't delete the draft: " + e.message); return; }
+    }
+    onClose();
+  };
   const [importUrl, setImportUrl] = useState("");
   const [importing, setImporting] = useState(false);
   const importFromLink = async () => {
-    if (!importUrl) { alert("Paste a product link first."); return; }
+    if (!importUrl) { setFormError("Paste a product link first."); return; }
     setImporting(true);
     try {
       const { data: sess } = await supabase.auth.getSession();
@@ -993,14 +1126,14 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
       if (data && data.title) {
         setForm((f) => ({ ...f, name: data.title || f.name, desc: data.description || f.desc, price: data.price ? String(data.price) : f.price, category: data.category || f.category, images: data.image ? [{ url: data.image }].concat(f.images || []) : (f.images || []) }));
       } else {
-        alert((data && data.error) || "Could not import from that link.");
+        setFormError((data && data.error) || "Could not import from that link.");
       }
-    } catch (e) { alert("Import failed: " + e.message); }
+    } catch (e) { setFormError("Import failed: " + e.message); }
     setImporting(false);
   };
   const handleSave = async () => {
     if (saving) return;
-    if (!form.name.trim() || !form.price) return alert("Name and price are required.");
+    if (!form.name.trim() || !form.price) { setFormError("Add a title and a price before saving."); goTo(!form.name.trim() ? "listing" : "pricing"); return; }
     const isEdit = !!product;
 
     // Refuse to silently create a second product with the same name.
@@ -1115,9 +1248,12 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
         <div className="s3d-pf-head">
           <div style={{ flex: 1, minWidth: 200 }}>
             <div style={{ fontFamily: FONTS.display, fontSize: 26, fontWeight: 600, lineHeight: 1.05 }}>{product ? (form.name || "Edit product") : (form.name || "New product")}</div>
-            <div style={{ fontSize: 12.5, color: COLORS.textMuted, marginTop: 3 }}>{sessionSku} · {statusLabel}{generating ? " · the AI is writing the listing…" : ""}</div>
+            <div style={{ fontSize: 12.5, color: draftState.error ? COLORS.terracotta : COLORS.textMuted, marginTop: 3 }}>
+              {sessionSku} · {product ? statusLabel : "New product, autosaves as a draft"}
+              {!product && (draftState.saving ? " · saving draft…" : draftState.error ? " · draft not saved: " + draftState.error : draftState.savedAt ? " · draft saved " + draftState.savedAt.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "")}
+            </div>
           </div>
-          <button onClick={onClose} className="s3d-btn-quiet" style={{ border: "none", color: COLORS.textMuted }}>Discard</button>
+          <button onClick={discard} className="s3d-btn-quiet" style={{ border: "none", color: COLORS.textMuted }}>{product ? "Cancel" : "Discard"}</button>
           <button onClick={handleCancel} disabled={saving} className="s3d-btn-quiet">{product ? "Close" : "Save as draft"}</button>
           <button onClick={handleSave} disabled={saving} className="s3d-btn-primary">{saving ? "Saving…" : form.status === "active" ? "Save and publish" : "Save"}</button>
         </div>
@@ -1126,6 +1262,12 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
         </nav>
 
         <div className="s3d-pf-body" ref={scrollRef}>
+          {formError && (
+            <div role="alert" style={{ margin: "16px 22px 0", background: "#FBEAE5", border: "1px solid " + COLORS.terracotta, borderRadius: 10, padding: "10px 14px", fontSize: 13, color: COLORS.terracotta, display: "flex", gap: 12, alignItems: "flex-start" }}>
+              <span style={{ flex: 1, lineHeight: 1.5 }}>{formError}</span>
+              <button onClick={() => setFormError("")} aria-label="Dismiss" style={{ background: "none", border: "none", color: COLORS.terracotta, fontSize: 18, cursor: "pointer", lineHeight: 1 }}>×</button>
+            </div>
+          )}
           {generating && (
             <div role="status" style={{ margin: "16px 22px 0", background: "#FBEFD8", border: "1px solid #E6C886", borderRadius: 10, padding: "10px 14px", fontSize: 13, color: COLORS.saffronDark, fontWeight: 600 }}>
               Reading your photos and writing the listing in the Souk3D style…
@@ -1136,7 +1278,7 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
               {/* Photos */}
               <section id="pf-photos" className="s3d-sec">
                 <h3>Photos</h3>
-                <p className="s3d-sub">{(form.images || []).length ? "The first photo is the cover. Up to 5 photos." : "Start here. Drop your photos and the AI writes the whole listing from them."}</p>
+                <p className="s3d-sub">{(form.images || []).length ? "The first photo is the cover. Up to 5 photos." : "Start here. Add your photos, then the AI can write the listing from them when you're ready."}</p>
                 <input ref={fileRef} type="file" accept="image/*" multiple style={{ display: "none" }} onChange={(e) => handleImageUpload(e.target.files)} />
                 {!(form.images || []).length ? (
                   <div
@@ -1180,6 +1322,14 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
                     {form.images.length < 5 && (
                       <button onClick={() => fileRef.current && fileRef.current.click()} style={{ width: 118, height: 118, borderRadius: 10, border: "1.5px dashed " + COLORS.wheat, background: COLORS.cream, color: COLORS.saffronDark, cursor: "pointer", fontSize: 13, fontFamily: FONTS.body }}>+ Add photo</button>
                     )}
+                  </div>
+                )}
+                {uploading && <div role="status" style={{ marginTop: 12, fontSize: 12.5, color: COLORS.saffronDark, fontWeight: 600 }}>Adding photos…</div>}
+                {!uploading && (form.images || []).length > 0 && !String(form.name || "").trim() && !generating && (
+                  <div style={{ marginTop: 14, background: "#FBEFD8", border: "1px solid #E6C886", borderRadius: 10, padding: "12px 14px", display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+                    <div style={{ flex: "1 1 220px", fontSize: 13, lineHeight: 1.5 }}><strong>Photos ready.</strong> Add any facts you know (size, set of, material) in the Listing section, then let the AI write it.</div>
+                    <button onClick={() => goTo("listing")} className="s3d-btn-quiet" style={{ fontSize: 13 }}>Add facts</button>
+                    <button onClick={() => handleGenerate()} className="s3d-btn-primary" style={{ fontSize: 13 }}>Write listing with AI</button>
                   </div>
                 )}
                 {bgBusy !== null && bgProgress && (
