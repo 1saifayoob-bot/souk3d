@@ -160,7 +160,7 @@ function LoginPage({ onLogin }) {
         <div style={{ textAlign: "center", marginBottom: 32 }}>
           <div style={{ fontFamily: FONTS.display, fontSize: 32, fontWeight: 600, color: COLORS.charcoal }}>Souk3D</div>
           <div style={{ fontFamily: FONTS.arabic, fontSize: 18, color: COLORS.saffron, marginTop: 4 }}>سوق ثري دي</div>
-          <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 8, fontFamily: FONTS.body }}>Admin Dashboard · Nala's Studio</div>
+          <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 8, fontFamily: FONTS.body }}>Admin Dashboard · Souk3D Studio</div>
         </div>
         <form onSubmit={handle}>
           <input
@@ -206,20 +206,37 @@ function Sidebar({ page, setPage }) {
         ))}
       </div>
       <div style={{ padding: "16px 20px", borderTop: `0.5px solid ${COLORS.inkBrown}` }}>
-        <div style={{ fontSize: 12, color: COLORS.textMuted, fontFamily: FONTS.body }}>Nala's Studio</div>
-        <div style={{ fontSize: 11, color: COLORS.textMuted + "88", marginTop: 2 }}>Detroit, MI</div>
+        <div style={{ fontSize: 12, color: COLORS.textMuted, fontFamily: FONTS.body }}>Souk3D Studio</div>
+        <div style={{ fontSize: 11, color: COLORS.textMuted + "88", marginTop: 2 }}>Burbank, Los Angeles</div>
       </div>
     </div>
   );
 }
 
+// ─── TEAM ─────────────────────────────────────────────────────────────────
+// Who signs in to the admin. Miami Abdulal owns the store; Saif builds it.
+const STAFF = {
+  "3dmediaselling@gmail.com": { name: "Miami", ar: "ميامي", role: "Owner" },
+  "1saif.ayoob@gmail.com": { name: "Saif", ar: "سيف", role: "Developer" },
+};
+function staffFor(email) {
+  const e = String(email || "").toLowerCase();
+  if (STAFF[e]) return STAFF[e];
+  const first = e.split("@")[0].replace(/[^a-z]/gi, " ").trim().split(" ")[0] || "there";
+  return { name: first.charAt(0).toUpperCase() + first.slice(1), ar: "", role: "" };
+}
+
 // ─── DASHBOARD ──────────────────────────────────────────────────────────
-function Dashboard({ onNavigate }) {
+function Dashboard({ onNavigate, userEmail }) {
+  const who = staffFor(userEmail);
+  const hour = new Date().getHours();
+  const greet = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const greetAr = hour < 12 ? "صباح الخير" : "مساء الخير";
   return (
     <div style={{ animation: "fadeIn 0.3s ease" }}>
       <div style={{ marginBottom: 24 }}>
-        <div style={{ fontFamily: FONTS.display, fontSize: 28, fontWeight: 600, color: COLORS.charcoal }}>Good morning, Nala ☀️</div>
-        <div style={{ fontFamily: FONTS.arabic, fontSize: 16, color: COLORS.saffron }}>صباح الخير يا نالا</div>
+        <div style={{ fontFamily: FONTS.display, fontSize: 28, fontWeight: 600, color: COLORS.charcoal }}>{greet}, {who.name} {hour < 17 ? "☀️" : "🌙"}</div>
+        <div style={{ fontFamily: FONTS.arabic, fontSize: 16, color: COLORS.saffron }}>{greetAr}{who.ar ? " يا " + who.ar : ""}</div>
         <div style={{ fontSize: 13, color: COLORS.textMuted, fontFamily: FONTS.body, marginTop: 4 }}>Here's what's happening in your store today.</div>
       </div>
       <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
@@ -3246,7 +3263,7 @@ export default function AdminApp() {
   if (!session) return <AdminLogin />;
 
   const PAGE_MAP = {
-    dashboard: <Dashboard onNavigate={go} />,
+    dashboard: <Dashboard onNavigate={go} userEmail={session.user && session.user.email} />,
     products: <ProductsPage />,
     orders: <OrdersPage />,
     customers: <CustomersPage />,
@@ -3330,7 +3347,7 @@ export default function AdminApp() {
         </aside>
 
       <main className="s3d-admin-main" style={{ flex: 1, padding: "24px 32px", overflowY: "auto" }}>
-        {PAGE_MAP[page] ?? <Dashboard onNavigate={go} />}
+        {PAGE_MAP[page] ?? <Dashboard onNavigate={go} userEmail={session.user && session.user.email} />}
       </main>
     </div>
   );
