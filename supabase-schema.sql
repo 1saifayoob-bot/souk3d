@@ -133,3 +133,19 @@ alter table products add column if not exists details jsonb not null default '[]
 
 -- Product videos from the AI studio ([{ url }]), shown in the product gallery. Added 2026-09-18.
 alter table products add column if not exists videos jsonb not null default '[]'::jsonb;
+
+-- AI studio scene templates saved by staff (name + scene description). Added 2026-09-22.
+create table if not exists public.studio_templates (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  kind text not null default 'scene',
+  text text not null,
+  created_at timestamptz not null default now()
+);
+alter table public.studio_templates enable row level security;
+create policy "staff read studio templates" on public.studio_templates for select to authenticated
+  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','super_admin','lister')));
+create policy "staff add studio templates" on public.studio_templates for insert to authenticated
+  with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','super_admin','lister')));
+create policy "staff delete studio templates" on public.studio_templates for delete to authenticated
+  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','super_admin','lister')));
