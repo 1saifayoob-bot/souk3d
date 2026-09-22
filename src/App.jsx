@@ -13,10 +13,10 @@ const F = { display: "'Cormorant Garamond', serif", body: "'Outfit', sans-serif"
 
 // ─── STOREFRONT MOCK DATA ──────────────────────────────────────────────────────
 const DEFAULT_STORE_PRODUCTS = [
-  { id: 1, name: "Damascus Name Plaque", name_ar: "لوحة الاسم الدمبقية", category: "Home Decor", country: "Syria", flag: "🇸🇾", price: 44.99, compareAt: 59.99, badge: "Best Seller", stars: 4.9, reviews: 47, emoji: "🏺", desc: "Beautifully 3D-printed wall plaque featuring your family name in Diwani calligraphy. Each piece is hand-finished in Los Angeles and ships worldwide.", customizable: true },
-  { id: 2, name: "Eid Mubarak Lantern", name_ar: "فانوس عيد مبارك", category: "Seasonal", country: "Pan-Arab", flag: "🌍", price: 34.99, compareAt: null, badge: "New", stars: 4.8, reviews: 38, emoji: "🪔", desc: "Intricate geometric lantern celebrating Eid al-Fitr and Eid al-Adha. Perfect as a centerpiece or gift.", customizable: false },
-  { id: 3, name: "Palestinian Olive Tree", name_ar: "شجرة الزيتون الفلسطينية", category: "Art", country: "Palestine", flag: "🇵🇸", price: 54.99, compareAt: null, badge: null, stars: 5.0, reviews: 29, emoji: "🫒", desc: "A symbol of steadfastness and heritage. This sculptural olive tree captures the spirit of Palestinian connection to the land.", customizable: false },
-  { id: 4, name: "Kufic Calligraphy Frame", name_ar: "إطار الخط الكوفي", category: "Art", country: "Pan-Arab", flag: "🌍", price: 64.99, compareAt: 79.99, badge: "Sale", stars: 4.7, reviews: 18, emoji: "✦", desc: "Custom Quranic verse or family name rendered in the ancient Kufic script, mounted in a sleek matte frame.", customizable: true },
+  { id: 1, name: "Damascus Name Plaque", name_ar: "لوحة الاسم الدمبقية", category: "Home Decor", country: "Syria", flag: "🇸🇾", price: 44.99, compareAt: 59.99, badge: "Best Seller", stars: 0, reviews: 0, emoji: "🏺", desc: "Beautifully 3D-printed wall plaque featuring your family name in Diwani calligraphy. Each piece is hand-finished in Los Angeles and ships worldwide.", customizable: true },
+  { id: 2, name: "Eid Mubarak Lantern", name_ar: "فانوس عيد مبارك", category: "Seasonal", country: "Pan-Arab", flag: "🌍", price: 34.99, compareAt: null, badge: "New", stars: 0, reviews: 0, emoji: "🪔", desc: "Intricate geometric lantern celebrating Eid al-Fitr and Eid al-Adha. Perfect as a centerpiece or gift.", customizable: false },
+  { id: 3, name: "Palestinian Olive Tree", name_ar: "شجرة الزيتون الفلسطينية", category: "Art", country: "Palestine", flag: "🇵🇸", price: 54.99, compareAt: null, badge: null, stars: 0, reviews: 0, emoji: "🫒", desc: "A symbol of steadfastness and heritage. This sculptural olive tree captures the spirit of Palestinian connection to the land.", customizable: false },
+  { id: 4, name: "Kufic Calligraphy Frame", name_ar: "إطار الخط الكوفي", category: "Art", country: "Pan-Arab", flag: "🌍", price: 64.99, compareAt: 79.99, badge: "Sale", stars: 0, reviews: 0, emoji: "✦", desc: "Custom Quranic verse or family name rendered in the ancient Kufic script, mounted in a sleek matte frame.", customizable: true },
 ];
 
 // Reads from localStorage (set by admin panel), falls back to defaults
@@ -61,11 +61,9 @@ const HERITAGE_ITEMS = [
   { country: "Pan-Arab", flag: "🌍", arabic: "عربي", count: 15, color: C.inkBrown },
 ];
 
-const REVIEWS = [
-  { name: "Layla H.", flag: "🇺🇸", location: "Detroit, MI", text: "Miami's work is absolutely stunning. The Damascus name plaque hangs above our fireplace and gets compliments every single day. Ordered a second one as a gift!", stars: 5, product: "Damascus Name Plaque", arabic: "ممتاز جداً" },
-  { name: "Omar K.", flag: "🇨🇦", location: "Toronto, ON", text: "Finally someone who understands the diaspora experience. Every piece tells a story. Fast shipping to Canada too.", stars: 5, product: "Eid Mubarak Lantern", arabic: "" },
-  { name: "Yara M.", flag: "🇬🇧", location: "London, UK", text: "The Palestinian olive tree sculpture is breathtaking. My mother cried when she saw it. It means so much to our family.", stars: 5, product: "Palestinian Olive Tree", arabic: "شكراً جزيلاً" },
-];
+// Real customer reviews only. The review sections stay hidden while this is empty.
+// Add entries like: { name: "Layla H.", flag: "🇺🇸", location: "Los Angeles, CA", text: "...", stars: 5 }
+const REVIEWS = [];
 
 // ─── SHARED STOREFRONT COMPONENTS ─────────────────────────────────────────────
 function Stars({ count, size = 13 }) {
@@ -89,10 +87,12 @@ function ProductCard({ product, onView, onAddToCart }) {
         <div style={{ fontSize: 9, color: C.textMuted, fontFamily: F.body, letterSpacing: 1, marginBottom: 4 }}>{product.flag} {product.country}</div>
         <div onClick={() => onView(product)} style={{ fontFamily: F.display, fontSize: 17, fontWeight: 600, color: C.charcoal, marginBottom: 2, lineHeight: 1.2 }}>{product.name}</div>
         <div style={{ fontFamily: F.arabic, fontSize: 13, color: C.textMuted, marginBottom: 6 }}>{product.name_ar}</div>
+        {product.reviews > 0 && (
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
           <Stars count={product.stars} />
           <span style={{ fontSize: 11, color: C.textMuted, fontFamily: F.body }}>({product.reviews})</span>
         </div>
+        )}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
             <span style={{ fontFamily: F.body, fontSize: 17, fontWeight: 700, color: C.charcoal }}>${product.price}</span>
@@ -300,10 +300,12 @@ function ProductDetail({product, onBack, onAddToCart, onBuyNow, user }) {
           <div style={{ fontSize: 10, background: C.saffron + "22", color: C.saffron, padding: "3px 10px", borderRadius: 10, display: "inline-block", fontWeight: 600, marginBottom: 10, fontFamily: F.body }}>{product.flag} {product.country}</div>
           <div style={{ fontFamily: F.display, fontSize: 34, fontWeight: 600, color: C.charcoal, lineHeight: 1.1, marginBottom: 6 }}>{product.name}</div>
           <div style={{ fontFamily: F.arabic, fontSize: 22, color: C.saffron, marginBottom: 12, direction: "rtl", textAlign: "right" }}>{product.name_ar}</div>
+          {product.reviews > 0 && (
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
             <Stars count={product.stars} size={16} />
             <span style={{ fontSize: 13, color: C.textMuted, fontFamily: F.body }}>{product.stars} ({product.reviews} reviews)</span>
           </div>
+          )}
           <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 16 }}>
             <span style={{ fontFamily: F.body, fontSize: 28, fontWeight: 700, color: C.charcoal }}>${unitPrice.toFixed(2)}</span>
             {product.compareAt && <span style={{ fontSize: 16, color: C.textMuted, textDecoration: "line-through" }}>${product.compareAt}</span>}
@@ -382,6 +384,7 @@ function ProductDetail({product, onBack, onAddToCart, onBuyNow, user }) {
       </div>
 
       {/* Reviews */}
+      {REVIEWS.length > 0 && (
       <div style={{ marginBottom: 48 }}>
         <div style={{ fontFamily: F.display, fontSize: 26, fontWeight: 600, color: C.charcoal, marginBottom: 20 }}>Customer Reviews</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
@@ -401,6 +404,7 @@ function ProductDetail({product, onBack, onAddToCart, onBuyNow, user }) {
           ))}
         </div>
       </div>
+      )}
     </div>
   );
 }
@@ -972,6 +976,7 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder }) {
         </div>
 
         {/* Reviews */}
+        {REVIEWS.length > 0 && (
         <div style={{ marginBottom: 56 }}>
           <div style={{ textAlign: "center", marginBottom: 28 }}>
             <div style={{ fontFamily: F.display, fontSize: 36, fontWeight: 600, color: C.charcoal }}>What Our Community Says</div>
@@ -993,6 +998,7 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder }) {
             ))}
           </div>
         </div>
+        )}
 
         {/* Newsletter */}
         <NewsletterSignup />
