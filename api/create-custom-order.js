@@ -108,7 +108,7 @@ function customerHtml(ref, r) {
     '<p style="font-size:19px;margin:0 0 6px;">We have your request, ' +
     esc(r.name || "friend") +
     "! ✦</p>" +
-    '<p style="font-size:15px;color:#555;line-height:1.7;">Thank you for trusting us with something personal. Miami will look over your idea and send you a personalised quote, usually within 1-2 business days.</p>' +
+    '<p style="font-size:15px;color:#555;line-height:1.7;">Thank you for trusting us with something personal. We will look over your idea and send you a personalised quote, usually within 1-2 business days.</p>' +
     '<div style="background:#FBF7F0;border:0.5px solid #E8DCC8;border-radius:10px;padding:16px;margin:18px 0;">' +
     '<div style="font-size:11px;font-weight:700;color:#8A7A6A;letter-spacing:0.5px;margin-bottom:8px;">YOUR REQUEST — ' +
     esc(ref) +
@@ -123,7 +123,7 @@ function customerHtml(ref, r) {
     "</table></div>" +
     '<p style="font-size:14px;color:#555;line-height:1.7;">Every Souk3D piece is designed, printed and finished by hand in Burbank, Los Angeles. We will be in touch soon. 💛</p>' +
     '<p style="font-size:13px;color:#8A7A6A;margin-top:22px;">Just reply to this email if you want to add anything.</p>' +
-    '<p style="font-size:13px;color:#8A7A6A;">— Miami and the Souk3D family<br/><span style="font-size:15px;">شكراً لك</span></p>' +
+    '<p style="font-size:13px;color:#8A7A6A;">— The Souk3D Family<br/><span style="font-size:15px;">شكراً لك</span></p>' +
     "</div>"
   );
 }

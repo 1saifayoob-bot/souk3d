@@ -81,7 +81,7 @@ function quoteHtml(name, ref, amount, message, req) {
         "</div>"
       : "") +
     '<p style="font-size:14px;color:#555;line-height:1.7;">Just reply to this email to accept, ask a question, or change anything. Nothing is charged until you say yes.</p>' +
-    '<p style="font-size:13px;color:#8A7A6A;margin-top:22px;">— Miami and the Souk3D family<br/><span style="font-size:15px;">شكراً لك</span></p>' +
+    '<p style="font-size:13px;color:#8A7A6A;margin-top:22px;">— The Souk3D Family<br/><span style="font-size:15px;">شكراً لك</span></p>' +
     "</div>"
   );
 }

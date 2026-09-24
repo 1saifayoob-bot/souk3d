@@ -47,13 +47,22 @@ export default async function handler(req, res) {
   }
 
   if (p) {
-    const first = Array.isArray(p.images) && p.images[0] ? p.images[0] : null;
+    // A shared link can name the photo that matches the chosen option (?img=2),
+    // so the preview shows the colour the customer actually picked.
+    const gallery = Array.isArray(p.images) ? p.images.filter((im) => im && (im.url || im.thumbUrl)) : [];
+    const wanted = parseInt((req.query && req.query.img) || "", 10);
+    const first = (!isNaN(wanted) && gallery[wanted]) || gallery[0] || null;
     const img = (first && (first.url || first.thumbUrl)) || "";
     const title = p.name + " - Souk3D";
     const desc = String(
       p.description || "Handmade 3D-printed gifts celebrating Arab heritage, made by hand in Los Angeles."
     ).slice(0, 200);
-    const url = origin + "/p/" + encodeURIComponent(p.sku);
+    const q = [];
+    for (const [k, v] of Object.entries(req.query || {})) {
+      if (k === "sku" || v == null) continue;
+      q.push(encodeURIComponent(k) + "=" + encodeURIComponent(String(v)));
+    }
+    const url = origin + "/p/" + encodeURIComponent(p.sku) + (q.length ? "?" + q.join("&") : "");
 
     const tags = [
       '<meta property="og:type" content="product" />',
