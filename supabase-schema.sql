@@ -149,3 +149,22 @@ create policy "staff add studio templates" on public.studio_templates for insert
   with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','super_admin','lister')));
 create policy "staff delete studio templates" on public.studio_templates for delete to authenticated
   using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','super_admin','lister')));
+
+-- Collections: named groups of products with their own page at /c/<slug>. Added 2026-09-22.
+alter table public.products add column if not exists collection text not null default '';
+create index if not exists products_collection_idx on public.products (collection);
+create table if not exists public.collections (
+  slug text primary key,
+  name text not null,
+  name_ar text not null default '',
+  emoji text not null default '✦',
+  blurb text not null default '',
+  sort integer not null default 0,
+  active boolean not null default true,
+  created_at timestamptz not null default now()
+);
+alter table public.collections enable row level security;
+create policy "anyone can read collections" on public.collections for select to anon, authenticated using (true);
+create policy "staff manage collections" on public.collections for all to authenticated
+  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','super_admin','lister')))
+  with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','super_admin','lister')));
