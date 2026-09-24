@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { supabase, fetchProducts, signUpCustomer, signInCustomer, signOutCustomer, sendPasswordReset, getCurrentUser, onAuthChange, fetchMyOrders } from "./lib/supabase";
+import { supabase, fetchProducts, fetchCollections, signUpCustomer, signInCustomer, signOutCustomer, sendPasswordReset, getCurrentUser, onAuthChange, fetchMyOrders } from "./lib/supabase";
 
 // ─── BRAND CONSTANTS ───────────────────────────────────────────────────────────
 const C = {
@@ -866,8 +866,20 @@ function NewsletterSignup() {
   );
 }
 
-function Homepage({ onViewProduct, onAddToCart, onCustomOrder }) {
+// Collections come from the database so the store owner can add them herself.
+function useCollections() {
+  const [list, setList] = useState([]);
+  useEffect(() => {
+    let live = true;
+    fetchCollections({ activeOnly: true }).then((c) => { if (live) setList(c || []); }).catch(() => {});
+    return () => { live = false; };
+  }, []);
+  return list;
+}
+
+function Homepage({ onViewProduct, onAddToCart, onCustomOrder, onBrowse }) {
   const STORE_PRODUCTS = useProducts();
+  const collections = useCollections();
   return (
     <div>
       {/* Hero */}
@@ -914,8 +926,8 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder }) {
             <div style={{ fontFamily: F.arabic, fontSize: 20, color: C.saffron }}>تسوق حسب التراث</div>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12 }}>
-            {HERITAGE_ITEMS.map(h => (
-              <div key={h.country} style={{ background: "#FFF", border: `0.5px solid ${C.wheat}`, borderRadius: 12, padding: "20px 16px", textAlign: "center", cursor: "pointer", transition: "box-shadow 0.2s" }}>
+            {HERITAGE_ITEMS.map(h => ({ ...h, count: STORE_PRODUCTS.filter(p => (p.country || "") === h.country).length })).filter(h => h.count > 0).map(h => (
+              <div key={h.country} onClick={() => onBrowse({ kind: "country", value: h.country, title: h.country, title_ar: h.arabic, emoji: h.flag })} style={{ background: "#FFF", border: `0.5px solid ${C.wheat}`, borderRadius: 12, padding: "20px 16px", textAlign: "center", cursor: "pointer", transition: "box-shadow 0.2s" }}>
                 <div style={{ fontSize: 36, marginBottom: 8 }}>{h.flag}</div>
                 <div style={{ fontFamily: F.body, fontSize: 14, fontWeight: 600, color: C.charcoal }}>{h.country}</div>
                 <div style={{ fontFamily: F.arabic, fontSize: 14, color: h.color }}>{h.arabic}</div>
@@ -924,6 +936,30 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder }) {
             ))}
           </div>
         </div>
+
+        {/* Collections */}
+        {collections.filter(c => STORE_PRODUCTS.some(p => p.collection === c.slug)).length > 0 && (
+          <div id="collections-section" style={{ marginBottom: 56 }}>
+            <div style={{ textAlign: "center", marginBottom: 28 }}>
+              <div style={{ fontFamily: F.display, fontSize: 36, fontWeight: 600, color: C.charcoal }}>Collections</div>
+              <div style={{ fontFamily: F.arabic, fontSize: 20, color: C.saffron }}>المجموعات</div>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 16 }}>
+              {collections.map(c => ({ ...c, count: STORE_PRODUCTS.filter(p => p.collection === c.slug).length }))
+                .filter(c => c.count > 0)
+                .map(c => (
+                  <div key={c.slug} onClick={() => onBrowse({ kind: "collection", value: c.slug, title: c.name, title_ar: c.name_ar, emoji: c.emoji, blurb: c.blurb })}
+                    style={{ background: C.saffron + "14", border: `0.5px solid ${C.saffron}44`, borderRadius: 16, padding: "28px 22px", cursor: "pointer" }}>
+                    <div style={{ fontSize: 40, lineHeight: 1 }}>{c.emoji || "✦"}</div>
+                    <div style={{ fontFamily: F.display, fontSize: 24, fontWeight: 600, color: C.charcoal, marginTop: 10 }}>{c.name}</div>
+                    {c.name_ar ? <div style={{ fontFamily: F.arabic, fontSize: 16, color: C.saffron, marginTop: 2 }}>{c.name_ar}</div> : null}
+                    {c.blurb ? <p style={{ fontSize: 13, color: C.textMuted, fontFamily: F.body, lineHeight: 1.6, margin: "10px 0 0" }}>{c.blurb}</p> : null}
+                    <div style={{ fontSize: 12, color: C.saffronDark, fontFamily: F.body, fontWeight: 600, marginTop: 12 }}>{c.count} pieces →</div>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
 
         {/* Best sellers */}
         <div id="shop-section" style={{ marginBottom: 56 }}>
@@ -1278,9 +1314,36 @@ function AccountPage({ user, onBack, onSignOut }) {
   );
 }
 
+// ─── BROWSE PAGE ─────────────────────────────────────────────────────────
+// One page for a collection (/c/<slug>) or a heritage (/h/<country>).
+function BrowsePage({ browse, onViewProduct, onAddToCart, onBack }) {
+  const all = useProducts();
+  const items = all.filter((p) => browse.kind === "collection" ? p.collection === browse.value : (p.country || "") === browse.value);
+  return (
+    <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 5% 70px", animation: "fadeIn 0.3s ease" }}>
+      <button onClick={onBack} style={{ background: "none", border: "none", color: C.textMuted, fontSize: 13, fontFamily: F.body, cursor: "pointer", padding: 0, marginBottom: 18 }}>‹ Back to the shop</button>
+      <div style={{ textAlign: "center", marginBottom: 32 }}>
+        <div style={{ fontSize: 46, lineHeight: 1 }}>{browse.emoji || "✦"}</div>
+        <h1 style={{ fontFamily: F.display, fontSize: 40, fontWeight: 600, color: C.charcoal, margin: "10px 0 4px" }}>{browse.title}</h1>
+        {browse.title_ar ? <div style={{ fontFamily: F.arabic, fontSize: 22, color: C.saffron }}>{browse.title_ar}</div> : null}
+        {browse.blurb ? <p style={{ fontSize: 15, color: C.textMuted, fontFamily: F.body, lineHeight: 1.7, maxWidth: 560, margin: "14px auto 0" }}>{browse.blurb}</p> : null}
+        <div style={{ fontSize: 12.5, color: C.textMuted, fontFamily: F.body, marginTop: 10 }}>{items.length} {items.length === 1 ? "piece" : "pieces"}</div>
+      </div>
+      {items.length === 0 ? (
+        <div style={{ textAlign: "center", color: C.textMuted, fontFamily: F.body, fontSize: 14, padding: "40px 0" }}>Nothing here yet — check back soon.</div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 18 }}>
+          {items.map((p) => <ProductCard key={p.id} product={p} onView={onViewProduct} onAddToCart={onAddToCart} />)}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function App() {
   const [page, setPage] = useState("home");
   const [viewingProduct, setViewingProduct] = useState(null);
+  const [browse, setBrowse] = useState(null);
   const [cart, setCart] = useState([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [user, setUser] = useState(null);
@@ -1296,6 +1359,14 @@ export default function App() {
   }, []);
 
   // Products have real URLs (/p/<sku>) so they can be shared and linked.
+  // Collection and heritage pages have their own URLs so they can be shared.
+  const openBrowse = (b) => {
+    setBrowse(b);
+    setViewingProduct(null);
+    setPage("browse");
+    window.scrollTo(0, 0);
+    window.history.pushState({ browse: b }, "", (b.kind === "collection" ? "/c/" : "/h/") + encodeURIComponent(b.value));
+  };
   const openProduct = (p) => {
     setViewingProduct(p);
     setPage("product");
@@ -1303,9 +1374,29 @@ export default function App() {
   };
   const goHome = () => {
     setViewingProduct(null);
+    setBrowse(null);
     setPage("home");
     window.history.pushState({}, "", "/");
   };
+
+  // Open a collection or heritage page from its link.
+  useEffect(() => {
+    const m = window.location.pathname.match(/^\/(c|h)\/(.+)$/);
+    if (!m) return;
+    const kind = m[1] === "c" ? "collection" : "country";
+    const value = decodeURIComponent(m[2]);
+    if (kind === "country") { setBrowse({ kind, value, title: value, emoji: "🌍" }); setPage("browse"); return; }
+    let live = true;
+    fetchCollections({ activeOnly: true })
+      .then((list) => {
+        const c = (list || []).find((x) => x.slug === value);
+        if (!live) return;
+        setBrowse(c ? { kind, value, title: c.name, title_ar: c.name_ar, emoji: c.emoji, blurb: c.blurb } : { kind, value, title: value, emoji: "✦" });
+        setPage("browse");
+      })
+      .catch(() => { if (live) { setBrowse({ kind, value, title: value, emoji: "✦" }); setPage("browse"); } });
+    return () => { live = false; };
+  }, []);
 
   // Open the right product when someone lands on a shared link.
   useEffect(() => {
@@ -1324,9 +1415,12 @@ export default function App() {
 
   // Keep the browser back/forward buttons honest.
   useEffect(() => {
-    const onPop = () => {
-      const m = window.location.pathname.match(/^\/p\//);
-      if (!m) { setViewingProduct(null); setPage("home"); }
+    const onPop = (e) => {
+      const path = window.location.pathname;
+      if (/^\/p\//.test(path)) return;
+      const b = e && e.state && e.state.browse;
+      if (b) { setViewingProduct(null); setBrowse(b); setPage("browse"); return; }
+      setViewingProduct(null); setBrowse(null); setPage("home");
     };
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
@@ -1372,16 +1466,16 @@ export default function App() {
 
       {/* Navigation */}
       <nav style={{ background: C.cream, borderBottom: `0.5px solid ${C.wheat}`, padding: "14px 5%", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}>
-        <div onClick={() => { setPage("home"); setViewingProduct(null); }} style={{ cursor: "pointer" }}>
+        <div onClick={goHome} style={{ cursor: "pointer" }}>
           <div style={{ fontFamily: F.display, fontSize: 22, fontWeight: 600, color: C.charcoal }}>Souk3D</div>
           <div style={{ fontFamily: F.arabic, fontSize: 12, color: C.saffron, lineHeight: 1 }}>سوق ثري دي</div>
         </div>
         <div style={{ display: "flex", gap: 24 }}>
-          {["Shop", "Heritage", "Custom Orders", "About"].map(link => (
+          {["Shop", "Collections", "Heritage", "Custom Orders", "About"].map(link => (
             <span key={link} onClick={() => {
               if (link === "Custom Orders") { setPage("custom-order"); return; }
-              setPage("home"); setViewingProduct(null);
-              const ids = { Shop: "shop-section", Heritage: "heritage-section", About: "about-section" };
+              goHome();
+              const ids = { Shop: "shop-section", Collections: "collections-section", Heritage: "heritage-section", About: "about-section" };
               setTimeout(() => { const el = document.getElementById(ids[link]); if (el) el.scrollIntoView({ behavior: "smooth" }); }, 80);
             }} style={{ fontSize: 13, color: C.charcoal, fontFamily: F.body, cursor: "pointer", fontWeight: 500 }}>{link}</span>
           ))}
@@ -1408,7 +1502,11 @@ export default function App() {
           onViewProduct={openProduct}
           onAddToCart={addToCart}
           onCustomOrder={() => setPage("custom-order")}
+          onBrowse={openBrowse}
         />
+      )}
+      {page === "browse" && browse && !viewingProduct && (
+        <BrowsePage browse={browse} onViewProduct={openProduct} onAddToCart={addToCart} onBack={goHome} />
       )}
       {page === "product" && viewingProduct && (
         <ProductDetail user={user}
