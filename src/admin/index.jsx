@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { supabase, optimizeAndUpload, fetchProducts, saveProduct, deleteProductById, migrateLocalProducts, fetchOrders, setProductStatus, reoptimizeProductImages, fetchProductIds, fetchProductById, productNeedsOptimizing, fetchCustomOrders, setCustomOrderStage, fetchCustomers, fetchDiscounts, saveDiscount, setDiscountStatus, deleteDiscountById } from "../lib/supabase";
+import { supabase, optimizeAndUpload, fetchCollections, saveCollection, slugifyCollection, fetchProducts, saveProduct, deleteProductById, migrateLocalProducts, fetchOrders, setProductStatus, reoptimizeProductImages, fetchProductIds, fetchProductById, productNeedsOptimizing, fetchCustomOrders, setCustomOrderStage, fetchCustomers, fetchDiscounts, saveDiscount, setDiscountStatus, deleteDiscountById } from "../lib/supabase";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart, PieChart, Pie, Cell, BarChart, Bar } from "recharts";
 
 // ─── BRAND CONSTANTS ───────────────────────────────────────────────────────────
@@ -792,6 +792,7 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
     keywords: [],
     details: [],
     videos: [],
+    collection: "",
   };
   const [form, setForm] = useState(product ? {
     ...product,
@@ -802,6 +803,7 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
     badge: product.badge || "",
     images: product.images || (product.imageUrl ? [{url:product.imageUrl,bg:product.imageBg||"cream"}] : []),
     videos: product.videos || [],
+    collection: product.collection || "",
     details: product.details || [],
     keywords: product.keywords || [],
   } : empty);
@@ -941,6 +943,23 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
   const [imgBusy, setImgBusy] = useState(false);
   const [bgBusy, setBgBusy] = useState(null);
   const [formError, setFormError] = useState("");
+  const [collections, setCollections] = useState([]);
+  const [newCollection, setNewCollection] = useState(null); // { name, emoji, name_ar }
+  const loadCollections = async () => {
+    try { setCollections(await fetchCollections({ activeOnly: false })); }
+    catch (e) { setFormError("Couldn't load collections: " + e.message); }
+  };
+  useEffect(() => { loadCollections(); }, []);
+  const createCollection = async () => {
+    const draft = newCollection || {};
+    if (!String(draft.name || "").trim()) { setFormError("Give the collection a name first."); return; }
+    try {
+      const saved = await saveCollection({ name: draft.name, name_ar: draft.name_ar, emoji: draft.emoji, blurb: draft.blurb, sort: collections.length + 1 });
+      await loadCollections();
+      set("collection", saved.slug || slugifyCollection(draft.name));
+      setNewCollection(null);
+    } catch (e) { setFormError("Couldn't create the collection: " + e.message); }
+  };
   const [uploading, setUploading] = useState(false);
   const [draftState, setDraftState] = useState({ savedAt: null, error: "", saving: false });
   const draftRow = useRef(null);      // the autosaved draft's database row, if any
@@ -1184,6 +1203,7 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
       images: form.images || [],
       keywords: (form.keywords || []).map(function (k) { return String(k || "").trim(); }).filter(Boolean),
       details: (form.details || []).map(function (d) { return String(d || "").trim(); }).filter(Boolean),
+      collection: form.collection || "",
       variations: (form.variations || []).map(function (g) { return { name: String(g.name || "").trim(), options: (g.options || []).map(function (o) { return { label: String(o.label || "").trim(), delta: parseFloat(o.delta) || 0 }; }).filter(function (o) { return o.label; }) }; }).filter(function (g) { return g.name && g.options.length > 0; }),
     };
     try {
@@ -1500,6 +1520,33 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
                     <label style={labelStyle} htmlFor="pf-icon">Icon <span style={{ fontWeight: 400, color: COLORS.textMuted }}>(shown when there is no photo)</span></label>
                     <input id="pf-icon" type="text" value={form.emoji} onChange={(e) => set("emoji", e.target.value)} style={{ ...inputStyle(false), width: 80, textAlign: "center", fontSize: 18 }} />
                   </div>
+                </div>
+                <div style={{ marginTop: 14 }}>
+                  <label style={labelStyle} htmlFor="pf-collection">Collection <span style={{ fontWeight: 400, color: COLORS.textMuted }}>(its own page in the store)</span></label>
+                  {!newCollection ? (
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      <select id="pf-collection" value={form.collection || ""} onChange={(e) => { if (e.target.value === "__new__") { setNewCollection({ name: "", name_ar: "", emoji: "✦", blurb: "" }); } else set("collection", e.target.value); }} style={{ ...inputStyle(false), cursor: "pointer", flex: "1 1 220px" }}>
+                        <option value="">No collection</option>
+                        {collections.map((c) => <option key={c.slug} value={c.slug}>{(c.emoji || "✦") + " " + c.name + (c.active ? "" : " (hidden)")}</option>)}
+                        <option value="__new__">+ New collection…</option>
+                      </select>
+                      {form.collection ? <a href={"/c/" + form.collection} target="_blank" rel="noreferrer" className="s3d-btn-small" style={{ alignSelf: "center" }}>View page</a> : null}
+                    </div>
+                  ) : (
+                    <div style={{ border: "1px solid " + COLORS.wheat, borderRadius: 10, padding: 12, background: COLORS.cream }}>
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        <input value={newCollection.emoji} onChange={(e) => setNewCollection({ ...newCollection, emoji: e.target.value })} aria-label="Collection icon" style={{ ...inputStyle(false), width: 64, textAlign: "center" }} />
+                        <input autoFocus value={newCollection.name} onChange={(e) => setNewCollection({ ...newCollection, name: e.target.value })} placeholder="Collection name, e.g. Hug the World" style={{ ...inputStyle(false), flex: "1 1 200px" }} />
+                        <input dir="rtl" value={newCollection.name_ar} onChange={(e) => setNewCollection({ ...newCollection, name_ar: e.target.value })} placeholder="بالعربي" style={{ ...inputStyle(true), flex: "1 1 140px" }} />
+                      </div>
+                      <input value={newCollection.blurb} onChange={(e) => setNewCollection({ ...newCollection, blurb: e.target.value })} placeholder="One line shown at the top of the collection page" style={{ ...inputStyle(false), marginTop: 8 }} />
+                      <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                        <button onClick={createCollection} className="s3d-btn-primary" style={{ fontSize: 13 }}>Create collection</button>
+                        <button onClick={() => setNewCollection(null)} className="s3d-btn-quiet" style={{ fontSize: 13 }}>Cancel</button>
+                      </div>
+                      <div style={hint}>Its page will be souk3d.com/c/{slugifyCollection(newCollection.name) || "…"}</div>
+                    </div>
+                  )}
                 </div>
                 <div style={{ marginTop: 14 }}>
                   <label style={labelStyle} htmlFor="pf-keywords">Search keywords <span style={{ fontWeight: 400, color: COLORS.textMuted }}>(comma separated)</span></label>
