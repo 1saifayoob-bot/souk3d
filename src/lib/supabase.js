@@ -189,6 +189,7 @@ export function rowToProduct(r) {
     variations: Array.isArray(r.variations) ? r.variations : [],
     details: Array.isArray(r.details) ? r.details : [],
     videos: Array.isArray(r.videos) ? r.videos : [],
+    collection: r.collection || "",
   };
 }
 
@@ -221,6 +222,7 @@ export function productToRow(p) {
     variations: Array.isArray(p.variations) ? p.variations : [],
     details: Array.isArray(p.details) ? p.details.map((d) => String(d || "").trim()).filter(Boolean) : [],
     videos: Array.isArray(p.videos) ? p.videos.filter((v) => v && typeof v.url === "string" && v.url.startsWith("http")).map((v) => ({ url: v.url })) : [],
+    collection: String(p.collection || "").trim(),
     image_bg: p.imageBg || (images[0] && images[0].bg) || "cream",
   };
 }
@@ -602,4 +604,37 @@ export async function fetchOrders() {
     return [];
   }
   return (data || []).map(rowToOrder);
+}
+
+// ─── COLLECTIONS ────────────────────────────────────────────────────────────
+// Named groups of products ("Hug the World"), shown as their own page at /c/<slug>.
+export async function fetchCollections({ activeOnly = true } = {}) {
+  let q = supabase.from("collections").select("*").order("sort", { ascending: true });
+  if (activeOnly) q = q.eq("active", true);
+  const { data, error } = await q;
+  if (error) throw error;
+  return data || [];
+}
+
+export function slugifyCollection(name) {
+  return String(name || "")
+    .toLowerCase().trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40);
+}
+
+export async function saveCollection({ slug, name, name_ar, emoji, blurb, sort }) {
+  const row = {
+    slug: slug || slugifyCollection(name),
+    name: String(name || "").trim(),
+    name_ar: String(name_ar || "").trim(),
+    emoji: String(emoji || "✦").trim().slice(0, 8),
+    blurb: String(blurb || "").trim(),
+    sort: Number(sort) || 0,
+  };
+  if (!row.slug || !row.name) throw new Error("A collection needs a name.");
+  const { data, error } = await supabase.from("collections").upsert(row, { onConflict: "slug" }).select().single();
+  if (error) throw error;
+  return data;
 }
