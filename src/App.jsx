@@ -248,8 +248,49 @@ function ProductDetail({product, onBack, onAddToCart, onBuyNow, user }) {
   const [qty, setQty] = useState(1);
   const [customText, setCustomText] = useState("");
   const varGroups = (Array.isArray(product.variations) ? product.variations : []).filter(g => g && g.name && Array.isArray(g.options) && g.options.length > 0);
-  const [chosen, setChosen] = useState(() => { const init = {}; varGroups.forEach(g => { init[g.name] = g.options[0].label; }); return init; });
-  useEffect(() => { const init = {}; varGroups.forEach(g => { init[g.name] = g.options[0].label; }); setChosen(init); setQty(1); }, [product.id]);
+  // A link can point at an exact choice: /p/SKU?Color=Blue
+  const readChoiceFromUrl = () => {
+    const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+    const init = {};
+    varGroups.forEach(g => {
+      const wanted = params.get(g.name) || params.get(g.name.toLowerCase());
+      const match = wanted && g.options.find(o => String(o.label).toLowerCase() === String(wanted).toLowerCase());
+      init[g.name] = match ? match.label : g.options[0].label;
+    });
+    return init;
+  };
+  const [chosen, setChosen] = useState(readChoiceFromUrl);
+  useEffect(() => { setChosen(readChoiceFromUrl()); setQty(1); }, [product.id]);
+
+  // Show the photo that belongs to the chosen option, and keep the address bar
+  // in step so "Copy link" shares exactly what the customer is looking at.
+  const photoForChoice = (picks) => {
+    for (const g of varGroups) {
+      const o = g.options.find(x => x.label === picks[g.name]);
+      if (o && (o.img === 0 || o.img) && galleryImgs[o.img]) return o.img;
+    }
+    return null;
+  };
+  useEffect(() => {
+    const i = photoForChoice(chosen);
+    if (i !== null) setActiveImg(i);
+    if (typeof window === "undefined" || !varGroups.length) return;
+    const params = new URLSearchParams(window.location.search);
+    varGroups.forEach(g => { if (chosen[g.name]) params.set(g.name, chosen[g.name]); });
+    const q = params.toString();
+    if (/^\/p\//.test(window.location.pathname)) {
+      window.history.replaceState(window.history.state, "", window.location.pathname + (q ? "?" + q : ""));
+    }
+  }, [chosen, product.id]);
+  const shareQuery = (() => {
+    if (!varGroups.length) return "";
+    const params = new URLSearchParams();
+    varGroups.forEach(g => { if (chosen[g.name]) params.set(g.name, chosen[g.name]); });
+    const i = photoForChoice(chosen);
+    if (i !== null) params.set("img", String(i));
+    const q = params.toString();
+    return q ? "?" + q : "";
+  })();
   const varDelta = varGroups.reduce((s, g) => { const o = g.options.find(x => x.label === chosen[g.name]); return s + (o ? (Number(o.delta) || 0) : 0); }, 0);
   const unitPrice = (Number(product.price) || 0) + varDelta;
   const [selectedStyle, setSelectedStyle] = useState("Diwani");
@@ -327,6 +368,11 @@ function ProductDetail({product, onBack, onAddToCart, onBuyNow, user }) {
             </div>
           )}
 
+          {varGroups.length > 0 && (
+            <div style={{ fontSize: 11.5, color: C.textMuted, fontFamily: F.body, marginBottom: 10 }}>
+              The link below updates with your choice, so you can send someone this exact {varGroups.map(g => g.name.toLowerCase()).join(" and ")}.
+            </div>
+          )}
           {varGroups.map(g => (
             <div key={g.name} style={{ marginBottom: 14 }}>
               <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 0.5, color: C.textMuted, fontFamily: F.body, marginBottom: 6, textTransform: "uppercase" }}>{g.name}</div>
@@ -362,7 +408,7 @@ function ProductDetail({product, onBack, onAddToCart, onBuyNow, user }) {
               </div>
             )}
 
-            <ShareRow product={product} />
+            <ShareRow product={product} query={shareQuery} />
         </div>
       </div>
 
@@ -480,7 +526,7 @@ function CheckoutPage({ cart, onBack, promo, user }) {
         <div style={{ fontSize: 64, marginBottom: 20 }}>🎉</div>
         <div style={{ fontFamily: F.display, fontSize: 36, fontWeight: 600, color: C.charcoal, marginBottom: 8 }}>Order Confirmed!</div>
         <div style={{ fontFamily: F.arabic, fontSize: 22, color: C.saffron, marginBottom: 16 }}>مبروك طلبك!</div>
-        <p style={{ fontSize: 14, color: C.textMuted, fontFamily: F.body, lineHeight: 1.7, marginBottom: 24 }}>Your order has been received. Miami will begin crafting your pieces within 1–2 business days. You'll receive an email confirmation shortly.</p>
+        <p style={{ fontSize: 14, color: C.textMuted, fontFamily: F.body, lineHeight: 1.7, marginBottom: 24 }}>Your order has been received. We will begin crafting your pieces within 1–2 business days. You'll receive an email confirmation shortly.</p>
         <button onClick={onBack} style={{ padding: "13px 32px", background: C.charcoal, color: "#FFF", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 600, fontFamily: F.body, cursor: "pointer" }}>Continue Shopping</button>
       </div>
     );
@@ -659,7 +705,7 @@ function CustomOrderForm({ onBack }) {
         {reference && (
           <div style={{ display: "inline-block", background: C.cream2, border: "0.5px solid " + C.wheat, borderRadius: 8, padding: "6px 14px", fontSize: 12, fontFamily: F.body, color: C.textMuted, marginBottom: 16 }}>Reference {reference}</div>
         )}
-        <p style={{ fontSize: 14, color: C.textMuted, fontFamily: F.body, lineHeight: 1.7, marginBottom: 24 }}>Miami will review your request and send you a personalized quote within 24 hours. Check your email and WhatsApp!</p>
+        <p style={{ fontSize: 14, color: C.textMuted, fontFamily: F.body, lineHeight: 1.7, marginBottom: 24 }}>We will review your request and send you a personalized quote within 24 hours. Check your email and WhatsApp!</p>
         <button onClick={onBack} style={{ padding: "13px 32px", background: C.saffron, color: "#FFF", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 600, fontFamily: F.body, cursor: "pointer" }}>Back to Shop</button>
       </div>
     );
@@ -776,7 +822,7 @@ function CustomOrderForm({ onBack }) {
           {/* What happens next */}
           <div style={{ background: C.cream2, border: `0.5px solid ${C.wheat}`, borderRadius: 12, padding: "16px 18px", marginBottom: 20 }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: C.charcoal, marginBottom: 10, fontFamily: F.body }}>What happens next?</div>
-            {["Miami reviews your request (within 24h)", "You receive a custom quote by email", "Approve the quote — no payment until you approve", "Miami crafts your piece (3–5 days)", "Ships directly to you worldwide 🚀"].map((s, i) => (
+            {["We review your request (within 24h)", "You receive a custom quote by email", "Approve the quote — no payment until you approve", "We craft your piece (3–5 days)", "Ships directly to you worldwide 🚀"].map((s, i) => (
               <div key={i} style={{ display: "flex", gap: 10, marginBottom: 6, alignItems: "flex-start" }}>
                 <div style={{ width: 20, height: 20, borderRadius: "50%", background: C.saffron, color: "#FFF", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
                 <div style={{ fontSize: 12, color: C.charcoal, fontFamily: F.body, lineHeight: 1.5 }}>{s}</div>
@@ -890,7 +936,7 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder, onBrowse }) {
           <div>
             <div style={{ fontFamily: F.arabic, fontSize: 28, color: C.saffron, marginBottom: 12 }}>أهلاً وسهلاً</div>
             <div style={{ fontFamily: F.display, fontSize: 56, fontWeight: 600, color: "#FFF", lineHeight: 1.1, marginBottom: 16 }}>Gifts that carry your story home.</div>
-            <p style={{ fontSize: 16, color: "#C9B99A", fontFamily: F.body, lineHeight: 1.7, marginBottom: 32, maxWidth: 440 }}>Handmade 3D-printed gifts celebrating Arab heritage, crafted with love in Burbank, Los Angeles by Miami Abdulal. Every piece tells a diaspora story.</p>
+            <p style={{ fontSize: 16, color: "#C9B99A", fontFamily: F.body, lineHeight: 1.7, marginBottom: 32, maxWidth: 440 }}>Handmade 3D-printed gifts celebrating Arab heritage, crafted with love in Burbank, Los Angeles by the Souk3D Family. Every piece tells a diaspora story.</p>
             <div style={{ display: "flex", gap: 14 }}>
               <button onClick={() => window.scrollTo({ top: 600, behavior: "smooth" })} style={{ padding: "15px 32px", background: C.saffron, color: "#FFF", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, fontFamily: F.body, cursor: "pointer" }}>Shop Now</button>
               <button onClick={onCustomOrder} style={{ padding: "15px 32px", background: "transparent", color: "#FFF", border: `1.5px solid rgba(255,255,255,0.3)`, borderRadius: 10, fontSize: 14, fontWeight: 600, fontFamily: F.body, cursor: "pointer" }}>Custom Order ✦</button>
@@ -983,7 +1029,7 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder, onBrowse }) {
             <div style={{ fontFamily: F.arabic, fontSize: 20, color: C.saffron, marginBottom: 12 }}>منّا لكم بكل حب</div>
             <div style={{ fontFamily: F.display, fontSize: 30, fontWeight: 600, color: "#FFF", lineHeight: 1.2, marginBottom: 16 }}>A piece of home in every print.</div>
             <p style={{ fontSize: 14, color: "#C9B99A", fontFamily: F.body, lineHeight: 1.8, marginBottom: 20 }}>Growing up in the Arab diaspora, we always searched for gifts that felt like home — pieces that held our language, our patterns, our stories. When we couldn't find them, we decided to make them. Every Souk3D piece is printed, finished, and packed by hand in our studio in Burbank, Los Angeles.</p>
-            <div style={{ fontFamily: F.display, fontSize: 22, color: C.saffron, fontStyle: "italic" }}>— Miami Abdulal ✦</div>
+            <div style={{ fontFamily: F.display, fontSize: 22, color: C.saffron, fontStyle: "italic" }}>— The Souk3D Family ✦</div>
           </div>
           <div style={{ textAlign: "center" }}>
             <div style={{ width: 160, height: 160, borderRadius: "50%", background: `linear-gradient(135deg, ${C.saffron}44 0%, ${C.terracotta}44 100%)`, margin: "0 auto 16px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 72 }}>🏺</div>
@@ -1063,7 +1109,7 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder, onBrowse }) {
             ))}
           </div>
           <div style={{ borderTop: `0.5px solid ${C.inkBrown}`, paddingTop: 20, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
-            <div style={{ fontSize: 12, color: "#6A5848", fontFamily: F.body }}>© {new Date().getFullYear()} Souk3D by Miami Abdulal. All rights reserved.</div>
+            <div style={{ fontSize: 12, color: "#6A5848", fontFamily: F.body }}>© {new Date().getFullYear()} Souk3D Family. All rights reserved.</div>
             <div style={{ fontSize: 12, color: "#6A5848", fontFamily: F.body }}>Made with ❤️ in Burbank, Los Angeles</div>
           </div>
         </div>
@@ -1079,9 +1125,13 @@ export function productUrl(p) {
   return window.location.origin + "/p/" + encodeURIComponent(p.sku || "");
 }
 
-function ShareRow({ product }) {
+function productUrlWithChoice(p, query) {
+  return productUrl(p) + (query || "");
+}
+
+function ShareRow({ product, query }) {
   const [copied, setCopied] = useState(false);
-  const url = productUrl(product);
+  const url = productUrlWithChoice(product, query);
   const text = product.name + " — $" + Number(product.price || 0).toFixed(2) + " · Souk3D";
   const enc = encodeURIComponent;
 
