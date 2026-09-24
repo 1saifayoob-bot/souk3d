@@ -65,28 +65,88 @@ const HERITAGE_ITEMS = [
 // Add entries like: { name: "Layla H.", flag: "🇺🇸", location: "Los Angeles, CA", text: "...", stars: 5 }
 const REVIEWS = [];
 
+// ─── OPTIONS ON THE CARD ──────────────────────────────────────────────────
+// A colour option gets a real dot; anything else gets a short label like
+// "3 sizes", because a grey dot for "Large" tells a shopper nothing.
+const SWATCHES = {
+  pink: "#E48AA8", blue: "#4C7FD0", navy: "#22365E", teal: "#2E8B8B", turquoise: "#40C1C1",
+  white: "#FFFFFF", cream: "#F6ECD9", beige: "#E5D5B8", black: "#1E1A16", grey: "#9B9B9B", gray: "#9B9B9B",
+  silver: "#C8C8C8", gold: "#D4AF37", brass: "#C39B4A", copper: "#B87333", bronze: "#9C7A3C",
+  red: "#C0392B", maroon: "#7B2D2D", burgundy: "#6E2438", orange: "#E08A3C", yellow: "#E8C547",
+  green: "#4C8B57", olive: "#7A8C4B", purple: "#7C5AA6", lilac: "#B9A0D8", brown: "#7A5A42", natural: "#D8C3A5",
+};
+function swatchColor(option) {
+  if (option && typeof option.color === "string" && /^#[0-9a-f]{3,8}$/i.test(option.color.trim())) return option.color.trim();
+  const label = String((option && option.label) || "").toLowerCase();
+  const key = Object.keys(SWATCHES).find((k) => label.includes(k));
+  return key ? SWATCHES[key] : null;
+}
+function colourGroup(product) {
+  const groups = (Array.isArray(product.variations) ? product.variations : []).filter(g => g && g.name && Array.isArray(g.options) && g.options.length > 1);
+  return groups.find(g => /colou?r/i.test(g.name) || g.options.every(o => swatchColor(o))) || null;
+}
+function otherOptionLabel(product) {
+  const groups = (Array.isArray(product.variations) ? product.variations : []).filter(g => g && g.name && Array.isArray(g.options) && g.options.length > 1);
+  const colour = colourGroup(product);
+  const rest = groups.filter(g => g !== colour);
+  if (!rest.length) return "";
+  const g = rest[0];
+  return g.options.length + " " + g.name.toLowerCase() + (/s$/i.test(g.name) ? "" : "s");
+}
+function optionQuery(groupName, label, imgIndex) {
+  const params = new URLSearchParams();
+  params.set(groupName, label);
+  if (imgIndex === 0 || imgIndex) params.set("img", String(imgIndex));
+  return "?" + params.toString();
+}
+
 // ─── SHARED STOREFRONT COMPONENTS ─────────────────────────────────────────────
 function Stars({ count, size = 13 }) {
   return <span style={{ color: C.saffron, fontSize: size, letterSpacing: 1 }}>{"★".repeat(Math.floor(count))}{"☆".repeat(5 - Math.floor(count))}</span>;
 }
 
 function ProductCard({ product, onView, onAddToCart }) {
+  const colours = colourGroup(product);
+  const otherLabel = otherOptionLabel(product);
+  const [pick, setPick] = useState(null);
+  const gallery = (product.images || []).filter((im) => im && im.url);
+  const cardImg = pick && (pick.img === 0 || pick.img) && gallery[pick.img] ? (gallery[pick.img].thumbUrl || gallery[pick.img].url) : "";
   const [hovered, setHovered] = useState(false);
   return (
     <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} style={{ background: "#FFF", border: `0.5px solid ${C.wheat}`, borderRadius: 12, overflow: "hidden", cursor: "pointer", transition: "box-shadow 0.2s", boxShadow: hovered ? "0 8px 32px rgba(42,31,24,0.14)" : "none" }}>
-      <div onClick={() => onView(product)} style={{ aspectRatio: "1", background: `linear-gradient(135deg, ${C.cream2} 0%, ${C.wheat}44 100%)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 64, position: "relative" }}>
-        {(product.thumbUrl || product.imageUrl || (product.images && product.images[0] && product.images[0].url)) ? <img src={product.thumbUrl || product.imageUrl || (product.images && product.images[0] && product.images[0].url) || ""} alt={product.name || ""} loading="lazy" decoding="async" style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: "inherit" }} /> : product.emoji}
+      <div onClick={() => onView(product, pick ? optionQuery(colours.name, pick.label, pick.img) : "")} style={{ aspectRatio: "1", background: `linear-gradient(135deg, ${C.cream2} 0%, ${C.wheat}44 100%)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 64, position: "relative" }}>
+        {(cardImg) ? <img src={cardImg} alt="" onError={(e) => { e.currentTarget.style.display = "none"; }} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (product.thumbUrl || product.imageUrl || (product.images && product.images[0] && product.images[0].url)) ? <img src={product.thumbUrl || product.imageUrl || (product.images && product.images[0] && product.images[0].url) || ""} alt={product.name || ""} loading="lazy" decoding="async" style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: "inherit" }} /> : product.emoji}
         {product.badge && (
           <div style={{ position: "absolute", top: 12, left: 12, background: product.badge === "Sale" ? C.terracotta : product.badge === "New" ? C.damascene : C.saffron, color: "#FFF", fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 10, fontFamily: F.body }}>{product.badge}</div>
         )}
         {product.customizable && (
           <div style={{ position: "absolute", top: 12, right: 12, background: C.olive, color: "#FFF", fontSize: 9, fontWeight: 700, padding: "3px 9px", borderRadius: 10, fontFamily: F.body }}>✦ Custom</div>
         )}
+        {(colours || otherLabel) && (
+          <div style={{ position: "absolute", bottom: 10, right: 10, background: "rgba(255,255,255,0.92)", color: C.charcoal, fontSize: 10, fontWeight: 600, padding: "3px 9px", borderRadius: 10, fontFamily: F.body }}>
+            {colours ? colours.options.length + " colours" : otherLabel}
+          </div>
+        )}
       </div>
       <div style={{ padding: "14px 16px" }}>
         <div style={{ fontSize: 9, color: C.textMuted, fontFamily: F.body, letterSpacing: 1, marginBottom: 4 }}>{product.flag} {product.country}</div>
-        <div onClick={() => onView(product)} style={{ fontFamily: F.display, fontSize: 17, fontWeight: 600, color: C.charcoal, marginBottom: 2, lineHeight: 1.2 }}>{product.name}</div>
+        <div onClick={() => onView(product, pick ? optionQuery(colours.name, pick.label, pick.img) : "")} style={{ fontFamily: F.display, fontSize: 17, fontWeight: 600, color: C.charcoal, marginBottom: 2, lineHeight: 1.2 }}>{product.name}</div>
         <div style={{ fontFamily: F.arabic, fontSize: 13, color: C.textMuted, marginBottom: 6 }}>{product.name_ar}</div>
+        {colours && (
+          <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 8 }}>
+            {colours.options.map((o) => {
+              const c = swatchColor(o) || C.wheat;
+              const on = pick && pick.label === o.label;
+              return (
+                <button key={o.label} title={o.label} aria-label={o.label}
+                  onClick={(e) => { e.stopPropagation(); setPick(on ? null : o); }}
+                  style={{ width: 18, height: 18, borderRadius: "50%", background: c, cursor: "pointer", padding: 0,
+                    border: on ? `2px solid ${C.charcoal}` : `1px solid ${C.wheat}`, boxShadow: on ? `0 0 0 2px #FFF inset` : "none" }} />
+              );
+            })}
+            <span style={{ fontSize: 11, color: C.textMuted, fontFamily: F.body }}>{pick ? pick.label : colours.options.length + " colours"}</span>
+          </div>
+        )}
         {product.reviews > 0 && (
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
           <Stars count={product.stars} />
@@ -98,7 +158,7 @@ function ProductCard({ product, onView, onAddToCart }) {
             <span style={{ fontFamily: F.body, fontSize: 17, fontWeight: 700, color: C.charcoal }}>${product.price}</span>
             {product.compareAt && <span style={{ fontSize: 12, color: C.textMuted, textDecoration: "line-through", marginLeft: 6 }}>${product.compareAt}</span>}
           </div>
-          <button onClick={() => onAddToCart(product)} style={{ background: C.charcoal, color: "#FFF", border: "none", padding: "8px 14px", fontSize: 11, fontWeight: 600, borderRadius: 8, cursor: "pointer", fontFamily: F.body, letterSpacing: 0.5 }}>Add to Cart</button>
+          <button onClick={() => onAddToCart(pick ? { ...product, variation: { [colours.name]: pick.label }, price: (Number(product.price) || 0) + (Number(pick.delta) || 0) } : product)} style={{ background: C.charcoal, color: "#FFF", border: "none", padding: "8px 14px", fontSize: 11, fontWeight: 600, borderRadius: 8, cursor: "pointer", fontFamily: F.body, letterSpacing: 0.5 }}>Add to Cart</button>
         </div>
               {product.buyUrl && (
                 <a href={product.buyUrl} target="_blank" rel="noopener noreferrer" style={{ display: "block", marginTop: 10, textAlign: "center", padding: "14px", background: C.saffron, color: "#FFF", borderRadius: 10, fontSize: 14, fontWeight: 700, fontFamily: F.body, textDecoration: "none" }}>
@@ -1417,10 +1477,11 @@ export default function App() {
     window.scrollTo(0, 0);
     window.history.pushState({ browse: b }, "", (b.kind === "collection" ? "/c/" : "/h/") + encodeURIComponent(b.value));
   };
-  const openProduct = (p) => {
+  const openProduct = (p, query) => {
     setViewingProduct(p);
     setPage("product");
-    if (p && p.sku) window.history.pushState({ sku: p.sku }, "", "/p/" + encodeURIComponent(p.sku));
+    window.scrollTo(0, 0);
+    if (p && p.sku) window.history.pushState({ sku: p.sku }, "", "/p/" + encodeURIComponent(p.sku) + (query || ""));
   };
   const goHome = () => {
     setViewingProduct(null);
