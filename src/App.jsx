@@ -65,6 +65,20 @@ const HERITAGE_ITEMS = [
 // Add entries like: { name: "Layla H.", flag: "🇺🇸", location: "Los Angeles, CA", text: "...", stars: 5 }
 const REVIEWS = [];
 
+// ─── FLAGS ────────────────────────────────────────────────────────────────
+// Windows has no flag emoji, so 🇸🇾 shows up as the letters "SY" there.
+// Real SVG flags look the same on every device.
+const FLAG_FILES = {
+  Syria: "sy", Lebanon: "lb", Palestine: "ps", Egypt: "eg", Iraq: "iq",
+  Jordan: "jo", Morocco: "ma", Tunisia: "tn", Pakistan: "pk", Somalia: "so", USA: "us",
+};
+function Flag({ country, size = 18, style }) {
+  const file = FLAG_FILES[country];
+  const common = { width: size * 1.33, height: size, borderRadius: 3, display: "inline-block", verticalAlign: "middle", flexShrink: 0, ...style };
+  if (!file) return <span style={{ fontSize: size, lineHeight: 1, ...style }}>🌍</span>;
+  return <img src={"/flags/" + file + ".svg"} alt={country} title={country} loading="lazy" style={{ ...common, objectFit: "cover", boxShadow: "0 0 0 0.5px rgba(0,0,0,0.12)" }} />;
+}
+
 // ─── OPTIONS ON THE CARD ──────────────────────────────────────────────────
 // A colour option gets a real dot; anything else gets a short label like
 // "3 sizes", because a grey dot for "Large" tells a shopper nothing.
@@ -129,7 +143,7 @@ function ProductCard({ product, onView, onAddToCart }) {
         )}
       </div>
       <div style={{ padding: "14px 16px" }}>
-        <div style={{ fontSize: 9, color: C.textMuted, fontFamily: F.body, letterSpacing: 1, marginBottom: 4 }}>{product.flag} {product.country}</div>
+        <div style={{ fontSize: 9, color: C.textMuted, fontFamily: F.body, letterSpacing: 1, marginBottom: 4, display: "flex", alignItems: "center", gap: 5 }}><Flag country={product.country} size={11} /> {product.country}</div>
         <div onClick={() => onView(product, pick ? optionQuery(colours.name, pick.label, pick.img) : "")} style={{ fontFamily: F.display, fontSize: 17, fontWeight: 600, color: C.charcoal, marginBottom: 2, lineHeight: 1.2 }}>{product.name}</div>
         <div style={{ fontFamily: F.arabic, fontSize: 13, color: C.textMuted, marginBottom: 6 }}>{product.name_ar}</div>
         {colours && (
@@ -398,7 +412,7 @@ function ProductDetail({product, onBack, onAddToCart, onBuyNow, user }) {
 
         {/* Product info */}
         <div>
-          <div style={{ fontSize: 10, background: C.saffron + "22", color: C.saffron, padding: "3px 10px", borderRadius: 10, display: "inline-block", fontWeight: 600, marginBottom: 10, fontFamily: F.body }}>{product.flag} {product.country}</div>
+          <div style={{ fontSize: 10, background: C.saffron + "22", color: C.saffron, padding: "3px 10px", borderRadius: 10, display: "inline-block", fontWeight: 600, marginBottom: 10, fontFamily: F.body, display: "inline-flex", alignItems: "center", gap: 6 }}><Flag country={product.country} size={13} /> {product.country}</div>
           <div style={{ fontFamily: F.display, fontSize: 34, fontWeight: 600, color: C.charcoal, lineHeight: 1.1, marginBottom: 6 }}>{product.name}</div>
           <div style={{ fontFamily: F.arabic, fontSize: 22, color: C.saffron, marginBottom: 12, direction: "rtl", textAlign: "right" }}>{product.name_ar}</div>
           {product.reviews > 0 && (
@@ -1034,7 +1048,7 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder, onBrowse }) {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12 }}>
             {HERITAGE_ITEMS.map(h => ({ ...h, count: STORE_PRODUCTS.filter(p => (p.country || "") === h.country).length })).filter(h => h.count > 0).map(h => (
               <div key={h.country} onClick={() => onBrowse({ kind: "country", value: h.country, title: h.country, title_ar: h.arabic, emoji: h.flag })} style={{ background: "#FFF", border: `0.5px solid ${C.wheat}`, borderRadius: 12, padding: "20px 16px", textAlign: "center", cursor: "pointer", transition: "box-shadow 0.2s" }}>
-                <div style={{ fontSize: 36, marginBottom: 8 }}>{h.flag}</div>
+                <div style={{ marginBottom: 8, height: 34, display: "flex", alignItems: "center", justifyContent: "center" }}><Flag country={h.country} size={30} /></div>
                 <div style={{ fontFamily: F.body, fontSize: 14, fontWeight: 600, color: C.charcoal }}>{h.country}</div>
                 <div style={{ fontFamily: F.arabic, fontSize: 14, color: h.color }}>{h.arabic}</div>
                 <div style={{ fontSize: 11, color: C.textMuted, marginTop: 4 }}>{h.count} items</div>
@@ -1433,7 +1447,9 @@ function BrowsePage({ browse, onViewProduct, onAddToCart, onBack }) {
     <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 5% 70px", animation: "fadeIn 0.3s ease" }}>
       <button onClick={onBack} style={{ background: "none", border: "none", color: C.textMuted, fontSize: 13, fontFamily: F.body, cursor: "pointer", padding: 0, marginBottom: 18 }}>‹ Back to the shop</button>
       <div style={{ textAlign: "center", marginBottom: 32 }}>
-        <div style={{ fontSize: 46, lineHeight: 1 }}>{browse.emoji || "✦"}</div>
+        {browse.kind === "country"
+          ? <Flag country={browse.value} size={46} style={{ borderRadius: 6 }} />
+          : <div style={{ fontSize: 46, lineHeight: 1 }}>{browse.emoji || "✦"}</div>}
         <h1 style={{ fontFamily: F.display, fontSize: 40, fontWeight: 600, color: C.charcoal, margin: "10px 0 4px" }}>{browse.title}</h1>
         {browse.title_ar ? <div style={{ fontFamily: F.arabic, fontSize: 22, color: C.saffron }}>{browse.title_ar}</div> : null}
         {browse.blurb ? <p style={{ fontSize: 15, color: C.textMuted, fontFamily: F.body, lineHeight: 1.7, maxWidth: 560, margin: "14px auto 0" }}>{browse.blurb}</p> : null}
