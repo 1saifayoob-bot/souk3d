@@ -69,7 +69,7 @@ const REVIEWS = [];
 // Add a link here and it appears in the header and the footer. Leave a value
 // empty and that network is hidden, so nothing on the page is a dead link.
 const SOCIAL = {
-  instagram: "",
+  instagram: "https://www.instagram.com/bbeventsinc/",
   tiktok: "",
   pinterest: "",
   etsy: "https://www.etsy.com/shop/3DNalaDesigns",
