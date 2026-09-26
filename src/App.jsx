@@ -1039,20 +1039,18 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder, onBrowse }) {
       </div>
 
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "60px 5%" }}>
-        {/* Heritage nav */}
-        <div id="heritage-section" style={{ marginBottom: 56 }}>
-          <div style={{ textAlign: "center", marginBottom: 32 }}>
-            <div style={{ fontFamily: F.display, fontSize: 36, fontWeight: 600, color: C.charcoal }}>Shop by Heritage</div>
-            <div style={{ fontFamily: F.arabic, fontSize: 20, color: C.saffron }}>تسوق حسب التراث</div>
+        {/* Best sellers */}
+        <div id="shop-section" style={{ marginBottom: 56 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 28 }}>
+            <div>
+              <div style={{ fontFamily: F.display, fontSize: 36, fontWeight: 600, color: C.charcoal }}>Best Sellers</div>
+              <div style={{ fontFamily: F.arabic, fontSize: 18, color: C.saffron }}>الأكثر مبيعاً</div>
+            </div>
+            <button style={{ fontSize: 13, color: C.saffron, background: "none", border: "none", cursor: "pointer", fontFamily: F.body, fontWeight: 600 }}>View all →</button>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12 }}>
-            {HERITAGE_ITEMS.map(h => ({ ...h, count: STORE_PRODUCTS.filter(p => (p.country || "") === h.country).length })).filter(h => h.count > 0).map(h => (
-              <div key={h.country} onClick={() => onBrowse({ kind: "country", value: h.country, title: h.country, title_ar: h.arabic, emoji: h.flag })} style={{ background: "#FFF", border: `0.5px solid ${C.wheat}`, borderRadius: 12, padding: "20px 16px", textAlign: "center", cursor: "pointer", transition: "box-shadow 0.2s" }}>
-                <div style={{ marginBottom: 8, height: 34, display: "flex", alignItems: "center", justifyContent: "center" }}><Flag country={h.country} size={30} /></div>
-                <div style={{ fontFamily: F.body, fontSize: 14, fontWeight: 600, color: C.charcoal }}>{h.country}</div>
-                <div style={{ fontFamily: F.arabic, fontSize: 14, color: h.color }}>{h.arabic}</div>
-                <div style={{ fontSize: 11, color: C.textMuted, marginTop: 4 }}>{h.count} items</div>
-              </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 18 }}>
+            {STORE_PRODUCTS.map(p => (
+              <ProductCard key={p.id} product={p} onView={onViewProduct} onAddToCart={onAddToCart} />
             ))}
           </div>
         </div>
@@ -1081,18 +1079,20 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder, onBrowse }) {
           </div>
         )}
 
-        {/* Best sellers */}
-        <div id="shop-section" style={{ marginBottom: 56 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 28 }}>
-            <div>
-              <div style={{ fontFamily: F.display, fontSize: 36, fontWeight: 600, color: C.charcoal }}>Best Sellers</div>
-              <div style={{ fontFamily: F.arabic, fontSize: 18, color: C.saffron }}>الأكثر مبيعاً</div>
-            </div>
-            <button style={{ fontSize: 13, color: C.saffron, background: "none", border: "none", cursor: "pointer", fontFamily: F.body, fontWeight: 600 }}>View all →</button>
+        {/* Heritage nav */}
+        <div id="heritage-section" style={{ marginBottom: 56 }}>
+          <div style={{ textAlign: "center", marginBottom: 32 }}>
+            <div style={{ fontFamily: F.display, fontSize: 36, fontWeight: 600, color: C.charcoal }}>Shop by Heritage</div>
+            <div style={{ fontFamily: F.arabic, fontSize: 20, color: C.saffron }}>تسوق حسب التراث</div>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 18 }}>
-            {STORE_PRODUCTS.map(p => (
-              <ProductCard key={p.id} product={p} onView={onViewProduct} onAddToCart={onAddToCart} />
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12 }}>
+            {HERITAGE_ITEMS.map(h => ({ ...h, count: STORE_PRODUCTS.filter(p => (p.country || "") === h.country).length })).filter(h => h.count > 0).map(h => (
+              <div key={h.country} onClick={() => onBrowse({ kind: "country", value: h.country, title: h.country, title_ar: h.arabic, emoji: h.flag })} style={{ background: "#FFF", border: `0.5px solid ${C.wheat}`, borderRadius: 12, padding: "20px 16px", textAlign: "center", cursor: "pointer", transition: "box-shadow 0.2s" }}>
+                <div style={{ marginBottom: 8, height: 34, display: "flex", alignItems: "center", justifyContent: "center" }}><Flag country={h.country} size={30} /></div>
+                <div style={{ fontFamily: F.body, fontSize: 14, fontWeight: 600, color: C.charcoal }}>{h.country}</div>
+                <div style={{ fontFamily: F.arabic, fontSize: 14, color: h.color }}>{h.arabic}</div>
+                <div style={{ fontSize: 11, color: C.textMuted, marginTop: 4 }}>{h.count} items</div>
+              </div>
             ))}
           </div>
         </div>
