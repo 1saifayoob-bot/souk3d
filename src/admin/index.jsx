@@ -207,7 +207,7 @@ function Sidebar({ page, setPage }) {
       </div>
       <div style={{ padding: "16px 20px", borderTop: `0.5px solid ${COLORS.inkBrown}` }}>
         <div style={{ fontSize: 12, color: COLORS.textMuted, fontFamily: FONTS.body }}>Souk3D Studio</div>
-        <div style={{ fontSize: 11, color: COLORS.textMuted + "88", marginTop: 2 }}>Burbank, Los Angeles</div>
+        <div style={{ fontSize: 11, color: COLORS.textMuted + "88", marginTop: 2 }}>Los Angeles, California</div>
       </div>
     </div>
   );
