@@ -121,7 +121,7 @@ function customerHtml(ref, r) {
     row("Deadline", r.deadline) +
     row("Notes", r.notes) +
     "</table></div>" +
-    '<p style="font-size:14px;color:#555;line-height:1.7;">Every Souk3D piece is designed, printed and finished by hand in Burbank, Los Angeles. We will be in touch soon. 💛</p>' +
+    '<p style="font-size:14px;color:#555;line-height:1.7;">Every Souk3D piece is designed, printed and finished by hand in Los Angeles, California. We will be in touch soon. 💛</p>' +
     '<p style="font-size:13px;color:#8A7A6A;margin-top:22px;">Just reply to this email if you want to add anything.</p>' +
     '<p style="font-size:13px;color:#8A7A6A;">— The Souk3D Family<br/><span style="font-size:15px;">شكراً لك</span></p>' +
     "</div>"
