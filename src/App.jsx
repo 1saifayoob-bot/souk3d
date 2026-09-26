@@ -65,6 +65,32 @@ const HERITAGE_ITEMS = [
 // Add entries like: { name: "Layla H.", flag: "🇺🇸", location: "Los Angeles, CA", text: "...", stars: 5 }
 const REVIEWS = [];
 
+// ─── SOCIAL ───────────────────────────────────────────────────────────────
+// Add a link here and it appears in the header and the footer. Leave a value
+// empty and that network is hidden, so nothing on the page is a dead link.
+const SOCIAL = {
+  instagram: "",
+  tiktok: "",
+  pinterest: "",
+  etsy: "https://www.etsy.com/shop/3DNalaDesigns",
+};
+function InstagramIcon({ size = 18, color = "currentColor" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="2" y="2" width="20" height="20" rx="5.5" />
+      <circle cx="12" cy="12" r="4.2" />
+      <circle cx="17.6" cy="6.4" r="1.1" fill={color} stroke="none" />
+    </svg>
+  );
+}
+function EtsyIcon({ size = 18, color = "currentColor" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+      <text x="12" y="18.5" textAnchor="middle" fontFamily="Georgia, serif" fontSize="19" fontWeight="700" fill={color}>E</text>
+    </svg>
+  );
+}
+
 // ─── FLAGS ────────────────────────────────────────────────────────────────
 // Windows has no flag emoji, so 🇸🇾 shows up as the letters "SY" there.
 // Real SVG flags look the same on every device.
@@ -1172,12 +1198,22 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder, onBrowse }) {
             {[
               { title: "Shop", links: ["All Products", "Syria", "Lebanon", "Palestine", "Custom Orders"] },
               { title: "Help", links: ["FAQ", "Shipping Info", "Returns", "Track Order"] },
-              { title: "Connect", links: ["Instagram", "TikTok", "Pinterest", "Etsy Shop"] },
+              { title: "Connect", links: [
+                SOCIAL.instagram ? { label: "Instagram", href: SOCIAL.instagram } : null,
+                SOCIAL.tiktok ? { label: "TikTok", href: SOCIAL.tiktok } : null,
+                SOCIAL.pinterest ? { label: "Pinterest", href: SOCIAL.pinterest } : null,
+                SOCIAL.etsy ? { label: "Etsy Shop", href: SOCIAL.etsy } : null,
+              ].filter(Boolean) },
             ].map(col => (
               <div key={col.title}>
                 <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: "#9A8878", marginBottom: 12, fontFamily: F.body }}>{col.title.toUpperCase()}</div>
-                {col.links.map(l => (
+                {col.links.map(l => typeof l === "string" ? (
                   <div key={l} style={{ fontSize: 13, color: "#C9B99A", fontFamily: F.body, marginBottom: 6, cursor: "pointer" }}>{l}</div>
+                ) : (
+                  <a key={l.label} href={l.href} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, color: "#C9B99A", fontFamily: F.body, marginBottom: 6, textDecoration: "none" }}>
+                    {l.label === "Instagram" ? <InstagramIcon size={15} color="#C9B99A" /> : l.label === "Etsy Shop" ? <EtsyIcon size={15} color="#C9B99A" /> : null}
+                    {l.label}
+                  </a>
                 ))}
               </div>
             ))}
@@ -1608,6 +1644,16 @@ export default function App() {
           ))}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          {SOCIAL.instagram && (
+            <a href={SOCIAL.instagram} target="_blank" rel="noopener noreferrer" title="Souk3D on Instagram" aria-label="Souk3D on Instagram" style={{ color: C.charcoal, display: "flex", alignItems: "center" }}>
+              <InstagramIcon size={19} />
+            </a>
+          )}
+          {SOCIAL.etsy && (
+            <a href={SOCIAL.etsy} target="_blank" rel="noopener noreferrer" title="Souk3D on Etsy" aria-label="Souk3D on Etsy" style={{ color: C.charcoal, display: "flex", alignItems: "center" }}>
+              <EtsyIcon size={19} />
+            </a>
+          )}
           <span style={{ fontSize: 18, cursor: "pointer", color: C.charcoal }}>🔍</span>
           <span
             onClick={() => { if (user) { setPage("account"); setViewingProduct(null); } else { setAuthOpen(true); } }}
