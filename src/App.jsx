@@ -996,7 +996,7 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder, onBrowse }) {
           <div>
             <div style={{ fontFamily: F.arabic, fontSize: 28, color: C.saffron, marginBottom: 12 }}>أهلاً وسهلاً</div>
             <div style={{ fontFamily: F.display, fontSize: 56, fontWeight: 600, color: "#FFF", lineHeight: 1.1, marginBottom: 16 }}>Gifts that carry your story home.</div>
-            <p style={{ fontSize: 16, color: "#C9B99A", fontFamily: F.body, lineHeight: 1.7, marginBottom: 32, maxWidth: 440 }}>Handmade 3D-printed gifts celebrating Arab heritage, crafted with love in Burbank, Los Angeles by the Souk3D Family. Every piece tells a diaspora story.</p>
+            <p style={{ fontSize: 16, color: "#C9B99A", fontFamily: F.body, lineHeight: 1.7, marginBottom: 32, maxWidth: 440 }}>Handmade 3D-printed gifts celebrating Arab heritage, crafted with love in Los Angeles, California by the Souk3D Family. Every piece tells a diaspora story.</p>
             <div style={{ display: "flex", gap: 14 }}>
               <button onClick={() => window.scrollTo({ top: 600, behavior: "smooth" })} style={{ padding: "15px 32px", background: C.saffron, color: "#FFF", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, fontFamily: F.body, cursor: "pointer" }}>Shop Now</button>
               <button onClick={onCustomOrder} style={{ padding: "15px 32px", background: "transparent", color: "#FFF", border: `1.5px solid rgba(255,255,255,0.3)`, borderRadius: 10, fontSize: 14, fontWeight: 600, fontFamily: F.body, cursor: "pointer" }}>Custom Order ✦</button>
@@ -1088,7 +1088,7 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder, onBrowse }) {
           <div>
             <div style={{ fontFamily: F.arabic, fontSize: 20, color: C.saffron, marginBottom: 12 }}>منّا لكم بكل حب</div>
             <div style={{ fontFamily: F.display, fontSize: 30, fontWeight: 600, color: "#FFF", lineHeight: 1.2, marginBottom: 16 }}>A piece of home in every print.</div>
-            <p style={{ fontSize: 14, color: "#C9B99A", fontFamily: F.body, lineHeight: 1.8, marginBottom: 20 }}>Growing up in the Arab diaspora, we always searched for gifts that felt like home — pieces that held our language, our patterns, our stories. When we couldn't find them, we decided to make them. Every Souk3D piece is printed, finished, and packed by hand in our studio in Burbank, Los Angeles.</p>
+            <p style={{ fontSize: 14, color: "#C9B99A", fontFamily: F.body, lineHeight: 1.8, marginBottom: 20 }}>Growing up in the Arab diaspora, we always searched for gifts that felt like home — pieces that held our language, our patterns, our stories. When we couldn't find them, we decided to make them. Every Souk3D piece is printed, finished, and packed by hand in our studio in Los Angeles, California.</p>
             <div style={{ fontFamily: F.display, fontSize: 22, color: C.saffron, fontStyle: "italic" }}>— The Souk3D Family ✦</div>
           </div>
           <div style={{ textAlign: "center" }}>
@@ -1153,7 +1153,7 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder, onBrowse }) {
             <div>
               <div style={{ fontFamily: F.display, fontSize: 24, fontWeight: 600, color: "#FFF", marginBottom: 4 }}>Souk3D</div>
               <div style={{ fontFamily: F.arabic, fontSize: 16, color: C.saffron, marginBottom: 12 }}>سوق تري دي</div>
-              <p style={{ fontSize: 12, color: "#9A8878", fontFamily: F.body, lineHeight: 1.7 }}>Handmade 3D-printed gifts for the Arab diaspora, crafted with love in Burbank, Los Angeles.</p>
+              <p style={{ fontSize: 12, color: "#9A8878", fontFamily: F.body, lineHeight: 1.7 }}>Handmade 3D-printed gifts for the Arab diaspora, crafted with love in Los Angeles, California.</p>
             </div>
             {[
               { title: "Shop", links: ["All Products", "Syria", "Lebanon", "Palestine", "Custom Orders"] },
@@ -1170,7 +1170,7 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder, onBrowse }) {
           </div>
           <div style={{ borderTop: `0.5px solid ${C.inkBrown}`, paddingTop: 20, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
             <div style={{ fontSize: 12, color: "#6A5848", fontFamily: F.body }}>© {new Date().getFullYear()} Souk3D Family. All rights reserved.</div>
-            <div style={{ fontSize: 12, color: "#6A5848", fontFamily: F.body }}>Made with ❤️ in Burbank, Los Angeles</div>
+            <div style={{ fontSize: 12, color: "#6A5848", fontFamily: F.body }}>Made with ❤️ in Los Angeles, California</div>
           </div>
         </div>
       </div>
