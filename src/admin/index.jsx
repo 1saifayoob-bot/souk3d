@@ -3289,10 +3289,34 @@ function UsersPage() {
   );
 }
 
+// The page you are on lives in the address (/admin?p=products), so a refresh
+// keeps you where you were and the browser's back button works.
+const PAGE_IDS = ["dashboard", "products", "orders", "customers", "custom", "analytics", "discounts", "email", "settings", "users"];
+function pageFromUrl() {
+  if (typeof window === "undefined") return "dashboard";
+  const p = new URLSearchParams(window.location.search).get("p");
+  return PAGE_IDS.indexOf(p) !== -1 ? p : "dashboard";
+}
+
 export default function AdminApp() {
-  const [page, setPage] = useState("dashboard");
+  const [page, setPage] = useState(pageFromUrl);
   const [navOpen, setNavOpen] = useState(false);
-  const go = (id) => { setPage(id); setNavOpen(false); if (typeof window !== "undefined") window.scrollTo(0, 0); };
+  const writeUrl = (id, replace) => {
+    if (typeof window === "undefined") return;
+    const url = window.location.pathname + (id === "dashboard" ? "" : "?p=" + id);
+    window.history[replace ? "replaceState" : "pushState"]({ adminPage: id }, "", url);
+  };
+  const go = (id) => {
+    setPage(id);
+    setNavOpen(false);
+    writeUrl(id, false);
+    if (typeof window !== "undefined") window.scrollTo(0, 0);
+  };
+  useEffect(() => {
+    const onPop = () => { setPage(pageFromUrl()); setNavOpen(false); };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
   const [session, setSession] = useState(undefined);
   const [role, setRole] = useState(null);
   useEffect(() => {
@@ -3301,7 +3325,7 @@ export default function AdminApp() {
         .then(({ data }) => {
           const r = (data && data.role) || "lister";
           setRole(r);
-          if (r === "lister") setPage("products");
+          if (r === "lister") { setPage("products"); writeUrl("products", true); }
         });
     } else { setRole(null); }
   }, [session]);
