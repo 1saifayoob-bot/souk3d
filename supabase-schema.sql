@@ -168,3 +168,7 @@ create policy "anyone can read collections" on public.collections for select to 
 create policy "staff manage collections" on public.collections for all to authenticated
   using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','super_admin','lister')))
   with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','super_admin','lister')));
+
+-- A product can belong to several collections (Tarboush and Cake Toppers). Added 2026-09-27.
+alter table public.products add column if not exists collections jsonb not null default '[]'::jsonb;
+update public.products set collections = jsonb_build_array(collection) where collection <> '' and collections = '[]'::jsonb;
