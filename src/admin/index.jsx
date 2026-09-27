@@ -792,7 +792,7 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
     keywords: [],
     details: [],
     videos: [],
-    collection: "",
+    collections: [],
   };
   const [form, setForm] = useState(product ? {
     ...product,
@@ -803,7 +803,7 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
     badge: product.badge || "",
     images: product.images || (product.imageUrl ? [{url:product.imageUrl,bg:product.imageBg||"cream"}] : []),
     videos: product.videos || [],
-    collection: product.collection || "",
+    collections: product.collections || (product.collection ? [product.collection] : []),
     details: product.details || [],
     keywords: product.keywords || [],
   } : empty);
@@ -956,7 +956,8 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
     try {
       const saved = await saveCollection({ name: draft.name, name_ar: draft.name_ar, emoji: draft.emoji, blurb: draft.blurb, sort: collections.length + 1 });
       await loadCollections();
-      set("collection", saved.slug || slugifyCollection(draft.name));
+      const slug = saved.slug || slugifyCollection(draft.name);
+      set("collections", [...new Set([...(form.collections || []), slug])]);
       setNewCollection(null);
     } catch (e) { setFormError("Couldn't create the collection: " + e.message); }
   };
@@ -1203,7 +1204,7 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
       images: form.images || [],
       keywords: (form.keywords || []).map(function (k) { return String(k || "").trim(); }).filter(Boolean),
       details: (form.details || []).map(function (d) { return String(d || "").trim(); }).filter(Boolean),
-      collection: form.collection || "",
+      collections: form.collections || [],
       variations: (form.variations || []).map(function (g) { return { name: String(g.name || "").trim(), options: (g.options || []).map(function (o) { var img = parseInt(o.img, 10); return { label: String(o.label || "").trim(), delta: parseFloat(o.delta) || 0, img: isNaN(img) || img < 0 ? null : img, color: /^#[0-9a-f]{3,8}$/i.test(String(o.color || "").trim()) ? String(o.color).trim() : null }; }).filter(function (o) { return o.label; }) }; }).filter(function (g) { return g.name && g.options.length > 0; }),
     };
     try {
@@ -1528,21 +1529,36 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
                   </div>
                 </div>
                 <div style={{ marginTop: 14 }}>
-                  <label style={labelStyle} htmlFor="pf-collection">Collection <span style={{ fontWeight: 400, color: COLORS.textMuted }}>(its own page in the store)</span></label>
+                  <div className="s3d-label">Collections <span style={{ fontWeight: 400, color: COLORS.textMuted }}>(a product can be in more than one)</span></div>
                   {!newCollection ? (
-                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      <select id="pf-collection" value={form.collection || ""} onChange={(e) => { if (e.target.value === "__new__") { setNewCollection({ name: "", name_ar: "", emoji: "✦", blurb: "" }); } else set("collection", e.target.value); }} style={{ ...inputStyle(false), cursor: "pointer", flex: "1 1 220px" }}>
-                        <option value="">No collection</option>
-                        {collections.map((c) => <option key={c.slug} value={c.slug}>{(c.emoji || "✦") + " " + c.name + (c.active ? "" : " (hidden)")}</option>)}
-                        <option value="__new__">+ New collection…</option>
-                      </select>
-                      {form.collection ? <a href={"/c/" + form.collection} target="_blank" rel="noreferrer" className="s3d-btn-small" style={{ alignSelf: "center" }}>View page</a> : null}
+                    <div>
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        {collections.map((c) => {
+                          const on = (form.collections || []).indexOf(c.slug) !== -1;
+                          return (
+                            <button key={c.slug} onClick={() => set("collections", on ? (form.collections || []).filter((x) => x !== c.slug) : [...(form.collections || []), c.slug])}
+                              style={{ padding: "8px 14px", borderRadius: 999, fontSize: 13, fontFamily: FONTS.body, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 7,
+                                border: "1px solid " + (on ? COLORS.charcoal : COLORS.wheat), background: on ? COLORS.charcoal : "#fff", color: on ? "#fff" : COLORS.charcoal }}>
+                              <span aria-hidden="true">{on ? "✓" : (c.emoji || "✦")}</span>{c.name}{c.active ? "" : " (hidden)"}
+                            </button>
+                          );
+                        })}
+                        <button onClick={() => setNewCollection({ name: "", name_ar: "", emoji: "✦", blurb: "" })} style={{ padding: "8px 14px", borderRadius: 999, fontSize: 13, fontFamily: FONTS.body, cursor: "pointer", border: "1px dashed " + COLORS.wheat, background: "#fff", color: COLORS.saffronDark }}>+ New collection…</button>
+                      </div>
+                      {(form.collections || []).length > 0 && (
+                        <div style={hint}>
+                          Shows on {(form.collections || []).length === 1 ? "this page" : "these pages"}:{" "}
+                          {(form.collections || []).map((slug, i) => (
+                            <span key={slug}>{i ? ", " : ""}<a href={"/c/" + slug} target="_blank" rel="noreferrer" style={{ color: COLORS.saffronDark }}>/c/{slug}</a></span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div style={{ border: "1px solid " + COLORS.wheat, borderRadius: 10, padding: 12, background: COLORS.cream }}>
                       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                         <input value={newCollection.emoji} onChange={(e) => setNewCollection({ ...newCollection, emoji: e.target.value })} aria-label="Collection icon" style={{ ...inputStyle(false), width: 64, textAlign: "center" }} />
-                        <input autoFocus value={newCollection.name} onChange={(e) => setNewCollection({ ...newCollection, name: e.target.value })} placeholder="Collection name, e.g. Hug the World" style={{ ...inputStyle(false), flex: "1 1 200px" }} />
+                        <input autoFocus value={newCollection.name} onChange={(e) => setNewCollection({ ...newCollection, name: e.target.value })} placeholder="Collection name, e.g. Cake Toppers" style={{ ...inputStyle(false), flex: "1 1 200px" }} />
                         <input dir="rtl" value={newCollection.name_ar} onChange={(e) => setNewCollection({ ...newCollection, name_ar: e.target.value })} placeholder="بالعربي" style={{ ...inputStyle(true), flex: "1 1 140px" }} />
                       </div>
                       <input value={newCollection.blurb} onChange={(e) => setNewCollection({ ...newCollection, blurb: e.target.value })} placeholder="One line shown at the top of the collection page" style={{ ...inputStyle(false), marginTop: 8 }} />
