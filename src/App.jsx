@@ -1082,14 +1082,14 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder, onBrowse }) {
         </div>
 
         {/* Collections */}
-        {collections.filter(c => STORE_PRODUCTS.some(p => p.collection === c.slug)).length > 0 && (
+        {collections.filter(c => STORE_PRODUCTS.some(p => (p.collections || []).indexOf(c.slug) !== -1)).length > 0 && (
           <div id="collections-section" style={{ marginBottom: 56 }}>
             <div style={{ textAlign: "center", marginBottom: 28 }}>
               <div style={{ fontFamily: F.display, fontSize: 36, fontWeight: 600, color: C.charcoal }}>Collections</div>
               <div style={{ fontFamily: F.arabic, fontSize: 20, color: C.saffron }}>المجموعات</div>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 16 }}>
-              {collections.map(c => ({ ...c, count: STORE_PRODUCTS.filter(p => p.collection === c.slug).length }))
+              {collections.map(c => ({ ...c, count: STORE_PRODUCTS.filter(p => (p.collections || []).indexOf(c.slug) !== -1).length }))
                 .filter(c => c.count > 0)
                 .map(c => (
                   <div key={c.slug} onClick={() => onBrowse({ kind: "collection", value: c.slug, title: c.name, title_ar: c.name_ar, emoji: c.emoji, blurb: c.blurb })}
@@ -1478,7 +1478,8 @@ function AccountPage({ user, onBack, onSignOut }) {
 // One page for a collection (/c/<slug>) or a heritage (/h/<country>).
 function BrowsePage({ browse, onViewProduct, onAddToCart, onBack }) {
   const all = useProducts();
-  const items = all.filter((p) => browse.kind === "collection" ? p.collection === browse.value : (p.country || "") === browse.value);
+  const inCollection = (p) => (p.collections || []).indexOf(browse.value) !== -1;
+  const items = all.filter((p) => browse.kind === "collection" ? inCollection(p) : (p.country || "") === browse.value);
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 5% 70px", animation: "fadeIn 0.3s ease" }}>
       <button onClick={onBack} style={{ background: "none", border: "none", color: C.textMuted, fontSize: 13, fontFamily: F.body, cursor: "pointer", padding: 0, marginBottom: 18 }}>‹ Back to the shop</button>
