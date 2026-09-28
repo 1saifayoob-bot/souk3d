@@ -105,6 +105,14 @@ function Flag({ country, size = 18, style }) {
   return <img src={"/flags/" + file + ".svg"} alt={country} title={country} loading="lazy" style={{ ...common, objectFit: "cover", boxShadow: "0 0 0 0.5px rgba(0,0,0,0.12)" }} />;
 }
 
+// A collection can use a photo of the real piece instead of an emoji.
+function CollectionIcon({ collection, size = 40 }) {
+  if (collection && collection.icon) {
+    return <img src={collection.icon} alt="" loading="lazy" style={{ width: size, height: size, borderRadius: size * 0.22, objectFit: "cover", display: "block" }} />;
+  }
+  return <div style={{ fontSize: size, lineHeight: 1 }}>{(collection && collection.emoji) || "✦"}</div>;
+}
+
 // ─── OPTIONS ON THE CARD ──────────────────────────────────────────────────
 // A colour option gets a real dot; anything else gets a short label like
 // "3 sizes", because a grey dot for "Large" tells a shopper nothing.
@@ -1092,9 +1100,9 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder, onBrowse }) {
               {collections.map(c => ({ ...c, count: STORE_PRODUCTS.filter(p => (p.collections || []).indexOf(c.slug) !== -1).length }))
                 .filter(c => c.count > 0)
                 .map(c => (
-                  <div key={c.slug} onClick={() => onBrowse({ kind: "collection", value: c.slug, title: c.name, title_ar: c.name_ar, emoji: c.emoji, blurb: c.blurb, banner: c.banner, story: c.story, story_ar: c.story_ar })}
+                  <div key={c.slug} onClick={() => onBrowse({ kind: "collection", value: c.slug, title: c.name, title_ar: c.name_ar, emoji: c.emoji, icon: c.icon, blurb: c.blurb, banner: c.banner, story: c.story, story_ar: c.story_ar })}
                     style={{ background: C.saffron + "14", border: `0.5px solid ${C.saffron}44`, borderRadius: 16, padding: "28px 22px", cursor: "pointer" }}>
-                    <div style={{ fontSize: 40, lineHeight: 1 }}>{c.emoji || "✦"}</div>
+                    <CollectionIcon collection={c} size={44} />
                     <div style={{ fontFamily: F.display, fontSize: 24, fontWeight: 600, color: C.charcoal, marginTop: 10 }}>{c.name}</div>
                     {c.name_ar ? <div style={{ fontFamily: F.arabic, fontSize: 16, color: C.saffron, marginTop: 2 }}>{c.name_ar}</div> : null}
                     {c.blurb ? <p style={{ fontSize: 13, color: C.textMuted, fontFamily: F.body, lineHeight: 1.6, margin: "10px 0 0" }}>{c.blurb}</p> : null}
@@ -1498,7 +1506,7 @@ function BrowsePage({ browse, onViewProduct, onAddToCart, onBack }) {
         <div style={{ textAlign: "center", marginBottom: 32 }}>
           {browse.kind === "country"
             ? <Flag country={browse.value} size={46} style={{ borderRadius: 6 }} />
-            : <div style={{ fontSize: 46, lineHeight: 1 }}>{browse.emoji || "✦"}</div>}
+            : <div style={{ display: "flex", justifyContent: "center" }}><CollectionIcon collection={browse} size={56} /></div>}
           <h1 style={{ fontFamily: F.display, fontSize: 40, fontWeight: 600, color: C.charcoal, margin: "10px 0 4px" }}>{browse.title}</h1>
           {browse.title_ar ? <div style={{ fontFamily: F.arabic, fontSize: 22, color: C.saffron }}>{browse.title_ar}</div> : null}
           {browse.blurb ? <p style={{ fontSize: 15, color: C.textMuted, fontFamily: F.body, lineHeight: 1.7, maxWidth: 560, margin: "14px auto 0" }}>{browse.blurb}</p> : null}
@@ -1574,7 +1582,7 @@ export default function App() {
       .then((list) => {
         const c = (list || []).find((x) => x.slug === value);
         if (!live) return;
-        setBrowse(c ? { kind, value, title: c.name, title_ar: c.name_ar, emoji: c.emoji, blurb: c.blurb, banner: c.banner, story: c.story, story_ar: c.story_ar } : { kind, value, title: value, emoji: "✦" });
+        setBrowse(c ? { kind, value, title: c.name, title_ar: c.name_ar, emoji: c.emoji, icon: c.icon, blurb: c.blurb, banner: c.banner, story: c.story, story_ar: c.story_ar } : { kind, value, title: value, emoji: "✦" });
         setPage("browse");
       })
       .catch(() => { if (live) { setBrowse({ kind, value, title: value, emoji: "✦" }); setPage("browse"); } });
