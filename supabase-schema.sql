@@ -172,3 +172,8 @@ create policy "staff manage collections" on public.collections for all to authen
 -- A product can belong to several collections (Tarboush and Cake Toppers). Added 2026-09-27.
 alter table public.products add column if not exists collections jsonb not null default '[]'::jsonb;
 update public.products set collections = jsonb_build_array(collection) where collection <> '' and collections = '[]'::jsonb;
+
+-- Collection pages can carry a banner photo and a story in both languages. Added 2026-09-28.
+alter table public.collections add column if not exists banner text not null default '';
+alter table public.collections add column if not exists story text not null default '';
+alter table public.collections add column if not exists story_ar text not null default '';
