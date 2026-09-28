@@ -108,9 +108,16 @@ function Flag({ country, size = 18, style }) {
 // A collection can use a photo of the real piece instead of an emoji.
 function CollectionIcon({ collection, size = 40 }) {
   if (collection && collection.icon) {
-    return <img src={collection.icon} alt="" loading="lazy" style={{ width: size, height: size, borderRadius: size * 0.22, objectFit: "cover", display: "block" }} />;
+    // The photo is zoomed inside its frame so the piece fills the square
+    // instead of floating in empty background.
+    return (
+      <div style={{ width: size, height: size, borderRadius: size * 0.2, overflow: "hidden", display: "block", flexShrink: 0 }}>
+        <img src={collection.icon} alt="" loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover", transform: "scale(1.3)", display: "block" }} />
+      </div>
+    );
   }
-  return <div style={{ fontSize: size, lineHeight: 1 }}>{(collection && collection.emoji) || "✦"}</div>;
+  // Emoji don't need the same box as a photo, so keep them a touch smaller.
+  return <div style={{ fontSize: Math.min(size * 0.62, 56), lineHeight: 1, height: size, display: "flex", alignItems: "center" }}>{(collection && collection.emoji) || "✦"}</div>;
 }
 
 // ─── OPTIONS ON THE CARD ──────────────────────────────────────────────────
@@ -1102,7 +1109,7 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder, onBrowse }) {
                 .map(c => (
                   <div key={c.slug} onClick={() => onBrowse({ kind: "collection", value: c.slug, title: c.name, title_ar: c.name_ar, emoji: c.emoji, icon: c.icon, blurb: c.blurb, banner: c.banner, story: c.story, story_ar: c.story_ar })}
                     style={{ background: C.saffron + "14", border: `0.5px solid ${C.saffron}44`, borderRadius: 16, padding: "28px 22px", cursor: "pointer" }}>
-                    <CollectionIcon collection={c} size={44} />
+                    <CollectionIcon collection={c} size={88} />
                     <div style={{ fontFamily: F.display, fontSize: 24, fontWeight: 600, color: C.charcoal, marginTop: 10 }}>{c.name}</div>
                     {c.name_ar ? <div style={{ fontFamily: F.arabic, fontSize: 16, color: C.saffron, marginTop: 2 }}>{c.name_ar}</div> : null}
                     {c.blurb ? <p style={{ fontSize: 13, color: C.textMuted, fontFamily: F.body, lineHeight: 1.6, margin: "10px 0 0" }}>{c.blurb}</p> : null}
@@ -1506,7 +1513,7 @@ function BrowsePage({ browse, onViewProduct, onAddToCart, onBack }) {
         <div style={{ textAlign: "center", marginBottom: 32 }}>
           {browse.kind === "country"
             ? <Flag country={browse.value} size={46} style={{ borderRadius: 6 }} />
-            : <div style={{ display: "flex", justifyContent: "center" }}><CollectionIcon collection={browse} size={56} /></div>}
+            : <div style={{ display: "flex", justifyContent: "center" }}><CollectionIcon collection={browse} size={92} /></div>}
           <h1 style={{ fontFamily: F.display, fontSize: 40, fontWeight: 600, color: C.charcoal, margin: "10px 0 4px" }}>{browse.title}</h1>
           {browse.title_ar ? <div style={{ fontFamily: F.arabic, fontSize: 22, color: C.saffron }}>{browse.title_ar}</div> : null}
           {browse.blurb ? <p style={{ fontSize: 15, color: C.textMuted, fontFamily: F.body, lineHeight: 1.7, maxWidth: 560, margin: "14px auto 0" }}>{browse.blurb}</p> : null}
