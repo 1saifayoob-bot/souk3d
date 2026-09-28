@@ -1539,7 +1539,7 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
                             <button key={c.slug} onClick={() => set("collections", on ? (form.collections || []).filter((x) => x !== c.slug) : [...(form.collections || []), c.slug])}
                               style={{ padding: "8px 14px", borderRadius: 999, fontSize: 13, fontFamily: FONTS.body, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 7,
                                 border: "1px solid " + (on ? COLORS.charcoal : COLORS.wheat), background: on ? COLORS.charcoal : "#fff", color: on ? "#fff" : COLORS.charcoal }}>
-                              <span aria-hidden="true">{on ? "✓" : (c.emoji || "✦")}</span>{c.name}{c.active ? "" : " (hidden)"}
+                              {on ? <span aria-hidden="true">✓</span> : c.icon ? <img src={c.icon} alt="" style={{ width: 18, height: 18, borderRadius: 4, objectFit: "cover" }} /> : <span aria-hidden="true">{c.emoji || "✦"}</span>}{c.name}{c.active ? "" : " (hidden)"}
                             </button>
                           );
                         })}
