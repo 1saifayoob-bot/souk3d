@@ -177,3 +177,4 @@ update public.products set collections = jsonb_build_array(collection) where col
 alter table public.collections add column if not exists banner text not null default '';
 alter table public.collections add column if not exists story text not null default '';
 alter table public.collections add column if not exists story_ar text not null default '';
+alter table public.collections add column if not exists icon text not null default '';
