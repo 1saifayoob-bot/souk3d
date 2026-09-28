@@ -1092,7 +1092,7 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder, onBrowse }) {
               {collections.map(c => ({ ...c, count: STORE_PRODUCTS.filter(p => (p.collections || []).indexOf(c.slug) !== -1).length }))
                 .filter(c => c.count > 0)
                 .map(c => (
-                  <div key={c.slug} onClick={() => onBrowse({ kind: "collection", value: c.slug, title: c.name, title_ar: c.name_ar, emoji: c.emoji, blurb: c.blurb })}
+                  <div key={c.slug} onClick={() => onBrowse({ kind: "collection", value: c.slug, title: c.name, title_ar: c.name_ar, emoji: c.emoji, blurb: c.blurb, banner: c.banner, story: c.story, story_ar: c.story_ar })}
                     style={{ background: C.saffron + "14", border: `0.5px solid ${C.saffron}44`, borderRadius: 16, padding: "28px 22px", cursor: "pointer" }}>
                     <div style={{ fontSize: 40, lineHeight: 1 }}>{c.emoji || "✦"}</div>
                     <div style={{ fontFamily: F.display, fontSize: 24, fontWeight: 600, color: C.charcoal, marginTop: 10 }}>{c.name}</div>
@@ -1483,15 +1483,34 @@ function BrowsePage({ browse, onViewProduct, onAddToCart, onBack }) {
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 5% 70px", animation: "fadeIn 0.3s ease" }}>
       <button onClick={onBack} style={{ background: "none", border: "none", color: C.textMuted, fontSize: 13, fontFamily: F.body, cursor: "pointer", padding: 0, marginBottom: 18 }}>‹ Back to the shop</button>
-      <div style={{ textAlign: "center", marginBottom: 32 }}>
-        {browse.kind === "country"
-          ? <Flag country={browse.value} size={46} style={{ borderRadius: 6 }} />
-          : <div style={{ fontSize: 46, lineHeight: 1 }}>{browse.emoji || "✦"}</div>}
-        <h1 style={{ fontFamily: F.display, fontSize: 40, fontWeight: 600, color: C.charcoal, margin: "10px 0 4px" }}>{browse.title}</h1>
-        {browse.title_ar ? <div style={{ fontFamily: F.arabic, fontSize: 22, color: C.saffron }}>{browse.title_ar}</div> : null}
-        {browse.blurb ? <p style={{ fontSize: 15, color: C.textMuted, fontFamily: F.body, lineHeight: 1.7, maxWidth: 560, margin: "14px auto 0" }}>{browse.blurb}</p> : null}
-        <div style={{ fontSize: 12.5, color: C.textMuted, fontFamily: F.body, marginTop: 10 }}>{items.length} {items.length === 1 ? "piece" : "pieces"}</div>
-      </div>
+      {browse.banner ? (
+        <div style={{ position: "relative", borderRadius: 18, overflow: "hidden", marginBottom: 28, minHeight: 260 }}>
+          <img src={browse.banner} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, rgba(26,18,12,0.85) 0%, rgba(26,18,12,0.55) 45%, rgba(26,18,12,0.15) 100%)" }} />
+          <div style={{ position: "relative", padding: "56px 8% 48px", maxWidth: 620 }}>
+            <h1 style={{ fontFamily: F.display, fontSize: 46, fontWeight: 600, color: "#FFF", margin: "0 0 4px", lineHeight: 1.05 }}>{browse.title}</h1>
+            {browse.title_ar ? <div style={{ fontFamily: F.arabic, fontSize: 24, color: C.saffron }}>{browse.title_ar}</div> : null}
+            {browse.blurb ? <p style={{ fontSize: 17, color: "#F3E7D4", fontFamily: F.body, lineHeight: 1.6, margin: "14px 0 0" }}>{browse.blurb}</p> : null}
+            <div style={{ fontSize: 12.5, color: "#C9B99A", fontFamily: F.body, marginTop: 14 }}>{items.length} {items.length === 1 ? "piece" : "pieces"}</div>
+          </div>
+        </div>
+      ) : (
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
+          {browse.kind === "country"
+            ? <Flag country={browse.value} size={46} style={{ borderRadius: 6 }} />
+            : <div style={{ fontSize: 46, lineHeight: 1 }}>{browse.emoji || "✦"}</div>}
+          <h1 style={{ fontFamily: F.display, fontSize: 40, fontWeight: 600, color: C.charcoal, margin: "10px 0 4px" }}>{browse.title}</h1>
+          {browse.title_ar ? <div style={{ fontFamily: F.arabic, fontSize: 22, color: C.saffron }}>{browse.title_ar}</div> : null}
+          {browse.blurb ? <p style={{ fontSize: 15, color: C.textMuted, fontFamily: F.body, lineHeight: 1.7, maxWidth: 560, margin: "14px auto 0" }}>{browse.blurb}</p> : null}
+          <div style={{ fontSize: 12.5, color: C.textMuted, fontFamily: F.body, marginTop: 10 }}>{items.length} {items.length === 1 ? "piece" : "pieces"}</div>
+        </div>
+      )}
+      {(browse.story || browse.story_ar) ? (
+        <div style={{ maxWidth: 720, margin: "0 auto 34px", textAlign: "center" }}>
+          {browse.story ? <p style={{ fontSize: 15.5, color: C.charcoal, fontFamily: F.body, lineHeight: 1.85, margin: 0 }}>{browse.story}</p> : null}
+          {browse.story_ar ? <p dir="rtl" style={{ fontSize: 15, color: C.textMuted, fontFamily: F.arabic, lineHeight: 2, margin: "14px 0 0" }}>{browse.story_ar}</p> : null}
+        </div>
+      ) : null}
       {items.length === 0 ? (
         <div style={{ textAlign: "center", color: C.textMuted, fontFamily: F.body, fontSize: 14, padding: "40px 0" }}>Nothing here yet — check back soon.</div>
       ) : (
@@ -1555,7 +1574,7 @@ export default function App() {
       .then((list) => {
         const c = (list || []).find((x) => x.slug === value);
         if (!live) return;
-        setBrowse(c ? { kind, value, title: c.name, title_ar: c.name_ar, emoji: c.emoji, blurb: c.blurb } : { kind, value, title: value, emoji: "✦" });
+        setBrowse(c ? { kind, value, title: c.name, title_ar: c.name_ar, emoji: c.emoji, blurb: c.blurb, banner: c.banner, story: c.story, story_ar: c.story_ar } : { kind, value, title: value, emoji: "✦" });
         setPage("browse");
       })
       .catch(() => { if (live) { setBrowse({ kind, value, title: value, emoji: "✦" }); setPage("browse"); } });
