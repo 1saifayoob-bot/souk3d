@@ -1522,8 +1522,8 @@ function BrowsePage({ browse, onViewProduct, onAddToCart, onBack }) {
       )}
       {(browse.story || browse.story_ar) ? (
         <div style={{ maxWidth: 720, margin: "0 auto 34px", textAlign: "center" }}>
-          {browse.story ? <p style={{ fontSize: 15.5, color: C.charcoal, fontFamily: F.body, lineHeight: 1.85, margin: 0 }}>{browse.story}</p> : null}
-          {browse.story_ar ? <p dir="rtl" style={{ fontSize: 15, color: C.textMuted, fontFamily: F.arabic, lineHeight: 2, margin: "14px 0 0" }}>{browse.story_ar}</p> : null}
+          {browse.story ? <p style={{ fontSize: 15.5, color: C.charcoal, fontFamily: F.body, lineHeight: 1.85, margin: 0, whiteSpace: "pre-line" }}>{browse.story}</p> : null}
+          {browse.story_ar ? <p dir="rtl" style={{ fontSize: 15, color: C.textMuted, fontFamily: F.arabic, lineHeight: 2, margin: "18px 0 0", whiteSpace: "pre-line" }}>{browse.story_ar}</p> : null}
         </div>
       ) : null}
       {items.length === 0 ? (
