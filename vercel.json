@@ -1,6 +1,16 @@
 {
   "rewrites": [
-    { "source": "/p/:sku", "destination": "/api/product-page?sku=:sku" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/product-page?sitemap=1"
+    },
+    {
+      "source": "/p/:sku",
+      "destination": "/api/product-page?sku=:sku"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }
