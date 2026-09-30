@@ -642,3 +642,16 @@ export async function saveCollection({ slug, name, name_ar, emoji, blurb, sort }
   if (error) throw error;
   return data;
 }
+
+// ─── "MAKE MY COUNTRY" REQUESTS ─────────────────────────────────────────────
+// Anyone can ask for a country; only staff can read the list.
+export async function requestCountry({ country, email }) {
+  const row = {
+    country: String(country || "").trim().slice(0, 60),
+    email: String(email || "").trim().slice(0, 120),
+  };
+  if (!row.country) throw new Error("Tell us which country.");
+  const { error } = await supabase.from("country_requests").insert(row);
+  if (error) throw error;
+  return true;
+}
