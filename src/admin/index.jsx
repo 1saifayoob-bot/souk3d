@@ -447,7 +447,7 @@ function ProductStudio({ form, setForm }) {
   const [tplMsg, setTplMsg] = useState("");
   const [naming, setNaming] = useState(null); // { jobId, name }
   const [kind, setKind] = useState(function () { return inferStudioKind(form); });
-  const [size, setSize] = useState(function () { return inferStudioSize(form); });
+  const [size, setSize] = useState(function () { return form.size || inferStudioSize(form); });
   const [quote, setQuote] = useState(null); // { usd, credits, payload, error }
   const [balance, setBalance] = useState(undefined); // number, null (unknown) or undefined (loading)
   const [spent, setSpent] = useState(0);
@@ -793,6 +793,7 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
     details: [],
     videos: [],
     collections: [],
+    size: "",
   };
   const [form, setForm] = useState(product ? {
     ...product,
@@ -804,6 +805,7 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
     images: product.images || (product.imageUrl ? [{url:product.imageUrl,bg:product.imageBg||"cream"}] : []),
     videos: product.videos || [],
     collections: product.collections || (product.collection ? [product.collection] : []),
+    size: product.size || "",
     details: product.details || [],
     keywords: product.keywords || [],
   } : empty);
@@ -1205,6 +1207,7 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
       keywords: (form.keywords || []).map(function (k) { return String(k || "").trim(); }).filter(Boolean),
       details: (form.details || []).map(function (d) { return String(d || "").trim(); }).filter(Boolean),
       collections: form.collections || [],
+      size: String(form.size || "").trim(),
       variations: (form.variations || []).map(function (g) { return { name: String(g.name || "").trim(), options: (g.options || []).map(function (o) { var img = parseInt(o.img, 10); return { label: String(o.label || "").trim(), delta: parseFloat(o.delta) || 0, img: isNaN(img) || img < 0 ? null : img, color: /^#[0-9a-f]{3,8}$/i.test(String(o.color || "").trim()) ? String(o.color).trim() : null }; }).filter(function (o) { return o.label; }) }; }).filter(function (g) { return g.name && g.options.length > 0; }),
     };
     try {
@@ -1231,6 +1234,7 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
     { id: "listing", label: "Description, 40 to 80 words", ok: descWords >= 35 && descWords <= 90, note: descWords ? descWords + " words" : "" },
     { id: "listing", label: "Arabic title and description", ok: !!String(form.name_ar || "").trim() && !!String(form.desc_ar || "").trim() },
     { id: "listing", label: "Details list", ok: detailsList.length > 0 },
+    { id: "listing", label: "Size", ok: !!String(form.size || "").trim() },
     { id: "pricing", label: "Price", ok: parseFloat(form.price) > 0 },
     { id: "organize", label: "Search keywords", ok: keywordsList.length >= 3 },
   ];
@@ -1437,6 +1441,12 @@ function ProductFormModal({ product, onSave, onClose, existingProducts }) {
                   <label style={labelStyle} htmlFor="pf-details">Details <span style={{ fontWeight: 400, color: COLORS.textMuted }}>(one per line)</span></label>
                   <textarea id="pf-details" value={(form.details || []).join("\n")} onChange={(e) => set("details", e.target.value.split("\n"))} placeholder={"Set of 2\n3D printed\nApprox. 3 in each\nMagnetic backing\nColors may vary slightly between pieces"} rows={5} style={{ ...inputStyle(false), resize: "vertical", lineHeight: 1.6 }} />
                   <div style={hint}>Shown in the Details tab on the product page. Only facts that are true for this product.</div>
+                </div>
+
+                <div style={{ marginTop: 16 }}>
+                  <label style={labelStyle} htmlFor="pf-size">Size</label>
+                  <input id="pf-size" type="text" value={form.size || ""} onChange={(e) => set("size", e.target.value)} placeholder='e.g. 3 in tall, or 2 x 2.5 in, or 8 cm' style={{ ...inputStyle(false), maxWidth: 320 }} />
+                  <div style={hint}>Shown first in the Details list, and used by the AI studio to keep scenes in scale. One product, one size line.</div>
                 </div>
               </section>
 
