@@ -358,6 +358,8 @@ function ProductDetail({product, onBack, onAddToCart, onBuyNow, user }) {
   const galleryObjs = (product.images && product.images.length ? product.images.filter((im) => im && im.url) : (product.imageUrl ? [{ url: product.imageUrl }] : [])).filter((im, i, arr) => arr.findIndex((x) => x.url === im.url) === i);
   const galleryImgs = galleryObjs.map((im) => im.url);
   const galleryVideos = (Array.isArray(product.videos) ? product.videos : []).filter((v) => v && v.url);
+  // Size is its own field now, and leads the Details list.
+  const detailLines = (product.size ? ["Size: " + product.size] : []).concat(product.details || []);
   const activeVideo = activeImg >= galleryImgs.length ? galleryVideos[activeImg - galleryImgs.length] : null;
   const mainSrc = galleryImgs[activeImg] || galleryImgs[0] || product.imageUrl || "";
   const [qty, setQty] = useState(1);
@@ -529,7 +531,7 @@ function ProductDetail({product, onBack, onAddToCart, onBuyNow, user }) {
 
       {/* Tabs */}
       <div style={{ borderBottom: `0.5px solid ${C.wheat}`, marginBottom: 24, display: "flex", gap: 0 }}>
-        {["description"].concat(product.details && product.details.length ? ["details"] : [], ["shipping", "faq"]).map(t => (
+        {["description"].concat(detailLines.length ? ["details"] : [], ["shipping", "faq"]).map(t => (
           <button key={t} onClick={() => setTab(t)} style={{ padding: "12px 20px", background: "none", border: "none", borderBottom: `2px solid ${tab === t ? C.saffron : "transparent"}`, fontSize: 13, fontWeight: tab === t ? 600 : 400, color: tab === t ? C.charcoal : C.textMuted, cursor: "pointer", fontFamily: F.body, textTransform: "capitalize" }}>{t}</button>
         ))}
       </div>
@@ -537,7 +539,7 @@ function ProductDetail({product, onBack, onAddToCart, onBuyNow, user }) {
         {tab === "description" && product.desc}
         {tab === "details" && (
           <ul style={{ margin: 0, paddingLeft: 18, whiteSpace: "normal" }}>
-            {(product.details || []).map((d, i) => <li key={i}>{d}</li>)}
+            {detailLines.map((d, i) => <li key={i}>{d}</li>)}
           </ul>
         )}
         {tab === "shipping" && "Processing time: 3–5 business days · USA: Standard $5.99 (5–8 days), Express $12.99 (2–3 days) · Canada: $9.99 standard · International: From $14.99 · Free shipping on orders $75+"}
