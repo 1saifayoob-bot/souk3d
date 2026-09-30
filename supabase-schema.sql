@@ -178,3 +178,19 @@ alter table public.collections add column if not exists banner text not null def
 alter table public.collections add column if not exists story text not null default '';
 alter table public.collections add column if not exists story_ar text not null default '';
 alter table public.collections add column if not exists icon text not null default '';
+
+-- "Make my country" requests from the Hug the World page. Added 2026-09-30.
+create table if not exists public.country_requests (
+  id uuid primary key default gen_random_uuid(),
+  country text not null,
+  email text not null default '',
+  note text not null default '',
+  created_at timestamptz not null default now(),
+  notified_at timestamptz
+);
+create index if not exists country_requests_country_idx on public.country_requests (lower(country));
+alter table public.country_requests enable row level security;
+create policy "anyone can ask for a country" on public.country_requests for insert to anon, authenticated with check (true);
+create policy "staff read country requests" on public.country_requests for select to authenticated
+  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','super_admin','lister')));
+alter table public.collections add column if not exists ask_box boolean not null default false;
