@@ -213,6 +213,94 @@ function Sidebar({ page, setPage }) {
   );
 }
 
+// ─── COUNTRY REQUESTS ─────────────────────────────────────────────────────
+// What people asked us to make, most wanted first, with one button to tell
+// everyone waiting that their country has landed.
+function CountryRequestsPage() {
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [msg, setMsg] = useState("");
+  const [busy, setBusy] = useState("");
+  const call = async (body) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const r = await fetch("/api/newsletter", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + (session ? session.access_token : "") },
+      body: JSON.stringify(body),
+    });
+    const out = await r.json();
+    if (!r.ok) throw new Error(out.error || "Request failed");
+    return out;
+  };
+  const load = async () => {
+    setLoading(true);
+    try { const out = await call({ action: "country-requests" }); setRows(out.countries || []); }
+    catch (e) { setMsg("Couldn't load requests: " + e.message); }
+    setLoading(false);
+  };
+  useEffect(() => { load(); }, []);
+  const tellThem = async (row) => {
+    if (!window.confirm("Email the " + row.waiting + " " + (row.waiting === 1 ? "person" : "people") + " waiting for " + row.country + "?")) return;
+    setBusy(row.country); setMsg("");
+    try {
+      const out = await call({ action: "country-ready", country: row.country });
+      setMsg(out.sent ? "Told " + out.sent + " " + (out.sent === 1 ? "person" : "people") + " that " + row.country + " is ready." : (out.message || "Nobody waiting."));
+      await load();
+    } catch (e) { setMsg("Couldn't send: " + e.message); }
+    setBusy("");
+  };
+  const total = rows.reduce((a, r) => a + r.asked, 0);
+  return (
+    <div style={{ animation: "fadeIn 0.3s ease" }}>
+      <div style={{ position: 'sticky', top: -24, zIndex: 10, background: COLORS.cream, margin: '-24px -32px 0', padding: '24px 32px 14px', borderBottom: '0.5px solid ' + COLORS.wheat }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 600, color: COLORS.charcoal, marginRight: 'auto' }}>Country Requests</div>
+          <button onClick={load} className="s3d-btn-small">Refresh</button>
+        </div>
+        <div style={{ fontSize: 12.5, color: COLORS.textMuted, fontFamily: FONTS.body, marginTop: 4 }}>
+          {total ? total + ' requests from the Hug the World page' : 'Asks from the Hug the World page'}
+        </div>
+      </div>
+      <div style={{ height: 14 }} />
+      {msg && <div role="status" style={{ background: "#FBEFD8", border: "1px solid #E6C886", borderRadius: 10, padding: "10px 14px", fontSize: 13, marginBottom: 14 }}>{msg}</div>}
+      <SectionCard>
+        {loading ? (
+          <div style={{ padding: 20, fontSize: 13, color: COLORS.textMuted }}>Loading…</div>
+        ) : rows.length === 0 ? (
+          <div style={{ padding: 20, fontSize: 13.5, color: COLORS.textMuted }}>No requests yet. They appear here as soon as someone asks for a country.</div>
+        ) : (
+          <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: FONTS.body }}>
+            <thead>
+              <tr style={{ borderBottom: "1px solid " + COLORS.wheat, textAlign: "left" }}>
+                <th style={{ padding: "10px 12px", fontSize: 11, letterSpacing: 1, color: COLORS.textMuted }}>COUNTRY</th>
+                <th style={{ padding: "10px 12px", fontSize: 11, letterSpacing: 1, color: COLORS.textMuted }}>ASKED</th>
+                <th style={{ padding: "10px 12px", fontSize: 11, letterSpacing: 1, color: COLORS.textMuted }}>WAITING FOR EMAIL</th>
+                <th style={{ padding: "10px 12px" }}></th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.country} style={{ borderBottom: "0.5px solid " + COLORS.wheat }}>
+                  <td style={{ padding: "12px", fontSize: 14, fontWeight: 600, color: COLORS.charcoal }}>{r.country}</td>
+                  <td style={{ padding: "12px", fontSize: 14 }}>{r.asked}</td>
+                  <td style={{ padding: "12px", fontSize: 14, color: r.waiting ? COLORS.charcoal : COLORS.textMuted }}>{r.waiting}</td>
+                  <td style={{ padding: "12px", textAlign: "right" }}>
+                    {r.waiting > 0 && (
+                      <button onClick={() => tellThem(r)} disabled={busy === r.country} className="s3d-btn-small">
+                        {busy === r.country ? "Sending…" : "Tell them it's ready"}
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </SectionCard>
+    </div>
+  );
+}
+
 // ─── TEAM ─────────────────────────────────────────────────────────────────
 // Who signs in to the admin. Miami Abdulal owns the store; Saif builds it.
 const STAFF = {
@@ -3206,6 +3294,7 @@ const ADMIN_PAGES = [
   { id: "orders", label: "Orders", icon: "OO" },
   { id: "customers", label: "Customers", icon: "CC" },
   { id: "custom", label: "Custom Orders", icon: "XX" },
+  { id: "requests", label: "Country Requests", icon: "RR" },
   { id: "analytics", label: "Analytics", icon: "AA" },
   { id: "discounts", label: "Discounts", icon: "DD" },
   { id: "email", label: "Email & Marketing", icon: "EE" },
@@ -3317,7 +3406,7 @@ function UsersPage() {
 
 // The page you are on lives in the address (/admin?p=products), so a refresh
 // keeps you where you were and the browser's back button works.
-const PAGE_IDS = ["dashboard", "products", "orders", "customers", "custom", "analytics", "discounts", "email", "settings", "users"];
+const PAGE_IDS = ["dashboard", "products", "orders", "customers", "custom", "requests", "analytics", "discounts", "email", "settings", "users"];
 function pageFromUrl() {
   if (typeof window === "undefined") return "dashboard";
   const p = new URLSearchParams(window.location.search).get("p");
@@ -3371,6 +3460,7 @@ export default function AdminApp() {
     orders: <OrdersPage />,
     customers: <CustomersPage />,
     custom: <CustomOrdersPage />,
+    requests: <CountryRequestsPage />,
     analytics: <AnalyticsPage />,
     discounts: <DiscountsPage />,
     email: <EmailMarketingPage />,
