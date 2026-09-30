@@ -190,6 +190,7 @@ export function rowToProduct(r) {
     details: Array.isArray(r.details) ? r.details : [],
     videos: Array.isArray(r.videos) ? r.videos : [],
     // A product can sit in several collections; older rows kept a single one.
+    size: r.size || "",
     collections: Array.isArray(r.collections) && r.collections.length ? r.collections.filter((c) => typeof c === "string" && c) : (r.collection ? [r.collection] : []),
   };
 }
@@ -223,6 +224,7 @@ export function productToRow(p) {
     variations: Array.isArray(p.variations) ? p.variations : [],
     details: Array.isArray(p.details) ? p.details.map((d) => String(d || "").trim()).filter(Boolean) : [],
     videos: Array.isArray(p.videos) ? p.videos.filter((v) => v && typeof v.url === "string" && v.url.startsWith("http")).map((v) => ({ url: v.url })) : [],
+    size: String(p.size || "").trim(),
     collections: Array.isArray(p.collections) ? [...new Set(p.collections.map((c) => String(c || "").trim()).filter(Boolean))] : [],
     collection: Array.isArray(p.collections) && p.collections[0] ? String(p.collections[0]).trim() : "",
     image_bg: p.imageBg || (images[0] && images[0].bg) || "cream",
