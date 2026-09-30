@@ -18,9 +18,41 @@ function esc(s) {
 // WhatsApp, Facebook and friends do not run JavaScript, so a client-rendered
 // SPA gives them nothing to show. This serves the same index.html with real
 // Open Graph tags injected for the product being shared.
+// Every page worth crawling, in one file, so Google learns about new products
+// and collections without waiting to stumble on them.
+async function sitemap(req, res, origin) {
+  const [prods, cols] = await Promise.all([
+    supabase.from("products").select("sku, created_at").eq("status", "active"),
+    supabase.from("collections").select("slug").eq("active", true),
+  ]);
+  const urls = [
+    { loc: origin + "/", priority: "1.0", freq: "daily" },
+  ];
+  for (const c of (cols.data || [])) urls.push({ loc: origin + "/c/" + encodeURIComponent(c.slug), priority: "0.8", freq: "weekly" });
+  for (const p of (prods.data || [])) {
+    urls.push({
+      loc: origin + "/p/" + encodeURIComponent(p.sku),
+      priority: "0.7", freq: "weekly",
+      lastmod: p.created_at ? String(p.created_at).slice(0, 10) : null,
+    });
+  }
+  const xml =
+    '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+    urls.map((u) =>
+      "  <url><loc>" + esc(u.loc) + "</loc>" +
+      (u.lastmod ? "<lastmod>" + u.lastmod + "</lastmod>" : "") +
+      "<changefreq>" + u.freq + "</changefreq><priority>" + u.priority + "</priority></url>"
+    ).join("\n") +
+    "\n</urlset>\n";
+  res.setHeader("Content-Type", "application/xml; charset=utf-8");
+  res.setHeader("Cache-Control", "public, max-age=600, s-maxage=3600");
+  return res.status(200).send(xml);
+}
+
 export default async function handler(req, res) {
   const host = req.headers.host || "www.souk3d.com";
   const origin = "https://" + host;
+  if (req.query && req.query.sitemap) return sitemap(req, res, origin);
   const sku = String((req.query && req.query.sku) || "").trim();
 
   let html = "";
@@ -79,6 +111,23 @@ export default async function handler(req, res) {
       '<meta name="twitter:description" content="' + esc(desc) + '" />',
       img ? '<meta name="twitter:image" content="' + esc(img) + '" />' : "",
       '<link rel="canonical" href="' + esc(url) + '" />',
+      '<script type="application/ld+json">' + JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "Product",
+        name: p.name,
+        description: (p.description || "").replace(/\s+/g, " ").trim().slice(0, 400),
+        sku: p.sku,
+        image: img ? [img] : undefined,
+        brand: { "@type": "Brand", name: "Souk3D" },
+        offers: {
+          "@type": "Offer",
+          url: url,
+          priceCurrency: "USD",
+          price: Number(p.price || 0).toFixed(2),
+          availability: "https://schema.org/InStock",
+          seller: { "@type": "Organization", name: "Souk3D" },
+        },
+      }) + '</script>',
       "<title>" + esc(title) + "</title>",
     ]
       .filter(Boolean)
