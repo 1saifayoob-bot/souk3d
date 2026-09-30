@@ -254,6 +254,53 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, sent: sent, failed: failedCount });
     }
 
+    // ---- "Make my country" requests (Hug the World) ----
+    if (action === "country-requests") {
+      const { data, error } = await admin
+        .from("country_requests")
+        .select("country, email, created_at, notified_at")
+        .order("created_at", { ascending: false });
+      if (error) return res.status(500).json({ error: error.message });
+      const byCountry = {};
+      for (const r of data || []) {
+        const key = String(r.country || "").trim();
+        if (!key) continue;
+        const k = key.toLowerCase();
+        byCountry[k] = byCountry[k] || { country: key, asked: 0, waiting: 0, emails: [], last: r.created_at };
+        byCountry[k].asked += 1;
+        if (!r.notified_at && r.email) { byCountry[k].waiting += 1; byCountry[k].emails.push(r.email); }
+      }
+      const list = Object.values(byCountry).sort((a, b) => b.asked - a.asked);
+      return res.status(200).json({ countries: list, total: (data || []).length });
+    }
+
+    if (action === "country-ready") {
+      const country = String(body.country || "").trim();
+      const url = String(body.url || SITE + "/c/hug-the-world");
+      if (!country) return res.status(400).json({ error: "Which country?" });
+      const { data: rows, error } = await admin
+        .from("country_requests")
+        .select("id, email")
+        .ilike("country", country)
+        .is("notified_at", null);
+      if (error) return res.status(500).json({ error: error.message });
+      const waiting = (rows || []).filter((r) => r.email && EMAIL_RE.test(r.email));
+      if (!waiting.length) return res.status(200).json({ sent: 0, message: "Nobody is waiting for " + country + "." });
+      const inner =
+        '<p style="font-size:18px;color:#2A1F18;margin:0 0 12px;">' + esc(country) + ' is ready.</p>' +
+        '<p style="font-size:14px;color:#5A4A3A;line-height:1.7;margin:0 0 20px;">You asked us to make a hug map for ' + esc(country) +
+        ', so we did. It is on the site now, waiting for your fridge.</p>' +
+        '<p style="text-align:center;margin:24px 0 0;"><a href="' + url + '" style="background:#D4881F;color:#fff;text-decoration:none;padding:12px 26px;border-radius:999px;font-size:14px;">See it</a></p>' +
+        '<p style="font-size:13px;color:#8A7A66;margin:22px 0 0;">Shukran for the nudge.<br/>The Souk3D Family</p>';
+      const html = shell(inner, null);
+      const result = await sendBatch(waiting.map((r) => ({
+        from: FROM_EMAIL, to: r.email, reply_to: REPLY_TO,
+        subject: country + " is ready · Souk3D", html,
+      })));
+      await admin.from("country_requests").update({ notified_at: new Date().toISOString() }).in("id", waiting.map((r) => r.id));
+      return res.status(200).json({ sent: waiting.length, result: result && result.error ? result.error : "ok" });
+    }
+
     return res.status(400).json({ error: "Unknown action." });
   } catch (e) {
     console.error("newsletter error:", e);
