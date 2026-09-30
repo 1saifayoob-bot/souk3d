@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { supabase, fetchProducts, fetchCollections, signUpCustomer, signInCustomer, signOutCustomer, sendPasswordReset, getCurrentUser, onAuthChange, fetchMyOrders } from "./lib/supabase";
+import { supabase, fetchProducts, fetchCollections, requestCountry, signUpCustomer, signInCustomer, signOutCustomer, sendPasswordReset, getCurrentUser, onAuthChange, fetchMyOrders } from "./lib/supabase";
 
 // ─── BRAND CONSTANTS ───────────────────────────────────────────────────────────
 const C = {
@@ -1109,7 +1109,7 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder, onBrowse }) {
               {collections.map(c => ({ ...c, count: STORE_PRODUCTS.filter(p => (p.collections || []).indexOf(c.slug) !== -1).length }))
                 .filter(c => c.count > 0)
                 .map(c => (
-                  <div key={c.slug} onClick={() => onBrowse({ kind: "collection", value: c.slug, title: c.name, title_ar: c.name_ar, emoji: c.emoji, icon: c.icon, blurb: c.blurb, banner: c.banner, story: c.story, story_ar: c.story_ar })}
+                  <div key={c.slug} onClick={() => onBrowse({ kind: "collection", value: c.slug, title: c.name, title_ar: c.name_ar, emoji: c.emoji, icon: c.icon, blurb: c.blurb, banner: c.banner, story: c.story, story_ar: c.story_ar, ask_box: c.ask_box })}
                     style={{ background: C.saffron + "14", border: `0.5px solid ${C.saffron}44`, borderRadius: 16, padding: "28px 22px", cursor: "pointer" }}>
                     <CollectionIcon collection={c} size={88} />
                     <div style={{ fontFamily: F.display, fontSize: 24, fontWeight: 600, color: C.charcoal, marginTop: 10 }}>{c.name}</div>
@@ -1493,6 +1493,50 @@ function AccountPage({ user, onBack, onSignOut }) {
 
 // ─── BROWSE PAGE ─────────────────────────────────────────────────────────
 // One page for a collection (/c/<slug>) or a heritage (/h/<country>).
+// Ask-for-your-country box, shown on collections that switch it on.
+function AskForCountry() {
+  const [country, setCountry] = useState("");
+  const [email, setEmail] = useState("");
+  const [state, setState] = useState("idle"); // idle | sending | done | error
+  const [error, setError] = useState("");
+  const send = async () => {
+    if (!country.trim()) { setError("Which country?"); setState("error"); return; }
+    setState("sending"); setError("");
+    try { await requestCountry({ country, email }); setState("done"); }
+    catch (e) { setError((e && e.message) || "Something went wrong."); setState("error"); }
+  };
+  if (state === "done") {
+    return (
+      <div style={{ background: C.charcoal, borderRadius: 18, padding: "34px 28px", textAlign: "center", marginTop: 40 }}>
+        <div style={{ fontFamily: F.display, fontSize: 26, color: "#FFF", marginBottom: 6 }}>Noted — {country.trim()} is on the list.</div>
+        <p style={{ fontSize: 14.5, color: "#E8DCC8", fontFamily: F.body, lineHeight: 1.7, margin: 0 }}>
+          {email.trim() ? "We'll email you the moment it's ready." : "Check back soon, the map is coming."}
+        </p>
+      </div>
+    );
+  }
+  return (
+    <div style={{ background: C.charcoal, borderRadius: 18, padding: "34px 28px", textAlign: "center", marginTop: 40 }}>
+      <div style={{ fontFamily: F.display, fontSize: 28, color: "#FFF", marginBottom: 4 }}>Missing your country?</div>
+      <div style={{ fontFamily: F.arabic, fontSize: 17, color: C.saffron, marginBottom: 10 }}>بلدك مو موجود؟</div>
+      <p style={{ fontSize: 14.5, color: "#E8DCC8", fontFamily: F.body, lineHeight: 1.7, maxWidth: 460, margin: "0 auto 20px" }}>
+        Tell us and we'll make it. Leave your email and we'll let you know the day it lands.
+      </p>
+      <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap", maxWidth: 520, margin: "0 auto" }}>
+        <input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Your country"
+          style={{ flex: "1 1 180px", padding: "12px 16px", borderRadius: 999, border: "none", fontSize: 14, fontFamily: F.body, outline: "none" }} />
+        <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email (optional)" type="email"
+          style={{ flex: "1 1 200px", padding: "12px 16px", borderRadius: 999, border: "none", fontSize: 14, fontFamily: F.body, outline: "none" }} />
+        <button onClick={send} disabled={state === "sending"}
+          style={{ padding: "12px 26px", borderRadius: 999, border: "none", background: C.saffron, color: "#FFF", fontSize: 14, fontWeight: 600, fontFamily: F.body, cursor: "pointer" }}>
+          {state === "sending" ? "Sending…" : "Ask for it"}
+        </button>
+      </div>
+      {state === "error" && <div style={{ fontSize: 13, color: "#F3B0A0", fontFamily: F.body, marginTop: 12 }}>{error}</div>}
+    </div>
+  );
+}
+
 function BrowsePage({ browse, onViewProduct, onAddToCart, onBack }) {
   const all = useProducts();
   const inCollection = (p) => (p.collections || []).indexOf(browse.value) !== -1;
@@ -1535,6 +1579,7 @@ function BrowsePage({ browse, onViewProduct, onAddToCart, onBack }) {
           {items.map((p) => <ProductCard key={p.id} product={p} onView={onViewProduct} onAddToCart={onAddToCart} />)}
         </div>
       )}
+      {browse.ask_box ? <AskForCountry /> : null}
     </div>
   );
 }
@@ -1591,7 +1636,7 @@ export default function App() {
       .then((list) => {
         const c = (list || []).find((x) => x.slug === value);
         if (!live) return;
-        setBrowse(c ? { kind, value, title: c.name, title_ar: c.name_ar, emoji: c.emoji, icon: c.icon, blurb: c.blurb, banner: c.banner, story: c.story, story_ar: c.story_ar } : { kind, value, title: value, emoji: "✦" });
+        setBrowse(c ? { kind, value, title: c.name, title_ar: c.name_ar, emoji: c.emoji, icon: c.icon, blurb: c.blurb, banner: c.banner, story: c.story, story_ar: c.story_ar, ask_box: c.ask_box } : { kind, value, title: value, emoji: "✦" });
         setPage("browse");
       })
       .catch(() => { if (live) { setBrowse({ kind, value, title: value, emoji: "✦" }); setPage("browse"); } });
