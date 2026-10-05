@@ -91,6 +91,8 @@ function EtsyIcon({ size = 18, color = "currentColor" }) {
   );
 }
 
+const SHOW_OCCASIONS = false;
+
 // ─── FLAGS ────────────────────────────────────────────────────────────────
 // Windows has no flag emoji, so 🇸🇾 shows up as the letters "SY" there.
 // Real SVG flags look the same on every device.
@@ -1154,7 +1156,10 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder, onBrowse }) {
           </div>
         </div>
 
-        {/* Collections by occasion */}
+        {/* Shop by Occasion is parked: the tiles do not filter yet and the counts
+            are not real. Flip SHOW_OCCASIONS to true once each occasion has
+            pieces worth showing, and wire the tiles to real filters first. */}
+        {SHOW_OCCASIONS && (
         <div style={{ marginBottom: 56 }}>
           <div style={{ textAlign: "center", marginBottom: 28 }}>
             <div style={{ fontFamily: F.display, fontSize: 36, fontWeight: 600, color: C.charcoal }}>Shop by Occasion</div>
@@ -1173,6 +1178,7 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder, onBrowse }) {
             ))}
           </div>
         </div>
+        )}
 
         {/* Reviews */}
         {REVIEWS.length > 0 && (
