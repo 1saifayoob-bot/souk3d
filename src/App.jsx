@@ -1502,7 +1502,13 @@ function AccountPage({ user, onBack, onSignOut }) {
 // Ask-for-your-country box, shown on collections that switch it on.
 // Search: opens from the header icon, matches name, Arabic name, keywords,
 // country and collection, and jumps straight to the product.
-function SearchPanel({ onClose, onViewProduct }) {
+function matchesQuery(p, needle) {
+  const hay = [p.name, p.name_ar, p.country, p.category, (p.keywords || []).join(" "), (p.collections || []).join(" "), p.desc, p.desc_ar, p.size]
+    .filter(Boolean).join(" ").toLowerCase();
+  return needle.split(/\s+/).filter(Boolean).every((w) => hay.includes(w));
+}
+
+function SearchPanel({ onClose, onViewProduct, onSeeAll }) {
   const all = useProducts();
   const [q, setQ] = useState("");
   const boxRef = useRef(null);
@@ -1514,17 +1520,15 @@ function SearchPanel({ onClose, onViewProduct }) {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
   const needle = q.trim().toLowerCase();
-  const results = !needle ? [] : all.filter((p) => {
-    const hay = [p.name, p.name_ar, p.country, p.category, (p.keywords || []).join(" "), (p.collections || []).join(" "), p.desc]
-      .filter(Boolean).join(" ").toLowerCase();
-    return needle.split(/\s+/).every((w) => hay.includes(w));
-  }).slice(0, 8);
+  const hits = !needle ? [] : all.filter((p) => matchesQuery(p, needle));
+  const results = hits.slice(0, 5);
+  const seeAll = () => { if (needle) { onClose(); onSeeAll(q.trim()); } };
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(26,18,12,0.45)", zIndex: 300, display: "flex", justifyContent: "center", alignItems: "flex-start", paddingTop: "12vh" }}>
       <div ref={boxRef} onClick={(e) => e.stopPropagation()} style={{ width: "min(560px, 92vw)", background: "#FFF", borderRadius: 16, boxShadow: "0 24px 60px rgba(0,0,0,0.25)", overflow: "hidden" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 18px", borderBottom: "1px solid " + C.wheat }}>
           <span style={{ fontSize: 17 }}>🔍</span>
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search magnets, countries, cake toppers…"
+          <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") seeAll(); }} placeholder="Search magnets, countries, cake toppers…"
             style={{ flex: 1, border: "none", outline: "none", fontSize: 16, fontFamily: F.body, color: C.charcoal, background: "transparent" }} />
           <button onClick={onClose} aria-label="Close search" style={{ border: "none", background: "none", fontSize: 20, color: C.textMuted, cursor: "pointer", lineHeight: 1 }}>×</button>
         </div>
@@ -1550,6 +1554,11 @@ function SearchPanel({ onClose, onViewProduct }) {
               <div style={{ fontSize: 14, fontWeight: 600, color: C.charcoal, fontFamily: F.body }}>${Number(p.price).toFixed(2)}</div>
             </div>
           ))}
+          {hits.length > 0 && (
+            <div onClick={seeAll} style={{ padding: "12px 16px", textAlign: "center", cursor: "pointer", fontFamily: F.body, fontSize: 13.5, color: C.saffronDark, fontWeight: 600 }}>
+              See all {hits.length} {hits.length === 1 ? "result" : "results"} →
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -1602,7 +1611,10 @@ function AskForCountry() {
 function BrowsePage({ browse, onViewProduct, onAddToCart, onBack }) {
   const all = useProducts();
   const inCollection = (p) => (p.collections || []).indexOf(browse.value) !== -1;
-  const items = all.filter((p) => browse.kind === "collection" ? inCollection(p) : (p.country || "") === browse.value);
+  const items = all.filter((p) =>
+    browse.kind === "collection" ? inCollection(p)
+    : browse.kind === "search" ? matchesQuery(p, String(browse.value || "").toLowerCase())
+    : (p.country || "") === browse.value);
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 5% 70px", animation: "fadeIn 0.3s ease" }}>
       <button onClick={onBack} style={{ background: "none", border: "none", color: C.textMuted, fontSize: 13, fontFamily: F.body, cursor: "pointer", padding: 0, marginBottom: 18 }}>‹ Back to the shop</button>
@@ -1621,6 +1633,8 @@ function BrowsePage({ browse, onViewProduct, onAddToCart, onBack }) {
         <div style={{ textAlign: "center", marginBottom: 32 }}>
           {browse.kind === "country"
             ? <Flag country={browse.value} size={46} style={{ borderRadius: 6 }} />
+            : browse.kind === "search"
+            ? <div style={{ fontSize: 40, lineHeight: 1 }}>🔍</div>
             : <div style={{ display: "flex", justifyContent: "center" }}><CollectionIcon collection={browse} size={92} /></div>}
           <h1 style={{ fontFamily: F.display, fontSize: 40, fontWeight: 600, color: C.charcoal, margin: "10px 0 4px" }}>{browse.title}</h1>
           {browse.title_ar ? <div style={{ fontFamily: F.arabic, fontSize: 22, color: C.saffron }}>{browse.title_ar}</div> : null}
@@ -1635,13 +1649,13 @@ function BrowsePage({ browse, onViewProduct, onAddToCart, onBack }) {
         </div>
       ) : null}
       {items.length === 0 ? (
-        <div style={{ textAlign: "center", color: C.textMuted, fontFamily: F.body, fontSize: 14, padding: "40px 0" }}>Nothing here yet — check back soon.</div>
+        <div style={{ textAlign: "center", color: C.textMuted, fontFamily: F.body, fontSize: 14, padding: "40px 0" }}>{browse.kind === "search" ? "Nothing matched that. Try a country, a word like habibi, or something like cake topper." : "Nothing here yet — check back soon."}</div>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 18 }}>
           {items.map((p) => <ProductCard key={p.id} product={p} onView={onViewProduct} onAddToCart={onAddToCart} />)}
         </div>
       )}
-      {browse.ask_box ? <AskForCountry /> : null}
+      {browse.ask_box || browse.kind === "search" ? <AskForCountry /> : null}
     </div>
   );
 }
@@ -1672,8 +1686,12 @@ export default function App() {
     setViewingProduct(null);
     setPage("browse");
     window.scrollTo(0, 0);
-    window.history.pushState({ browse: b }, "", (b.kind === "collection" ? "/c/" : "/h/") + encodeURIComponent(b.value));
+    const path = b.kind === "collection" ? "/c/" + encodeURIComponent(b.value)
+      : b.kind === "search" ? "/search?q=" + encodeURIComponent(b.value)
+      : "/h/" + encodeURIComponent(b.value);
+    window.history.pushState({ browse: b }, "", path);
   };
+  const openSearch = (q) => openBrowse({ kind: "search", value: q, title: "“" + q + "”" });
   const openProduct = (p, query) => {
     setViewingProduct(p);
     setPage("product");
@@ -1686,6 +1704,15 @@ export default function App() {
     setPage("home");
     window.history.pushState({}, "", "/");
   };
+
+  // Someone landed on a shared search link.
+  useEffect(() => {
+    if (!/^\/search\/?$/.test(window.location.pathname)) return;
+    const q = new URLSearchParams(window.location.search).get("q") || "";
+    if (!q.trim()) return;
+    setBrowse({ kind: "search", value: q.trim(), title: "“" + q.trim() + "”" });
+    setPage("browse");
+  }, []);
 
   // Open a collection or heritage page from its link.
   useEffect(() => {
@@ -1824,7 +1851,7 @@ export default function App() {
           onBrowse={openBrowse}
         />
       )}
-      {searchOpen && <SearchPanel onClose={() => setSearchOpen(false)} onViewProduct={openProduct} />}
+      {searchOpen && <SearchPanel onClose={() => setSearchOpen(false)} onViewProduct={openProduct} onSeeAll={openSearch} />}
       {page === "browse" && browse && !viewingProduct && (
         <BrowsePage browse={browse} onViewProduct={openProduct} onAddToCart={addToCart} onBack={goHome} />
       )}
