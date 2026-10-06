@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { supabase, fetchProducts, fetchCollections, requestCountry, signUpCustomer, signInCustomer, signOutCustomer, sendPasswordReset, getCurrentUser, onAuthChange, fetchMyOrders } from "./lib/supabase";
 
 // ─── BRAND CONSTANTS ───────────────────────────────────────────────────────────
@@ -1500,6 +1500,62 @@ function AccountPage({ user, onBack, onSignOut }) {
 // ─── BROWSE PAGE ─────────────────────────────────────────────────────────
 // One page for a collection (/c/<slug>) or a heritage (/h/<country>).
 // Ask-for-your-country box, shown on collections that switch it on.
+// Search: opens from the header icon, matches name, Arabic name, keywords,
+// country and collection, and jumps straight to the product.
+function SearchPanel({ onClose, onViewProduct }) {
+  const all = useProducts();
+  const [q, setQ] = useState("");
+  const boxRef = useRef(null);
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    const el = boxRef.current && boxRef.current.querySelector("input");
+    if (el) el.focus();
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+  const needle = q.trim().toLowerCase();
+  const results = !needle ? [] : all.filter((p) => {
+    const hay = [p.name, p.name_ar, p.country, p.category, (p.keywords || []).join(" "), (p.collections || []).join(" "), p.desc]
+      .filter(Boolean).join(" ").toLowerCase();
+    return needle.split(/\s+/).every((w) => hay.includes(w));
+  }).slice(0, 8);
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(26,18,12,0.45)", zIndex: 300, display: "flex", justifyContent: "center", alignItems: "flex-start", paddingTop: "12vh" }}>
+      <div ref={boxRef} onClick={(e) => e.stopPropagation()} style={{ width: "min(560px, 92vw)", background: "#FFF", borderRadius: 16, boxShadow: "0 24px 60px rgba(0,0,0,0.25)", overflow: "hidden" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 18px", borderBottom: "1px solid " + C.wheat }}>
+          <span style={{ fontSize: 17 }}>🔍</span>
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search magnets, countries, cake toppers…"
+            style={{ flex: 1, border: "none", outline: "none", fontSize: 16, fontFamily: F.body, color: C.charcoal, background: "transparent" }} />
+          <button onClick={onClose} aria-label="Close search" style={{ border: "none", background: "none", fontSize: 20, color: C.textMuted, cursor: "pointer", lineHeight: 1 }}>×</button>
+        </div>
+        <div style={{ maxHeight: "52vh", overflowY: "auto" }}>
+          {!needle ? (
+            <div style={{ padding: "18px", fontSize: 13.5, color: C.textMuted, fontFamily: F.body }}>
+              Try a country, a word like habibi or sabaho, or something like cake topper.
+            </div>
+          ) : results.length === 0 ? (
+            <div style={{ padding: "18px", fontSize: 13.5, color: C.textMuted, fontFamily: F.body }}>
+              Nothing for “{q.trim()}” yet. If it is a country, ask us for it on the Hug the World page and we will make it.
+            </div>
+          ) : results.map((p) => (
+            <div key={p.id} onClick={() => { onClose(); onViewProduct(p); }}
+              style={{ display: "flex", gap: 12, alignItems: "center", padding: "10px 16px", cursor: "pointer", borderBottom: "0.5px solid " + C.cream2 }}>
+              <div style={{ width: 46, height: 46, borderRadius: 8, overflow: "hidden", background: C.cream2, flexShrink: 0 }}>
+                {(p.thumbUrl || p.imageUrl) ? <img src={p.thumbUrl || p.imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : null}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily: F.display, fontSize: 15, color: C.charcoal, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</div>
+                <div style={{ fontSize: 12, color: C.textMuted, fontFamily: F.body }}>{p.country}{p.size ? " · " + p.size : ""}</div>
+              </div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: C.charcoal, fontFamily: F.body }}>${Number(p.price).toFixed(2)}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AskForCountry() {
   const [country, setCountry] = useState("");
   const [email, setEmail] = useState("");
@@ -1594,6 +1650,7 @@ export default function App() {
   const [page, setPage] = useState("home");
   const [viewingProduct, setViewingProduct] = useState(null);
   const [browse, setBrowse] = useState(null);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [cart, setCart] = useState([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [user, setUser] = useState(null);
@@ -1742,7 +1799,8 @@ export default function App() {
               <EtsyIcon size={19} />
             </a>
           )}
-          <span style={{ fontSize: 18, cursor: "pointer", color: C.charcoal }}>🔍</span>
+          <span onClick={() => setSearchOpen(true)} title="Search" role="button" aria-label="Search"
+            style={{ fontSize: 18, cursor: "pointer", color: C.charcoal }}>🔍</span>
           <span
             onClick={() => { if (user) { setPage("account"); setViewingProduct(null); } else { setAuthOpen(true); } }}
             title={user ? "My account" : "Sign in"}
@@ -1766,6 +1824,7 @@ export default function App() {
           onBrowse={openBrowse}
         />
       )}
+      {searchOpen && <SearchPanel onClose={() => setSearchOpen(false)} onViewProduct={openProduct} />}
       {page === "browse" && browse && !viewingProduct && (
         <BrowsePage browse={browse} onViewProduct={openProduct} onAddToCart={addToCart} onBack={goHome} />
       )}
