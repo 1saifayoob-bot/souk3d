@@ -1660,6 +1660,41 @@ function BrowsePage({ browse, onViewProduct, onAddToCart, onBack }) {
   );
 }
 
+// ─── BACK TO TOP ──────────────────────────────────────────────────────────────
+// Long collection, heritage and search pages need a way back up without flicking.
+function BackToTop() {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setShow(window.scrollY > 600);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+  if (!show) return null;
+  return (
+    <button
+      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+      aria-label="Back to top"
+      title="Back to top"
+      style={{
+        position: "fixed", bottom: "calc(18px + env(safe-area-inset-bottom, 0px))", right: 18,
+        width: 46, height: 46, borderRadius: "50%",
+        background: C.cream, color: C.charcoal,
+        border: `1px solid ${C.wheat}`,
+        boxShadow: "0 6px 20px rgba(42,31,24,0.18)",
+        cursor: "pointer", zIndex: 150,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: 0, WebkitTapHighlightColor: "transparent",
+      }}
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M12 19V5" />
+        <path d="M5 12l7-7 7 7" />
+      </svg>
+    </button>
+  );
+}
+
 export default function App() {
   const [page, setPage] = useState("home");
   const [viewingProduct, setViewingProduct] = useState(null);
@@ -1897,6 +1932,9 @@ export default function App() {
           onSignedIn={() => { setAuthOpen(false); setPage("account"); }}
         />
       )}
+
+      {/* Back to top — hidden while a drawer or modal owns the screen */}
+      {!cartOpen && !searchOpen && !authOpen && <BackToTop />}
     </div>
   );
 }
