@@ -1677,17 +1677,17 @@ function BackToTop() {
       aria-label="Back to top"
       title="Back to top"
       style={{
-        position: "fixed", bottom: "calc(18px + env(safe-area-inset-bottom, 0px))", right: 18,
-        width: 46, height: 46, borderRadius: "50%",
-        background: C.cream, color: C.charcoal,
-        border: `1px solid ${C.wheat}`,
-        boxShadow: "0 6px 20px rgba(42,31,24,0.18)",
+        position: "fixed", bottom: "calc(20px + env(safe-area-inset-bottom, 0px))", right: 20,
+        width: 52, height: 52, borderRadius: "50%",
+        background: C.charcoal, color: C.cream,
+        border: `2px solid ${C.saffron}`,
+        boxShadow: "0 8px 24px rgba(42,31,24,0.35)",
         cursor: "pointer", zIndex: 150,
         display: "flex", alignItems: "center", justifyContent: "center",
         padding: 0, WebkitTapHighlightColor: "transparent",
       }}
     >
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M12 19V5" />
         <path d="M5 12l7-7 7 7" />
       </svg>
