@@ -78,6 +78,16 @@
         .s3d-footer-grid { grid-template-columns: 1fr 1fr !important; gap: 24px !important; }
         .s3d-hero-title { font-size: 34px !important; }
         .s3d-pad { padding: 28px !important; }
+
+        /* Collection cards go two-up on a phone instead of one giant card
+           per screen, so more of the shop is visible at a glance. */
+        .s3d-cards-2 { grid-template-columns: repeat(2, 1fr) !important; gap: 12px !important; }
+        .s3d-coll-card { padding: 14px 12px !important; border-radius: 12px !important; }
+        .s3d-coll-icon > div { width: 56px !important; height: 56px !important; font-size: 34px !important; border-radius: 11px !important; }
+        .s3d-coll-name { font-size: 17px !important; margin-top: 8px !important; line-height: 1.2; }
+        .s3d-coll-ar { font-size: 13px !important; }
+        .s3d-coll-blurb { font-size: 11px !important; margin-top: 7px !important; }
+        .s3d-coll-count { font-size: 11px !important; margin-top: 8px !important; }
       }
       @media (max-width: 520px) {
         .s3d-nav-links { gap: 12px !important; }
