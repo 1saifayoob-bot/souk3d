@@ -1107,17 +1107,18 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder, onBrowse }) {
               <div style={{ fontFamily: F.display, fontSize: 36, fontWeight: 600, color: C.charcoal }}>Collections</div>
               <div style={{ fontFamily: F.arabic, fontSize: 20, color: C.saffron }}>المجموعات</div>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 16 }}>
+            <div className="s3d-cards-2" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 16 }}>
               {collections.map(c => ({ ...c, count: STORE_PRODUCTS.filter(p => (p.collections || []).indexOf(c.slug) !== -1).length }))
                 .filter(c => c.count > 0)
                 .map(c => (
                   <div key={c.slug} onClick={() => onBrowse({ kind: "collection", value: c.slug, title: c.name, title_ar: c.name_ar, emoji: c.emoji, icon: c.icon, blurb: c.blurb, banner: c.banner, story: c.story, story_ar: c.story_ar, ask_box: c.ask_box })}
+                    className="s3d-coll-card"
                     style={{ background: C.saffron + "14", border: `0.5px solid ${C.saffron}44`, borderRadius: 16, padding: "28px 22px", cursor: "pointer" }}>
-                    <CollectionIcon collection={c} size={88} />
-                    <div style={{ fontFamily: F.display, fontSize: 24, fontWeight: 600, color: C.charcoal, marginTop: 10 }}>{c.name}</div>
-                    {c.name_ar ? <div style={{ fontFamily: F.arabic, fontSize: 16, color: C.saffron, marginTop: 2 }}>{c.name_ar}</div> : null}
-                    {c.blurb ? <p style={{ fontSize: 13, color: C.textMuted, fontFamily: F.body, lineHeight: 1.6, margin: "10px 0 0" }}>{c.blurb}</p> : null}
-                    <div style={{ fontSize: 12, color: C.saffronDark, fontFamily: F.body, fontWeight: 600, marginTop: 12 }}>{c.count} pieces →</div>
+                    <div className="s3d-coll-icon"><CollectionIcon collection={c} size={88} /></div>
+                    <div className="s3d-coll-name" style={{ fontFamily: F.display, fontSize: 24, fontWeight: 600, color: C.charcoal, marginTop: 10 }}>{c.name}</div>
+                    {c.name_ar ? <div className="s3d-coll-ar" style={{ fontFamily: F.arabic, fontSize: 16, color: C.saffron, marginTop: 2 }}>{c.name_ar}</div> : null}
+                    {c.blurb ? <p className="s3d-coll-blurb" style={{ fontSize: 13, color: C.textMuted, fontFamily: F.body, lineHeight: 1.6, margin: "10px 0 0" }}>{c.blurb}</p> : null}
+                    <div className="s3d-coll-count" style={{ fontSize: 12, color: C.saffronDark, fontFamily: F.body, fontWeight: 600, marginTop: 12 }}>{c.count} pieces →</div>
                   </div>
                 ))}
             </div>
