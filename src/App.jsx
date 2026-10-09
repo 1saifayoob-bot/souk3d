@@ -431,7 +431,7 @@ function ProductDetail({product, onBack, onAddToCart, onBuyNow, user }) {
       </div>
 
       {/* Two-column layout */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, marginBottom: 48 }}>
+      <div className="s3d-stack" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, marginBottom: 48 }}>
         {/* Gallery */}
         <div>
           <div style={{ aspectRatio: "1", background: `linear-gradient(135deg, ${C.cream2} 0%, ${C.wheat}55 100%)`, borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 120, position: "relative", marginBottom: 12 }}>
@@ -666,7 +666,7 @@ function CheckoutPage({ cart, onBack, promo, user }) {
         <div style={{ textAlign: "center", fontSize: 11, color: C.textMuted, marginTop: 12, fontFamily: F.body }}>— or continue below —</div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 24 }}>
+      <div className="s3d-stack" style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 24 }}>
         {/* Form */}
         <div>
           {/* Contact */}
@@ -683,7 +683,7 @@ function CheckoutPage({ cart, onBack, promo, user }) {
           {/* Shipping address */}
           <div style={{ background: "#FFF", border: `0.5px solid ${C.wheat}`, borderRadius: 12, padding: "20px", marginBottom: 16 }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: C.charcoal, fontFamily: F.body, marginBottom: 14 }}>Shipping Address</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <div className="s3d-stack" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               {[["Full Name", "name"], ["Address Line 1", "line1"], ["Apt/Suite (optional)", "line2"], ["City", "city"], ["State/Province", "state"], ["ZIP/Postal Code", "zip"]].map(([label, key]) => (
                 <div key={key} style={{ gridColumn: key === "line1" || key === "name" ? "1/-1" : "auto" }}>
                   <div style={{ fontSize: 11, color: C.textMuted, fontFamily: F.body, marginBottom: 4 }}>{label}</div>
@@ -859,7 +859,7 @@ function CustomOrderForm({ onBack }) {
       {step === 1 && (
         <div>
           <div style={{ fontFamily: F.display, fontSize: 24, fontWeight: 600, color: C.charcoal, marginBottom: 20, textAlign: "center" }}>What's the occasion?</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 24 }}>
+          <div className="s3d-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 24 }}>
             {OCCASIONS.map(o => (
               <div key={o.id} onClick={() => setOccasion(o.id)} style={{ background: occasion === o.id ? C.saffron + "18" : "#FFF", border: `1.5px solid ${occasion === o.id ? C.saffron : C.wheat}`, borderRadius: 12, padding: "16px 10px", textAlign: "center", cursor: "pointer", transition: "all 0.15s" }}>
                 <div style={{ fontSize: 28, marginBottom: 6 }}>{o.emoji}</div>
@@ -1051,10 +1051,10 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder, onBrowse }) {
       <div style={{ background: `linear-gradient(160deg, ${C.charcoal} 0%, ${C.inkBrown} 60%, #1a0f08 100%)`, padding: "80px 5% 90px", position: "relative", overflow: "hidden" }}>
         {/* Decorative Arabic patterns */}
         <div style={{ position: "absolute", right: "5%", top: "50%", transform: "translateY(-50%)", fontFamily: F.arabic, fontSize: 180, color: "rgba(255,255,255,0.03)", direction: "rtl", lineHeight: 1, userSelect: "none", pointerEvents: "none" }}>بسم الله</div>
-        <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center" }}>
+        <div className="s3d-stack" style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center" }}>
           <div>
             <div style={{ fontFamily: F.arabic, fontSize: 28, color: C.saffron, marginBottom: 12 }}>أهلاً وسهلاً</div>
-            <div style={{ fontFamily: F.display, fontSize: 56, fontWeight: 600, color: "#FFF", lineHeight: 1.1, marginBottom: 16 }}>Gifts that carry your story home.</div>
+            <div className="s3d-hero-title" style={{ fontFamily: F.display, fontSize: 56, fontWeight: 600, color: "#FFF", lineHeight: 1.1, marginBottom: 16 }}>Gifts that carry your story home.</div>
             <p style={{ fontSize: 16, color: "#C9B99A", fontFamily: F.body, lineHeight: 1.7, marginBottom: 32, maxWidth: 440 }}>Handmade 3D-printed gifts celebrating Arab heritage, crafted with love in Los Angeles, California by the Souk3D Family. Every piece tells a diaspora story.</p>
             <div style={{ display: "flex", gap: 14 }}>
               <button onClick={() => window.scrollTo({ top: 600, behavior: "smooth" })} style={{ padding: "15px 32px", background: C.saffron, color: "#FFF", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, fontFamily: F.body, cursor: "pointer" }}>Shop Now</button>
@@ -1143,7 +1143,7 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder, onBrowse }) {
         </div>
 
         {/* Our story, signed by the owner */}
-        <div id="about-section" style={{ background: C.charcoal, borderRadius: 20, padding: "48px", marginBottom: 56, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40, alignItems: "center" }}>
+        <div id="about-section" className="s3d-stack s3d-pad" style={{ background: C.charcoal, borderRadius: 20, padding: "48px", marginBottom: 56, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40, alignItems: "center" }}>
           <div>
             <div style={{ fontFamily: F.arabic, fontSize: 20, color: C.saffron, marginBottom: 12 }}>منّا لكم بكل حب</div>
             <div style={{ fontFamily: F.display, fontSize: 30, fontWeight: 600, color: "#FFF", lineHeight: 1.2, marginBottom: 16 }}>A piece of home in every print.</div>
@@ -1164,7 +1164,7 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder, onBrowse }) {
           <div style={{ textAlign: "center", marginBottom: 28 }}>
             <div style={{ fontFamily: F.display, fontSize: 36, fontWeight: 600, color: C.charcoal }}>Shop by Occasion</div>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+          <div className="s3d-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
             {[
               { title: "Eid Gifts", arabic: "هدايا العيد", emoji: "🌙", color: C.saffron },
               { title: "Weddings", arabic: "الأعراس", emoji: "💍", color: C.terracotta },
@@ -1212,7 +1212,7 @@ function Homepage({ onViewProduct, onAddToCart, onCustomOrder, onBrowse }) {
       {/* Footer */}
       <div style={{ background: C.charcoal, padding: "48px 5% 24px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 32, marginBottom: 32 }}>
+          <div className="s3d-footer-grid" style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 32, marginBottom: 32 }}>
             <div>
               <div style={{ fontFamily: F.display, fontSize: 24, fontWeight: 600, color: "#FFF", marginBottom: 4 }}>Souk3D</div>
               <div style={{ fontFamily: F.arabic, fontSize: 16, color: C.saffron, marginBottom: 12 }}>سوق تري دي</div>
@@ -1835,12 +1835,12 @@ export default function App() {
       </div>
 
       {/* Navigation */}
-      <nav style={{ background: C.cream, borderBottom: `0.5px solid ${C.wheat}`, padding: "14px 5%", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}>
+      <nav className="s3d-nav" style={{ background: C.cream, borderBottom: `0.5px solid ${C.wheat}`, padding: "14px 5%", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}>
         <div onClick={goHome} style={{ cursor: "pointer" }}>
           <div style={{ fontFamily: F.display, fontSize: 22, fontWeight: 600, color: C.charcoal }}>Souk3D</div>
           <div style={{ fontFamily: F.arabic, fontSize: 12, color: C.saffron, lineHeight: 1 }}>سوق ثري دي</div>
         </div>
-        <div style={{ display: "flex", gap: 24 }}>
+        <div className="s3d-nav-links" style={{ display: "flex", gap: 24 }}>
           {["Shop", "Collections", "Heritage", "Custom Orders", "About"].map(link => (
             <span key={link} onClick={() => {
               if (link === "Custom Orders") { setPage("custom-order"); return; }
@@ -1850,7 +1850,7 @@ export default function App() {
             }} style={{ fontSize: 13, color: C.charcoal, fontFamily: F.body, cursor: "pointer", fontWeight: 500 }}>{link}</span>
           ))}
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+        <div className="s3d-nav-icons" style={{ display: "flex", alignItems: "center", gap: 16 }}>
           {SOCIAL.instagram && (
             <a href={SOCIAL.instagram} target="_blank" rel="noopener noreferrer" title="Souk3D on Instagram" aria-label="Souk3D on Instagram" style={{ color: C.charcoal, display: "flex", alignItems: "center" }}>
               <InstagramIcon size={19} />
