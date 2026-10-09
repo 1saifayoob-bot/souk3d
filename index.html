@@ -63,6 +63,27 @@
       ::-webkit-scrollbar { width: 4px; height: 4px; }
       ::-webkit-scrollbar-track { background: transparent; }
       ::-webkit-scrollbar-thumb { background: #D4881F55; border-radius: 4px; }
+
+      /* ── Phones and small tablets ─────────────────────────────────────────
+         The storefront is styled with inline styles, so these overrides need
+         !important to win. Without them the nav row is wider than a phone
+         screen, which drags the whole page into a squeezed column. */
+      @media (max-width: 860px) {
+        .s3d-nav { flex-wrap: wrap !important; padding: 12px 16px !important; row-gap: 10px; }
+        .s3d-nav-links { order: 3; width: 100%; justify-content: center; flex-wrap: wrap; gap: 16px !important; }
+        .s3d-nav-icons { gap: 14px !important; }
+        .s3d-stack { grid-template-columns: 1fr !important; gap: 24px !important; }
+        .s3d-grid-4 { grid-template-columns: repeat(2, 1fr) !important; }
+        .s3d-grid-3 { grid-template-columns: 1fr !important; }
+        .s3d-footer-grid { grid-template-columns: 1fr 1fr !important; gap: 24px !important; }
+        .s3d-hero-title { font-size: 34px !important; }
+        .s3d-pad { padding: 28px !important; }
+      }
+      @media (max-width: 520px) {
+        .s3d-nav-links { gap: 12px !important; }
+        .s3d-nav-links > span { font-size: 12px !important; }
+        .s3d-footer-grid { grid-template-columns: 1fr !important; }
+      }
     </style>
   </head>
   <body>
